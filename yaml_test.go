@@ -57,7 +57,6 @@ tag:
 
 	var bdata JSONMapSlice
 	require.NoError(t, json.Unmarshal(b, &bdata))
-
 }
 
 func TestJSONToYAMLWithNull(t *testing.T) {

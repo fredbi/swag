@@ -311,3 +311,34 @@ func (n *NameProvider) GetGoNameForType(tpe reflect.Type, name string) (string, 
 	nme, ok := names.jsonNames[name]
 	return nme, ok
 }
+
+// JSONDoc loads a json document from either a file or a remote url
+func JSONDoc(path string, opts ...DocOption) (json.RawMessage, error) {
+	data, err := LoadFromFileOrHTTP(path)
+	if err != nil {
+		return nil, err
+	}
+
+	o := docOptionsWithDefaults(opts)
+
+	if !o.HasTransforms() {
+		return json.RawMessage(data), nil
+	}
+
+	var jsonDoc JSONMapSlice
+	if err = jsonDoc.UnmarshalJSON(data); err != nil {
+		return nil, err
+	}
+
+	doc, err := o.ApplyTransforms(jsonDoc)
+	if err != nil {
+		return nil, err
+	}
+
+	data, err = json.Marshal(doc)
+	if err != nil {
+		return nil, err
+	}
+
+	return json.RawMessage(data), nil
+}

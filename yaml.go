@@ -55,31 +55,32 @@ func BytesToYAMLDoc(data []byte) (interface{}, error) {
 	return &document, nil
 }
 
-func yamlNode(root *yaml.Node) (interface{}, error) {
+func yamlNode(root *yaml.Node, hooks ...yamlHook) (interface{}, error) {
 	switch root.Kind {
 	case yaml.DocumentNode:
-		return yamlDocument(root)
+		return yamlDocument(root, hooks...)
 	case yaml.SequenceNode:
-		return yamlSequence(root)
+		return yamlSequence(root, hooks...)
 	case yaml.MappingNode:
-		return yamlMapping(root)
+		return yamlMapping(root, hooks...)
 	case yaml.ScalarNode:
-		return yamlScalar(root)
+		return yamlScalar(root, hooks...)
 	case yaml.AliasNode:
-		return yamlNode(root.Alias)
+		return yamlNode(root.Alias, hooks...)
 	default:
 		return nil, fmt.Errorf("unsupported YAML node type: %v: %w", root.Kind, ErrYAML)
 	}
 }
 
-func yamlDocument(node *yaml.Node) (interface{}, error) {
+func yamlDocument(node *yaml.Node, hooks ...yamlHook) (interface{}, error) {
 	if len(node.Content) != 1 {
 		return nil, fmt.Errorf("unexpected YAML Document node content length: %d: %w", len(node.Content), ErrYAML)
 	}
+	// TODO: hooks
 	return yamlNode(node.Content[0])
 }
 
-func yamlMapping(node *yaml.Node) (interface{}, error) {
+func yamlMapping(node *yaml.Node, hooks ...yamlHook) (interface{}, error) {
 	const sensibleAllocDivider = 2
 	m := make(JSONMapSlice, len(node.Content)/sensibleAllocDivider)
 
@@ -91,7 +92,7 @@ func yamlMapping(node *yaml.Node) (interface{}, error) {
 			return nil, fmt.Errorf("unable to decode YAML map key: %w: %w", err, ErrYAML)
 		}
 		nmi.Key = k
-		v, err := yamlNode(node.Content[i+1])
+		v, err := yamlNode(node.Content[i+1], hooks...)
 		if err != nil {
 			return nil, fmt.Errorf("unable to process YAML map value for key %q: %w: %w", k, err, ErrYAML)
 		}
@@ -102,12 +103,12 @@ func yamlMapping(node *yaml.Node) (interface{}, error) {
 	return m, nil
 }
 
-func yamlSequence(node *yaml.Node) (interface{}, error) {
+func yamlSequence(node *yaml.Node, hooks ...yamlHook) (interface{}, error) {
 	s := make([]interface{}, 0)
 
 	for i := 0; i < len(node.Content); i++ {
 
-		v, err := yamlNode(node.Content[i])
+		v, err := yamlNode(node.Content[i], hooks...)
 		if err != nil {
 			return nil, fmt.Errorf("unable to decode YAML sequence value: %w: %w", err, ErrYAML)
 		}
@@ -125,7 +126,7 @@ const ( // See https://yaml.org/type/
 	yamlNull         = "tag:yaml.org,2002:null"
 )
 
-func yamlScalar(node *yaml.Node) (interface{}, error) {
+func yamlScalar(node *yaml.Node, hooks ...yamlHook) (interface{}, error) {
 	switch node.LongTag() {
 	case yamlStringScalar:
 		return node.Value, nil
@@ -196,13 +197,21 @@ func (s JSONMapSlice) MarshalEasyJSON(w *jwriter.Writer) {
 
 // UnmarshalJSON makes a JSONMapSlice from JSON
 func (s *JSONMapSlice) UnmarshalJSON(data []byte) error {
+	return s.unmarshalJSONWithHooks(data)
+}
+
+func (s *JSONMapSlice) unmarshalJSONWithHooks(data []byte, hooks ...jsonHook) error {
 	l := jlexer.Lexer{Data: data}
-	s.UnmarshalEasyJSON(&l)
+	s.unmarshalEasyJSONWithHooks(&l, hooks...)
 	return l.Error()
 }
 
 // UnmarshalEasyJSON makes a JSONMapSlice from JSON, using easyJSON
 func (s *JSONMapSlice) UnmarshalEasyJSON(in *jlexer.Lexer) {
+	s.unmarshalEasyJSONWithHooks(in)
+}
+
+func (s *JSONMapSlice) unmarshalEasyJSONWithHooks(in *jlexer.Lexer, hooks ...jsonHook) {
 	if in.IsNull() {
 		in.Skip()
 		return
@@ -212,7 +221,7 @@ func (s *JSONMapSlice) UnmarshalEasyJSON(in *jlexer.Lexer) {
 	in.Delim('{')
 	for !in.IsDelim('}') {
 		var mi JSONMapItem
-		mi.UnmarshalEasyJSON(in)
+		mi.unmarshalEasyJSONWithHooks(in, hooks...)
 		result = append(result, mi)
 	}
 	*s = result
@@ -359,6 +368,10 @@ type JSONMapItem struct {
 	Value interface{}
 }
 
+type JSONSliceItem struct {
+	Value interface{} // TODO: marshal /unmarshal
+}
+
 // MarshalJSON renders a JSONMapItem as JSON
 func (s JSONMapItem) MarshalJSON() ([]byte, error) {
 	w := &jwriter.Writer{Flags: jwriter.NilMapAsEmpty | jwriter.NilSliceAsEmpty}
@@ -375,6 +388,10 @@ func (s JSONMapItem) MarshalEasyJSON(w *jwriter.Writer) {
 
 // UnmarshalJSON makes a JSONMapItem from JSON
 func (s *JSONMapItem) UnmarshalJSON(data []byte) error {
+	return s.unmarshalJSONWithHooks(data)
+}
+
+func (s *JSONMapItem) unmarshalJSONWithHooks(data []byte) error {
 	l := jlexer.Lexer{Data: data}
 	s.UnmarshalEasyJSON(&l)
 	return l.Error()
@@ -382,15 +399,42 @@ func (s *JSONMapItem) UnmarshalJSON(data []byte) error {
 
 // UnmarshalEasyJSON makes a JSONMapItem from JSON, using easyJSON
 func (s *JSONMapItem) UnmarshalEasyJSON(in *jlexer.Lexer) {
+	s.unmarshalEasyJSONWithHooks(in)
+}
+
+func (s *JSONMapItem) unmarshalEasyJSONWithHooks(in *jlexer.Lexer, hooks ...jsonHook) {
+	// TODO: hooks
 	key := in.UnsafeString()
 	in.WantColon()
-	value := in.Interface()
+
+	var value interface{}
+	switch {
+	case in.IsDelim('{'):
+		// contains an object
+		var inner JSONMapSlice
+		inner.unmarshalEasyJSONWithHooks(in, hooks...)
+		value = inner
+
+	case in.IsDelim('['):
+		// contains an array
+		var element JSONSliceItem
+		element.unmarshalEasyJSONWithHooks(in, hooks)
+		value = element
+
+	default:
+		// contains a scalar
+		value = in.Interface()
+	}
+
 	in.WantComma()
+	if !in.Ok() {
+		return
+	}
 	s.Key = key
 	s.Value = value
 }
 
-func transformData(input interface{}) (out interface{}, err error) {
+func transformData(input interface{}, hooks ...yamlHook) (out interface{}, err error) {
 	format := func(t interface{}) (string, error) {
 		switch k := t.(type) {
 		case string:
@@ -422,9 +466,9 @@ func transformData(input interface{}) (out interface{}, err error) {
 
 	switch in := input.(type) {
 	case yaml.Node:
-		return yamlNode(&in)
+		return yamlNode(&in, hooks...)
 	case *yaml.Node:
-		return yamlNode(in)
+		return yamlNode(in, hooks...)
 	case map[interface{}]interface{}:
 		o := make(JSONMapSlice, 0, len(in))
 		for ke, va := range in {
@@ -433,7 +477,7 @@ func transformData(input interface{}) (out interface{}, err error) {
 				return nil, err
 			}
 
-			v, ert := transformData(va)
+			v, ert := transformData(va, hooks...)
 			if ert != nil {
 				return nil, ert
 			}
@@ -445,7 +489,7 @@ func transformData(input interface{}) (out interface{}, err error) {
 		len1 := len(in)
 		o := make([]interface{}, len1)
 		for i := 0; i < len1; i++ {
-			o[i], err = transformData(in[i])
+			o[i], err = transformData(in[i], hooks...)
 			if err != nil {
 				return nil, err
 			}
@@ -455,14 +499,86 @@ func transformData(input interface{}) (out interface{}, err error) {
 	return input, nil
 }
 
+type (
+	DocProcessor func(any) (any, error)
+	DocOption    func(*docOptions)
+	docOptions   struct {
+		processors []DocProcessor
+	}
+
+	yamlHook func()
+	jsonHook func()
+)
+
+func WithDocProcessor(processor func(any) (any, error)) DocOption {
+	return func(o *docOptions) {
+		o.processors = append(o.processors, processor)
+	}
+}
+
+func WithXOrderProcessor(enabled bool) DocOption {
+	if !enabled {
+		return func(o *docOptions) {}
+	}
+
+	return WithDocProcessor(func(doc any) (any, error) {
+		switch doc.(type) {
+		case yaml.Node:
+			// TODO
+			return nil, nil // TODO
+		case *yaml.Node:
+			return nil, nil // TODO
+		case JSONMapSlice:
+			return nil, nil // TODO
+		default:
+			return nil, fmt.Errorf(
+				"XOrder processor only support yamlv3.Node and swag.JSONMapSlice input documents, got: %T",
+				doc,
+			)
+		}
+	})
+}
+
+func docOptionsWithDefaults(opts []DocOption) docOptions {
+	o := docOptions{}
+
+	for _, apply := range opts {
+		apply(&o)
+	}
+
+	return o
+}
+
+func (o docOptions) HasTransforms() bool {
+	return len(o.processors) > 0
+}
+
+func (o docOptions) ApplyTransforms(inputDoc any) (doc any, err error) {
+	doc = inputDoc
+	for _, process := range o.processors {
+		doc, err = process(doc)
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	return doc, nil
+}
+
 // YAMLDoc loads a yaml document from either http or a file and converts it to json
-func YAMLDoc(path string) (json.RawMessage, error) {
+func YAMLDoc(path string, opts ...DocOption) (json.RawMessage, error) {
 	yamlDoc, err := YAMLData(path)
 	if err != nil {
 		return nil, err
 	}
 
-	data, err := YAMLToJSON(yamlDoc)
+	o := docOptionsWithDefaults(opts)
+	doc, err := o.ApplyTransforms(yamlDoc)
+	if err != nil {
+		return nil, err
+	}
+
+	data, err := YAMLToJSON(doc)
 	if err != nil {
 		return nil, err
 	}
