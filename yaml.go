@@ -17,6 +17,7 @@ package swag
 import (
 	"encoding/json"
 	"fmt"
+	"log"
 	"path/filepath"
 	"reflect"
 	"sort"
@@ -43,12 +44,25 @@ func YAMLToJSON(data interface{}) (json.RawMessage, error) {
 	return json.RawMessage(b), err
 }
 
+type yamlv3Node struct {
+	yaml.Node
+}
+
+func (n *yamlv3Node) UnmarshalYAML(value *yaml.Node) error {
+	if err := yaml.Unmarshal(); err != nil {
+		return err
+	}
+
+	return nil
+}
+
 // BytesToYAMLDoc converts a byte slice into a YAML document
 func BytesToYAMLDoc(data []byte) (interface{}, error) {
-	var document yaml.Node // preserve order that is present in the document
+	var document yamlv3Node // preserve order that is present in the document
 	if err := yaml.Unmarshal(data, &document); err != nil {
 		return nil, err
 	}
+	//document.Decode(&document)
 	if document.Kind != yaml.DocumentNode || len(document.Content) != 1 || document.Content[0].Kind != yaml.MappingNode {
 		return nil, fmt.Errorf("only YAML documents that are objects are supported: %w", ErrYAML)
 	}
@@ -82,6 +96,7 @@ func yamlDocument(node *yaml.Node) (interface{}, error) {
 func yamlMapping(node *yaml.Node) (interface{}, error) {
 	const sensibleAllocDivider = 2
 	m := make(JSONMapSlice, len(node.Content)/sensibleAllocDivider)
+	uniqueKeys := make(map[string]struct{}, len(node.Content)/sensibleAllocDivider)
 
 	var j int
 	for i := 0; i < len(node.Content); i += 2 {
@@ -90,6 +105,13 @@ func yamlMapping(node *yaml.Node) (interface{}, error) {
 		if err != nil {
 			return nil, fmt.Errorf("unable to decode YAML map key: %w: %w", err, ErrYAML)
 		}
+
+		if _, isDuplicate := uniqueKeys[k]; isDuplicate {
+			return nil, fmt.Errorf("found duplicate key %q", k)
+		}
+		log.Printf("DEBUG(fred): found key %q (2)", k)
+		uniqueKeys[k] = struct{}{}
+
 		nmi.Key = k
 		v, err := yamlNode(node.Content[i+1])
 		if err != nil {
@@ -106,7 +128,6 @@ func yamlSequence(node *yaml.Node) (interface{}, error) {
 	s := make([]interface{}, 0)
 
 	for i := 0; i < len(node.Content); i++ {
-
 		v, err := yamlNode(node.Content[i])
 		if err != nil {
 			return nil, fmt.Errorf("unable to decode YAML sequence value: %w: %w", err, ErrYAML)
@@ -420,6 +441,7 @@ func transformData(input interface{}) (out interface{}, err error) {
 		}
 	}
 
+	log.Printf("DEBUG(fred): transform data from %T", input)
 	switch in := input.(type) {
 	case yaml.Node:
 		return yamlNode(&in)
@@ -427,11 +449,19 @@ func transformData(input interface{}) (out interface{}, err error) {
 		return yamlNode(in)
 	case map[interface{}]interface{}:
 		o := make(JSONMapSlice, 0, len(in))
+		uniqueKeys := make(map[string]struct{}, len(in))
+
 		for ke, va := range in {
 			var nmi JSONMapItem
 			if nmi.Key, err = format(ke); err != nil {
 				return nil, err
 			}
+
+			if _, isDuplicate := uniqueKeys[nmi.Key]; isDuplicate {
+				return nil, fmt.Errorf("found duplicate key %q", nmi.Key)
+			}
+			log.Printf("DEBUG(fred): found key %q (1)", nmi.Key)
+			uniqueKeys[nmi.Key] = struct{}{}
 
 			v, ert := transformData(va)
 			if ert != nil {

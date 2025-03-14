@@ -250,6 +250,41 @@ func TestMapKeyTypes(t *testing.T) {
 	require.NoError(t, err)
 }
 
+func TestDuplicateYAMLKeys(t *testing.T) {
+	t.Run("standard YAML unmarshaling should detect duplicate keys as an error", func(t *testing.T) {
+		var data interface{}
+		err := yaml.Unmarshal([]byte(fixture1464), &data)
+		require.Error(t, err)
+		t.Log(err)
+	})
+
+	t.Run("custom YAML unmarshaling should also detect duplicate keys as an error", func(t *testing.T) {
+		_, err := BytesToYAMLDoc([]byte(fixture1464))
+		require.Error(t, err)
+	})
+}
+
+const fixture1464 = `swagger: '2.0'
+info:
+  title: "duplicate yaml"
+  version: "1.0.0"
+paths:
+  /a:
+    get:
+      responses:
+        '200':
+          description: ok
+          schema:
+            $ref: '#/definitions/A'
+definitions:
+  A:
+    properties:
+      label:
+        type: string
+      label:
+        type: string
+`
+
 const fixtures2224 = `definitions:
   Time:
     type: string
