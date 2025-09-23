@@ -60,4 +60,11 @@ type OrderedAdapter interface {
 	OrderedMarshalAdapter
 	OrderedUnmarshalAdapter
 	NewOrderedMap(capacity int) OrderedMap
+
+	// Self-redeem: for [Adapter] s that are allocated from a pool.
+	// The [Adapter] must not be used after calling [Redeem].
+	Redeem()
+
+	// Reset the state of the [Adapter], if any.
+	Reset()
 }

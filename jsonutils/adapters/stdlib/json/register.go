@@ -28,8 +28,8 @@ func Register(dispatcher ifaces.Registrar) {
 			Who:  fmt.Sprintf("%s.%s", t.PkgPath(), t.Name()),
 			What: ifaces.AllCapabilities,
 			Constructor: func() (ifaces.Adapter, func()) {
-				a := BorrowAdapter()
-				return a, a.redeem
+				a := BorrowAdapterIface()
+				return a, a.Redeem
 			},
 			Support: support,
 		})

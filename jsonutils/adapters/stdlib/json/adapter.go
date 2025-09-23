@@ -111,7 +111,12 @@ func (a *Adapter) NewOrderedMap(capacity int) ifaces.OrderedMap {
 	return &m
 }
 
-func (a *Adapter) redeem() {
-	// a becomes immediately unusable once redeemed
+// Redeem the [Adapter] when it comes from a pool.
+//
+// The adapter becomes immediately unusable once redeemed.
+func (a *Adapter) Redeem() {
 	RedeemAdapter(a)
+}
+
+func (a *Adapter) Reset() {
 }
