@@ -1,0 +1,3592 @@
+{
+ "spdxVersion": "SPDX-2.3",
+ "dataLicense": "CC0-1.0",
+ "SPDXID": "SPDXRef-DOCUMENT",
+ "name": "github.com/go-openapi/swag",
+ "documentNamespace": "https://anchore.com/syft/dir/github.com/go-openapi/swag-b2f30315-32ad-474f-b6c2-08fe310c3e16",
+ "creationInfo": {
+  "licenseListVersion": "3.27",
+  "creators": [
+   "Organization: Anchore, Inc",
+   "Tool: syft-1.33.0"
+  ],
+  "created": "2025-10-03T17:07:10Z"
+ },
+ "packages": [
+  {
+   "name": "github.com/go-openapi/swag",
+   "SPDXID": "SPDXRef-Package-go-module-github.com-go-openapi-swag-aaf43cebfad3567d",
+   "versionInfo": "UNKNOWN",
+   "supplier": "NOASSERTION",
+   "downloadLocation": "NOASSERTION",
+   "filesAnalyzed": false,
+   "sourceInfo": "acquired package info from go module information: /benchmarks/go.mod",
+   "licenseConcluded": "Apache-2.0",
+   "licenseDeclared": "NOASSERTION",
+   "copyrightText": "NOASSERTION",
+   "externalRefs": [
+    {
+     "referenceCategory": "SECURITY",
+     "referenceType": "cpe23Type",
+     "referenceLocator": "cpe:2.3:a:go-openapi:swag:*:*:*:*:*:*:*:*"
+    },
+    {
+     "referenceCategory": "SECURITY",
+     "referenceType": "cpe23Type",
+     "referenceLocator": "cpe:2.3:a:go_openapi:swag:*:*:*:*:*:*:*:*"
+    },
+    {
+     "referenceCategory": "SECURITY",
+     "referenceType": "cpe23Type",
+     "referenceLocator": "cpe:2.3:a:go:swag:*:*:*:*:*:*:*:*"
+    },
+    {
+     "referenceCategory": "PACKAGE-MANAGER",
+     "referenceType": "purl",
+     "referenceLocator": "pkg:golang/github.com/go-openapi/swag"
+    }
+   ]
+  },
+  {
+   "name": "github.com/go-openapi/swag",
+   "SPDXID": "SPDXRef-Package-go-module-github.com-go-openapi-swag-d34ea2f5bef8ee55",
+   "versionInfo": "UNKNOWN",
+   "supplier": "NOASSERTION",
+   "downloadLocation": "NOASSERTION",
+   "filesAnalyzed": false,
+   "sourceInfo": "acquired package info from go module information: /go.mod",
+   "licenseConcluded": "Apache-2.0",
+   "licenseDeclared": "NOASSERTION",
+   "copyrightText": "NOASSERTION",
+   "externalRefs": [
+    {
+     "referenceCategory": "SECURITY",
+     "referenceType": "cpe23Type",
+     "referenceLocator": "cpe:2.3:a:go-openapi:swag:*:*:*:*:*:*:*:*"
+    },
+    {
+     "referenceCategory": "SECURITY",
+     "referenceType": "cpe23Type",
+     "referenceLocator": "cpe:2.3:a:go_openapi:swag:*:*:*:*:*:*:*:*"
+    },
+    {
+     "referenceCategory": "SECURITY",
+     "referenceType": "cpe23Type",
+     "referenceLocator": "cpe:2.3:a:go:swag:*:*:*:*:*:*:*:*"
+    },
+    {
+     "referenceCategory": "PACKAGE-MANAGER",
+     "referenceType": "purl",
+     "referenceLocator": "pkg:golang/github.com/go-openapi/swag"
+    }
+   ]
+  },
+  {
+   "name": "github.com/go-openapi/swag/cmdutils",
+   "SPDXID": "SPDXRef-Package-go-module-github.com-go-openapi-swag-cmdutils-45598b79d3d74526",
+   "versionInfo": "UNKNOWN",
+   "supplier": "NOASSERTION",
+   "downloadLocation": "NOASSERTION",
+   "filesAnalyzed": false,
+   "sourceInfo": "acquired package info from go module information: /benchmarks/go.mod",
+   "licenseConcluded": "NOASSERTION",
+   "licenseDeclared": "NOASSERTION",
+   "copyrightText": "NOASSERTION",
+   "externalRefs": [
+    {
+     "referenceCategory": "SECURITY",
+     "referenceType": "cpe23Type",
+     "referenceLocator": "cpe:2.3:a:go-openapi:swag\\/cmdutils:*:*:*:*:*:*:*:*"
+    },
+    {
+     "referenceCategory": "SECURITY",
+     "referenceType": "cpe23Type",
+     "referenceLocator": "cpe:2.3:a:go_openapi:swag\\/cmdutils:*:*:*:*:*:*:*:*"
+    },
+    {
+     "referenceCategory": "SECURITY",
+     "referenceType": "cpe23Type",
+     "referenceLocator": "cpe:2.3:a:go:swag\\/cmdutils:*:*:*:*:*:*:*:*"
+    },
+    {
+     "referenceCategory": "PACKAGE-MANAGER",
+     "referenceType": "purl",
+     "referenceLocator": "pkg:golang/github.com/go-openapi/swag#cmdutils"
+    }
+   ]
+  },
+  {
+   "name": "github.com/go-openapi/swag/cmdutils",
+   "SPDXID": "SPDXRef-Package-go-module-github.com-go-openapi-swag-cmdutils-8d86ad0f0d5d79aa",
+   "versionInfo": "UNKNOWN",
+   "supplier": "NOASSERTION",
+   "downloadLocation": "NOASSERTION",
+   "filesAnalyzed": false,
+   "sourceInfo": "acquired package info from go module information: /go.mod",
+   "licenseConcluded": "NOASSERTION",
+   "licenseDeclared": "NOASSERTION",
+   "copyrightText": "NOASSERTION",
+   "externalRefs": [
+    {
+     "referenceCategory": "SECURITY",
+     "referenceType": "cpe23Type",
+     "referenceLocator": "cpe:2.3:a:go-openapi:swag\\/cmdutils:*:*:*:*:*:*:*:*"
+    },
+    {
+     "referenceCategory": "SECURITY",
+     "referenceType": "cpe23Type",
+     "referenceLocator": "cpe:2.3:a:go_openapi:swag\\/cmdutils:*:*:*:*:*:*:*:*"
+    },
+    {
+     "referenceCategory": "SECURITY",
+     "referenceType": "cpe23Type",
+     "referenceLocator": "cpe:2.3:a:go:swag\\/cmdutils:*:*:*:*:*:*:*:*"
+    },
+    {
+     "referenceCategory": "PACKAGE-MANAGER",
+     "referenceType": "purl",
+     "referenceLocator": "pkg:golang/github.com/go-openapi/swag#cmdutils"
+    }
+   ]
+  },
+  {
+   "name": "github.com/go-openapi/swag/conv",
+   "SPDXID": "SPDXRef-Package-go-module-github.com-go-openapi-swag-conv-0c6b1b3d99b5dcea",
+   "versionInfo": "UNKNOWN",
+   "supplier": "NOASSERTION",
+   "downloadLocation": "NOASSERTION",
+   "filesAnalyzed": false,
+   "sourceInfo": "acquired package info from go module information: /benchmarks/go.mod",
+   "licenseConcluded": "NOASSERTION",
+   "licenseDeclared": "NOASSERTION",
+   "copyrightText": "NOASSERTION",
+   "externalRefs": [
+    {
+     "referenceCategory": "SECURITY",
+     "referenceType": "cpe23Type",
+     "referenceLocator": "cpe:2.3:a:go-openapi:swag\\/conv:*:*:*:*:*:*:*:*"
+    },
+    {
+     "referenceCategory": "SECURITY",
+     "referenceType": "cpe23Type",
+     "referenceLocator": "cpe:2.3:a:go_openapi:swag\\/conv:*:*:*:*:*:*:*:*"
+    },
+    {
+     "referenceCategory": "SECURITY",
+     "referenceType": "cpe23Type",
+     "referenceLocator": "cpe:2.3:a:go:swag\\/conv:*:*:*:*:*:*:*:*"
+    },
+    {
+     "referenceCategory": "PACKAGE-MANAGER",
+     "referenceType": "purl",
+     "referenceLocator": "pkg:golang/github.com/go-openapi/swag#conv"
+    }
+   ]
+  },
+  {
+   "name": "github.com/go-openapi/swag/conv",
+   "SPDXID": "SPDXRef-Package-go-module-github.com-go-openapi-swag-conv-d06f549e2e72b013",
+   "versionInfo": "UNKNOWN",
+   "supplier": "NOASSERTION",
+   "downloadLocation": "NOASSERTION",
+   "filesAnalyzed": false,
+   "sourceInfo": "acquired package info from go module information: /benchmarks/go.mod",
+   "licenseConcluded": "NOASSERTION",
+   "licenseDeclared": "NOASSERTION",
+   "copyrightText": "NOASSERTION",
+   "externalRefs": [
+    {
+     "referenceCategory": "SECURITY",
+     "referenceType": "cpe23Type",
+     "referenceLocator": "cpe:2.3:a:go-openapi:swag\\/conv:*:*:*:*:*:*:*:*"
+    },
+    {
+     "referenceCategory": "SECURITY",
+     "referenceType": "cpe23Type",
+     "referenceLocator": "cpe:2.3:a:go_openapi:swag\\/conv:*:*:*:*:*:*:*:*"
+    },
+    {
+     "referenceCategory": "SECURITY",
+     "referenceType": "cpe23Type",
+     "referenceLocator": "cpe:2.3:a:go:swag\\/conv:*:*:*:*:*:*:*:*"
+    },
+    {
+     "referenceCategory": "PACKAGE-MANAGER",
+     "referenceType": "purl",
+     "referenceLocator": "pkg:golang/github.com/go-openapi/swag#conv"
+    }
+   ]
+  },
+  {
+   "name": "github.com/go-openapi/swag/conv",
+   "SPDXID": "SPDXRef-Package-go-module-github.com-go-openapi-swag-conv-b448a3a84b76aa00",
+   "versionInfo": "UNKNOWN",
+   "supplier": "NOASSERTION",
+   "downloadLocation": "NOASSERTION",
+   "filesAnalyzed": false,
+   "sourceInfo": "acquired package info from go module information: /go.mod",
+   "licenseConcluded": "NOASSERTION",
+   "licenseDeclared": "NOASSERTION",
+   "copyrightText": "NOASSERTION",
+   "externalRefs": [
+    {
+     "referenceCategory": "SECURITY",
+     "referenceType": "cpe23Type",
+     "referenceLocator": "cpe:2.3:a:go-openapi:swag\\/conv:*:*:*:*:*:*:*:*"
+    },
+    {
+     "referenceCategory": "SECURITY",
+     "referenceType": "cpe23Type",
+     "referenceLocator": "cpe:2.3:a:go_openapi:swag\\/conv:*:*:*:*:*:*:*:*"
+    },
+    {
+     "referenceCategory": "SECURITY",
+     "referenceType": "cpe23Type",
+     "referenceLocator": "cpe:2.3:a:go:swag\\/conv:*:*:*:*:*:*:*:*"
+    },
+    {
+     "referenceCategory": "PACKAGE-MANAGER",
+     "referenceType": "purl",
+     "referenceLocator": "pkg:golang/github.com/go-openapi/swag#conv"
+    }
+   ]
+  },
+  {
+   "name": "github.com/go-openapi/swag/conv",
+   "SPDXID": "SPDXRef-Package-go-module-github.com-go-openapi-swag-conv-471d2519aac11aa5",
+   "versionInfo": "UNKNOWN",
+   "supplier": "NOASSERTION",
+   "downloadLocation": "NOASSERTION",
+   "filesAnalyzed": false,
+   "sourceInfo": "acquired package info from go module information: /go.mod",
+   "licenseConcluded": "NOASSERTION",
+   "licenseDeclared": "NOASSERTION",
+   "copyrightText": "NOASSERTION",
+   "externalRefs": [
+    {
+     "referenceCategory": "SECURITY",
+     "referenceType": "cpe23Type",
+     "referenceLocator": "cpe:2.3:a:go-openapi:swag\\/conv:*:*:*:*:*:*:*:*"
+    },
+    {
+     "referenceCategory": "SECURITY",
+     "referenceType": "cpe23Type",
+     "referenceLocator": "cpe:2.3:a:go_openapi:swag\\/conv:*:*:*:*:*:*:*:*"
+    },
+    {
+     "referenceCategory": "SECURITY",
+     "referenceType": "cpe23Type",
+     "referenceLocator": "cpe:2.3:a:go:swag\\/conv:*:*:*:*:*:*:*:*"
+    },
+    {
+     "referenceCategory": "PACKAGE-MANAGER",
+     "referenceType": "purl",
+     "referenceLocator": "pkg:golang/github.com/go-openapi/swag#conv"
+    }
+   ]
+  },
+  {
+   "name": "github.com/go-openapi/swag/fileutils",
+   "SPDXID": "SPDXRef-Package-go-module-github.com-go-openapi-swag-fileutils-f80e181f7334db53",
+   "versionInfo": "UNKNOWN",
+   "supplier": "NOASSERTION",
+   "downloadLocation": "NOASSERTION",
+   "filesAnalyzed": false,
+   "sourceInfo": "acquired package info from go module information: /benchmarks/go.mod",
+   "licenseConcluded": "NOASSERTION",
+   "licenseDeclared": "NOASSERTION",
+   "copyrightText": "NOASSERTION",
+   "externalRefs": [
+    {
+     "referenceCategory": "SECURITY",
+     "referenceType": "cpe23Type",
+     "referenceLocator": "cpe:2.3:a:go-openapi:swag\\/fileutils:*:*:*:*:*:*:*:*"
+    },
+    {
+     "referenceCategory": "SECURITY",
+     "referenceType": "cpe23Type",
+     "referenceLocator": "cpe:2.3:a:go_openapi:swag\\/fileutils:*:*:*:*:*:*:*:*"
+    },
+    {
+     "referenceCategory": "SECURITY",
+     "referenceType": "cpe23Type",
+     "referenceLocator": "cpe:2.3:a:go:swag\\/fileutils:*:*:*:*:*:*:*:*"
+    },
+    {
+     "referenceCategory": "PACKAGE-MANAGER",
+     "referenceType": "purl",
+     "referenceLocator": "pkg:golang/github.com/go-openapi/swag#fileutils"
+    }
+   ]
+  },
+  {
+   "name": "github.com/go-openapi/swag/fileutils",
+   "SPDXID": "SPDXRef-Package-go-module-github.com-go-openapi-swag-fileutils-25527654bd737f93",
+   "versionInfo": "UNKNOWN",
+   "supplier": "NOASSERTION",
+   "downloadLocation": "NOASSERTION",
+   "filesAnalyzed": false,
+   "sourceInfo": "acquired package info from go module information: /go.mod",
+   "licenseConcluded": "NOASSERTION",
+   "licenseDeclared": "NOASSERTION",
+   "copyrightText": "NOASSERTION",
+   "externalRefs": [
+    {
+     "referenceCategory": "SECURITY",
+     "referenceType": "cpe23Type",
+     "referenceLocator": "cpe:2.3:a:go-openapi:swag\\/fileutils:*:*:*:*:*:*:*:*"
+    },
+    {
+     "referenceCategory": "SECURITY",
+     "referenceType": "cpe23Type",
+     "referenceLocator": "cpe:2.3:a:go_openapi:swag\\/fileutils:*:*:*:*:*:*:*:*"
+    },
+    {
+     "referenceCategory": "SECURITY",
+     "referenceType": "cpe23Type",
+     "referenceLocator": "cpe:2.3:a:go:swag\\/fileutils:*:*:*:*:*:*:*:*"
+    },
+    {
+     "referenceCategory": "PACKAGE-MANAGER",
+     "referenceType": "purl",
+     "referenceLocator": "pkg:golang/github.com/go-openapi/swag#fileutils"
+    }
+   ]
+  },
+  {
+   "name": "github.com/go-openapi/swag/jsonname",
+   "SPDXID": "SPDXRef-Package-go-module-github.com-go-openapi-swag-jsonname-b3f6c07c60186420",
+   "versionInfo": "UNKNOWN",
+   "supplier": "NOASSERTION",
+   "downloadLocation": "NOASSERTION",
+   "filesAnalyzed": false,
+   "sourceInfo": "acquired package info from go module information: /benchmarks/go.mod",
+   "licenseConcluded": "NOASSERTION",
+   "licenseDeclared": "NOASSERTION",
+   "copyrightText": "NOASSERTION",
+   "externalRefs": [
+    {
+     "referenceCategory": "SECURITY",
+     "referenceType": "cpe23Type",
+     "referenceLocator": "cpe:2.3:a:go-openapi:swag\\/jsonname:*:*:*:*:*:*:*:*"
+    },
+    {
+     "referenceCategory": "SECURITY",
+     "referenceType": "cpe23Type",
+     "referenceLocator": "cpe:2.3:a:go_openapi:swag\\/jsonname:*:*:*:*:*:*:*:*"
+    },
+    {
+     "referenceCategory": "SECURITY",
+     "referenceType": "cpe23Type",
+     "referenceLocator": "cpe:2.3:a:go:swag\\/jsonname:*:*:*:*:*:*:*:*"
+    },
+    {
+     "referenceCategory": "PACKAGE-MANAGER",
+     "referenceType": "purl",
+     "referenceLocator": "pkg:golang/github.com/go-openapi/swag#jsonname"
+    }
+   ]
+  },
+  {
+   "name": "github.com/go-openapi/swag/jsonname",
+   "SPDXID": "SPDXRef-Package-go-module-github.com-go-openapi-swag-jsonname-d9e912480b499ebb",
+   "versionInfo": "UNKNOWN",
+   "supplier": "NOASSERTION",
+   "downloadLocation": "NOASSERTION",
+   "filesAnalyzed": false,
+   "sourceInfo": "acquired package info from go module information: /go.mod",
+   "licenseConcluded": "NOASSERTION",
+   "licenseDeclared": "NOASSERTION",
+   "copyrightText": "NOASSERTION",
+   "externalRefs": [
+    {
+     "referenceCategory": "SECURITY",
+     "referenceType": "cpe23Type",
+     "referenceLocator": "cpe:2.3:a:go-openapi:swag\\/jsonname:*:*:*:*:*:*:*:*"
+    },
+    {
+     "referenceCategory": "SECURITY",
+     "referenceType": "cpe23Type",
+     "referenceLocator": "cpe:2.3:a:go_openapi:swag\\/jsonname:*:*:*:*:*:*:*:*"
+    },
+    {
+     "referenceCategory": "SECURITY",
+     "referenceType": "cpe23Type",
+     "referenceLocator": "cpe:2.3:a:go:swag\\/jsonname:*:*:*:*:*:*:*:*"
+    },
+    {
+     "referenceCategory": "PACKAGE-MANAGER",
+     "referenceType": "purl",
+     "referenceLocator": "pkg:golang/github.com/go-openapi/swag#jsonname"
+    }
+   ]
+  },
+  {
+   "name": "github.com/go-openapi/swag/jsonutils",
+   "SPDXID": "SPDXRef-Package-go-module-github.com-go-openapi-swag-jsonutils-ed50e53ff66b76de",
+   "versionInfo": "UNKNOWN",
+   "supplier": "NOASSERTION",
+   "downloadLocation": "NOASSERTION",
+   "filesAnalyzed": false,
+   "sourceInfo": "acquired package info from go module information: /benchmarks/go.mod",
+   "licenseConcluded": "NOASSERTION",
+   "licenseDeclared": "NOASSERTION",
+   "copyrightText": "NOASSERTION",
+   "externalRefs": [
+    {
+     "referenceCategory": "SECURITY",
+     "referenceType": "cpe23Type",
+     "referenceLocator": "cpe:2.3:a:go-openapi:swag\\/jsonutils:*:*:*:*:*:*:*:*"
+    },
+    {
+     "referenceCategory": "SECURITY",
+     "referenceType": "cpe23Type",
+     "referenceLocator": "cpe:2.3:a:go_openapi:swag\\/jsonutils:*:*:*:*:*:*:*:*"
+    },
+    {
+     "referenceCategory": "SECURITY",
+     "referenceType": "cpe23Type",
+     "referenceLocator": "cpe:2.3:a:go:swag\\/jsonutils:*:*:*:*:*:*:*:*"
+    },
+    {
+     "referenceCategory": "PACKAGE-MANAGER",
+     "referenceType": "purl",
+     "referenceLocator": "pkg:golang/github.com/go-openapi/swag#jsonutils"
+    }
+   ]
+  },
+  {
+   "name": "github.com/go-openapi/swag/jsonutils",
+   "SPDXID": "SPDXRef-Package-go-module-github.com-go-openapi-swag-jsonutils-0b2977064b5255db",
+   "versionInfo": "UNKNOWN",
+   "supplier": "NOASSERTION",
+   "downloadLocation": "NOASSERTION",
+   "filesAnalyzed": false,
+   "sourceInfo": "acquired package info from go module information: /benchmarks/go.mod",
+   "licenseConcluded": "NOASSERTION",
+   "licenseDeclared": "NOASSERTION",
+   "copyrightText": "NOASSERTION",
+   "externalRefs": [
+    {
+     "referenceCategory": "SECURITY",
+     "referenceType": "cpe23Type",
+     "referenceLocator": "cpe:2.3:a:go-openapi:swag\\/jsonutils:*:*:*:*:*:*:*:*"
+    },
+    {
+     "referenceCategory": "SECURITY",
+     "referenceType": "cpe23Type",
+     "referenceLocator": "cpe:2.3:a:go_openapi:swag\\/jsonutils:*:*:*:*:*:*:*:*"
+    },
+    {
+     "referenceCategory": "SECURITY",
+     "referenceType": "cpe23Type",
+     "referenceLocator": "cpe:2.3:a:go:swag\\/jsonutils:*:*:*:*:*:*:*:*"
+    },
+    {
+     "referenceCategory": "PACKAGE-MANAGER",
+     "referenceType": "purl",
+     "referenceLocator": "pkg:golang/github.com/go-openapi/swag#jsonutils"
+    }
+   ]
+  },
+  {
+   "name": "github.com/go-openapi/swag/jsonutils",
+   "SPDXID": "SPDXRef-Package-go-module-github.com-go-openapi-swag-jsonutils-d63607f3d9c3d740",
+   "versionInfo": "UNKNOWN",
+   "supplier": "NOASSERTION",
+   "downloadLocation": "NOASSERTION",
+   "filesAnalyzed": false,
+   "sourceInfo": "acquired package info from go module information: /go.mod",
+   "licenseConcluded": "NOASSERTION",
+   "licenseDeclared": "NOASSERTION",
+   "copyrightText": "NOASSERTION",
+   "externalRefs": [
+    {
+     "referenceCategory": "SECURITY",
+     "referenceType": "cpe23Type",
+     "referenceLocator": "cpe:2.3:a:go-openapi:swag\\/jsonutils:*:*:*:*:*:*:*:*"
+    },
+    {
+     "referenceCategory": "SECURITY",
+     "referenceType": "cpe23Type",
+     "referenceLocator": "cpe:2.3:a:go_openapi:swag\\/jsonutils:*:*:*:*:*:*:*:*"
+    },
+    {
+     "referenceCategory": "SECURITY",
+     "referenceType": "cpe23Type",
+     "referenceLocator": "cpe:2.3:a:go:swag\\/jsonutils:*:*:*:*:*:*:*:*"
+    },
+    {
+     "referenceCategory": "PACKAGE-MANAGER",
+     "referenceType": "purl",
+     "referenceLocator": "pkg:golang/github.com/go-openapi/swag#jsonutils"
+    }
+   ]
+  },
+  {
+   "name": "github.com/go-openapi/swag/jsonutils",
+   "SPDXID": "SPDXRef-Package-go-module-github.com-go-openapi-swag-jsonutils-48e17803d48f9b3d",
+   "versionInfo": "UNKNOWN",
+   "supplier": "NOASSERTION",
+   "downloadLocation": "NOASSERTION",
+   "filesAnalyzed": false,
+   "sourceInfo": "acquired package info from go module information: /go.mod",
+   "licenseConcluded": "NOASSERTION",
+   "licenseDeclared": "NOASSERTION",
+   "copyrightText": "NOASSERTION",
+   "externalRefs": [
+    {
+     "referenceCategory": "SECURITY",
+     "referenceType": "cpe23Type",
+     "referenceLocator": "cpe:2.3:a:go-openapi:swag\\/jsonutils:*:*:*:*:*:*:*:*"
+    },
+    {
+     "referenceCategory": "SECURITY",
+     "referenceType": "cpe23Type",
+     "referenceLocator": "cpe:2.3:a:go_openapi:swag\\/jsonutils:*:*:*:*:*:*:*:*"
+    },
+    {
+     "referenceCategory": "SECURITY",
+     "referenceType": "cpe23Type",
+     "referenceLocator": "cpe:2.3:a:go:swag\\/jsonutils:*:*:*:*:*:*:*:*"
+    },
+    {
+     "referenceCategory": "PACKAGE-MANAGER",
+     "referenceType": "purl",
+     "referenceLocator": "pkg:golang/github.com/go-openapi/swag#jsonutils"
+    }
+   ]
+  },
+  {
+   "name": "github.com/go-openapi/swag/jsonutils/adapters/easyjson",
+   "SPDXID": "SPDXRef-Package-go-module-github.com-go-openapi-swag-jsonutils-adapters-easyjson-f1a777ed25920473",
+   "versionInfo": "UNKNOWN",
+   "supplier": "NOASSERTION",
+   "downloadLocation": "NOASSERTION",
+   "filesAnalyzed": false,
+   "sourceInfo": "acquired package info from go module information: /benchmarks/go.mod",
+   "licenseConcluded": "NOASSERTION",
+   "licenseDeclared": "NOASSERTION",
+   "copyrightText": "NOASSERTION",
+   "externalRefs": [
+    {
+     "referenceCategory": "SECURITY",
+     "referenceType": "cpe23Type",
+     "referenceLocator": "cpe:2.3:a:go-openapi:swag\\/jsonutils\\/adapters\\/easyjson:*:*:*:*:*:*:*:*"
+    },
+    {
+     "referenceCategory": "SECURITY",
+     "referenceType": "cpe23Type",
+     "referenceLocator": "cpe:2.3:a:go_openapi:swag\\/jsonutils\\/adapters\\/easyjson:*:*:*:*:*:*:*:*"
+    },
+    {
+     "referenceCategory": "SECURITY",
+     "referenceType": "cpe23Type",
+     "referenceLocator": "cpe:2.3:a:go:swag\\/jsonutils\\/adapters\\/easyjson:*:*:*:*:*:*:*:*"
+    },
+    {
+     "referenceCategory": "PACKAGE-MANAGER",
+     "referenceType": "purl",
+     "referenceLocator": "pkg:golang/github.com/go-openapi/swag#jsonutils/adapters/easyjson"
+    }
+   ]
+  },
+  {
+   "name": "github.com/go-openapi/swag/jsonutils/adapters/easyjson",
+   "SPDXID": "SPDXRef-Package-go-module-github.com-go-openapi-swag-jsonutils-adapters-easyjson-16dce97cfbf9dd42",
+   "versionInfo": "UNKNOWN",
+   "supplier": "NOASSERTION",
+   "downloadLocation": "NOASSERTION",
+   "filesAnalyzed": false,
+   "sourceInfo": "acquired package info from go module information: /benchmarks/go.mod",
+   "licenseConcluded": "NOASSERTION",
+   "licenseDeclared": "NOASSERTION",
+   "copyrightText": "NOASSERTION",
+   "externalRefs": [
+    {
+     "referenceCategory": "SECURITY",
+     "referenceType": "cpe23Type",
+     "referenceLocator": "cpe:2.3:a:go-openapi:swag\\/jsonutils\\/adapters\\/easyjson:*:*:*:*:*:*:*:*"
+    },
+    {
+     "referenceCategory": "SECURITY",
+     "referenceType": "cpe23Type",
+     "referenceLocator": "cpe:2.3:a:go_openapi:swag\\/jsonutils\\/adapters\\/easyjson:*:*:*:*:*:*:*:*"
+    },
+    {
+     "referenceCategory": "SECURITY",
+     "referenceType": "cpe23Type",
+     "referenceLocator": "cpe:2.3:a:go:swag\\/jsonutils\\/adapters\\/easyjson:*:*:*:*:*:*:*:*"
+    },
+    {
+     "referenceCategory": "PACKAGE-MANAGER",
+     "referenceType": "purl",
+     "referenceLocator": "pkg:golang/github.com/go-openapi/swag#jsonutils/adapters/easyjson"
+    }
+   ]
+  },
+  {
+   "name": "github.com/go-openapi/swag/jsonutils/adapters/easyjson",
+   "SPDXID": "SPDXRef-Package-go-module-github.com-go-openapi-swag-jsonutils-adapters-easyjson-c619ee3ee54a6cf1",
+   "versionInfo": "UNKNOWN",
+   "supplier": "NOASSERTION",
+   "downloadLocation": "NOASSERTION",
+   "filesAnalyzed": false,
+   "sourceInfo": "acquired package info from go module information: /go.mod",
+   "licenseConcluded": "NOASSERTION",
+   "licenseDeclared": "NOASSERTION",
+   "copyrightText": "NOASSERTION",
+   "externalRefs": [
+    {
+     "referenceCategory": "SECURITY",
+     "referenceType": "cpe23Type",
+     "referenceLocator": "cpe:2.3:a:go-openapi:swag\\/jsonutils\\/adapters\\/easyjson:*:*:*:*:*:*:*:*"
+    },
+    {
+     "referenceCategory": "SECURITY",
+     "referenceType": "cpe23Type",
+     "referenceLocator": "cpe:2.3:a:go_openapi:swag\\/jsonutils\\/adapters\\/easyjson:*:*:*:*:*:*:*:*"
+    },
+    {
+     "referenceCategory": "SECURITY",
+     "referenceType": "cpe23Type",
+     "referenceLocator": "cpe:2.3:a:go:swag\\/jsonutils\\/adapters\\/easyjson:*:*:*:*:*:*:*:*"
+    },
+    {
+     "referenceCategory": "PACKAGE-MANAGER",
+     "referenceType": "purl",
+     "referenceLocator": "pkg:golang/github.com/go-openapi/swag#jsonutils/adapters/easyjson"
+    }
+   ]
+  },
+  {
+   "name": "github.com/go-openapi/swag/jsonutils/adapters/easyjson",
+   "SPDXID": "SPDXRef-Package-go-module-github.com-go-openapi-swag-jsonutils-adapters-easyjson-59ea66d03e56e9b8",
+   "versionInfo": "UNKNOWN",
+   "supplier": "NOASSERTION",
+   "downloadLocation": "NOASSERTION",
+   "filesAnalyzed": false,
+   "sourceInfo": "acquired package info from go module information: /go.mod",
+   "licenseConcluded": "NOASSERTION",
+   "licenseDeclared": "NOASSERTION",
+   "copyrightText": "NOASSERTION",
+   "externalRefs": [
+    {
+     "referenceCategory": "SECURITY",
+     "referenceType": "cpe23Type",
+     "referenceLocator": "cpe:2.3:a:go-openapi:swag\\/jsonutils\\/adapters\\/easyjson:*:*:*:*:*:*:*:*"
+    },
+    {
+     "referenceCategory": "SECURITY",
+     "referenceType": "cpe23Type",
+     "referenceLocator": "cpe:2.3:a:go_openapi:swag\\/jsonutils\\/adapters\\/easyjson:*:*:*:*:*:*:*:*"
+    },
+    {
+     "referenceCategory": "SECURITY",
+     "referenceType": "cpe23Type",
+     "referenceLocator": "cpe:2.3:a:go:swag\\/jsonutils\\/adapters\\/easyjson:*:*:*:*:*:*:*:*"
+    },
+    {
+     "referenceCategory": "PACKAGE-MANAGER",
+     "referenceType": "purl",
+     "referenceLocator": "pkg:golang/github.com/go-openapi/swag#jsonutils/adapters/easyjson"
+    }
+   ]
+  },
+  {
+   "name": "github.com/go-openapi/swag/jsonutils/adapters/testintegration",
+   "SPDXID": "SPDXRef-Package-go-module-github.com-go-openapi-swag-jsonutils-adapters-testintegration-a2d49e12db6580f9",
+   "versionInfo": "UNKNOWN",
+   "supplier": "NOASSERTION",
+   "downloadLocation": "NOASSERTION",
+   "filesAnalyzed": false,
+   "sourceInfo": "acquired package info from go module information: /benchmarks/go.mod",
+   "licenseConcluded": "NOASSERTION",
+   "licenseDeclared": "NOASSERTION",
+   "copyrightText": "NOASSERTION",
+   "externalRefs": [
+    {
+     "referenceCategory": "SECURITY",
+     "referenceType": "cpe23Type",
+     "referenceLocator": "cpe:2.3:a:go-openapi:swag\\/jsonutils\\/adapters\\/testintegration:*:*:*:*:*:*:*:*"
+    },
+    {
+     "referenceCategory": "SECURITY",
+     "referenceType": "cpe23Type",
+     "referenceLocator": "cpe:2.3:a:go_openapi:swag\\/jsonutils\\/adapters\\/testintegration:*:*:*:*:*:*:*:*"
+    },
+    {
+     "referenceCategory": "SECURITY",
+     "referenceType": "cpe23Type",
+     "referenceLocator": "cpe:2.3:a:go:swag\\/jsonutils\\/adapters\\/testintegration:*:*:*:*:*:*:*:*"
+    },
+    {
+     "referenceCategory": "PACKAGE-MANAGER",
+     "referenceType": "purl",
+     "referenceLocator": "pkg:golang/github.com/go-openapi/swag#jsonutils/adapters/testintegration"
+    }
+   ]
+  },
+  {
+   "name": "github.com/go-openapi/swag/jsonutils/adapters/testintegration",
+   "SPDXID": "SPDXRef-Package-go-module-github.com-go-openapi-swag-jsonutils-adapters-testintegration-bad7841ac742fba7",
+   "versionInfo": "UNKNOWN",
+   "supplier": "NOASSERTION",
+   "downloadLocation": "NOASSERTION",
+   "filesAnalyzed": false,
+   "sourceInfo": "acquired package info from go module information: /go.mod",
+   "licenseConcluded": "NOASSERTION",
+   "licenseDeclared": "NOASSERTION",
+   "copyrightText": "NOASSERTION",
+   "externalRefs": [
+    {
+     "referenceCategory": "SECURITY",
+     "referenceType": "cpe23Type",
+     "referenceLocator": "cpe:2.3:a:go-openapi:swag\\/jsonutils\\/adapters\\/testintegration:*:*:*:*:*:*:*:*"
+    },
+    {
+     "referenceCategory": "SECURITY",
+     "referenceType": "cpe23Type",
+     "referenceLocator": "cpe:2.3:a:go_openapi:swag\\/jsonutils\\/adapters\\/testintegration:*:*:*:*:*:*:*:*"
+    },
+    {
+     "referenceCategory": "SECURITY",
+     "referenceType": "cpe23Type",
+     "referenceLocator": "cpe:2.3:a:go:swag\\/jsonutils\\/adapters\\/testintegration:*:*:*:*:*:*:*:*"
+    },
+    {
+     "referenceCategory": "PACKAGE-MANAGER",
+     "referenceType": "purl",
+     "referenceLocator": "pkg:golang/github.com/go-openapi/swag#jsonutils/adapters/testintegration"
+    }
+   ]
+  },
+  {
+   "name": "github.com/go-openapi/swag/jsonutils/adapters/testintegration/benchmarks",
+   "SPDXID": "SPDXRef-Package-go-module-github.com-go-openapi-swag-jsonutils-adapters-testintegration-benchmarks-eb8a02d6051ed8d3",
+   "versionInfo": "UNKNOWN",
+   "supplier": "NOASSERTION",
+   "downloadLocation": "NOASSERTION",
+   "filesAnalyzed": false,
+   "sourceInfo": "acquired package info from go module information: /benchmarks/go.mod",
+   "licenseConcluded": "NOASSERTION",
+   "licenseDeclared": "NOASSERTION",
+   "copyrightText": "NOASSERTION",
+   "externalRefs": [
+    {
+     "referenceCategory": "SECURITY",
+     "referenceType": "cpe23Type",
+     "referenceLocator": "cpe:2.3:a:go-openapi:swag\\/jsonutils\\/adapters\\/testintegration\\/benchmarks:*:*:*:*:*:*:*:*"
+    },
+    {
+     "referenceCategory": "SECURITY",
+     "referenceType": "cpe23Type",
+     "referenceLocator": "cpe:2.3:a:go_openapi:swag\\/jsonutils\\/adapters\\/testintegration\\/benchmarks:*:*:*:*:*:*:*:*"
+    },
+    {
+     "referenceCategory": "SECURITY",
+     "referenceType": "cpe23Type",
+     "referenceLocator": "cpe:2.3:a:go:swag\\/jsonutils\\/adapters\\/testintegration\\/benchmarks:*:*:*:*:*:*:*:*"
+    },
+    {
+     "referenceCategory": "PACKAGE-MANAGER",
+     "referenceType": "purl",
+     "referenceLocator": "pkg:golang/github.com/go-openapi/swag#jsonutils/adapters/testintegration/benchmarks"
+    }
+   ]
+  },
+  {
+   "name": "github.com/go-openapi/swag/jsonutils/adapters/testintegration/benchmarks",
+   "SPDXID": "SPDXRef-Package-go-module-github.com-go-openapi-swag-jsonutils-adapters-testintegration-benchmarks-5f51ed1869698f45",
+   "versionInfo": "UNKNOWN",
+   "supplier": "NOASSERTION",
+   "downloadLocation": "NOASSERTION",
+   "filesAnalyzed": false,
+   "sourceInfo": "acquired package info from go module information: /go.mod",
+   "licenseConcluded": "NOASSERTION",
+   "licenseDeclared": "NOASSERTION",
+   "copyrightText": "NOASSERTION",
+   "externalRefs": [
+    {
+     "referenceCategory": "SECURITY",
+     "referenceType": "cpe23Type",
+     "referenceLocator": "cpe:2.3:a:go-openapi:swag\\/jsonutils\\/adapters\\/testintegration\\/benchmarks:*:*:*:*:*:*:*:*"
+    },
+    {
+     "referenceCategory": "SECURITY",
+     "referenceType": "cpe23Type",
+     "referenceLocator": "cpe:2.3:a:go_openapi:swag\\/jsonutils\\/adapters\\/testintegration\\/benchmarks:*:*:*:*:*:*:*:*"
+    },
+    {
+     "referenceCategory": "SECURITY",
+     "referenceType": "cpe23Type",
+     "referenceLocator": "cpe:2.3:a:go:swag\\/jsonutils\\/adapters\\/testintegration\\/benchmarks:*:*:*:*:*:*:*:*"
+    },
+    {
+     "referenceCategory": "PACKAGE-MANAGER",
+     "referenceType": "purl",
+     "referenceLocator": "pkg:golang/github.com/go-openapi/swag#jsonutils/adapters/testintegration/benchmarks"
+    }
+   ]
+  },
+  {
+   "name": "github.com/go-openapi/swag/jsonutils/fixtures_test",
+   "SPDXID": "SPDXRef-Package-go-module-github.com-go-openapi-swag-jsonutils-fixtures-test-f56896aaa1b00dd4",
+   "versionInfo": "UNKNOWN",
+   "supplier": "NOASSERTION",
+   "downloadLocation": "NOASSERTION",
+   "filesAnalyzed": false,
+   "sourceInfo": "acquired package info from go module information: /benchmarks/go.mod",
+   "licenseConcluded": "NOASSERTION",
+   "licenseDeclared": "NOASSERTION",
+   "copyrightText": "NOASSERTION",
+   "externalRefs": [
+    {
+     "referenceCategory": "SECURITY",
+     "referenceType": "cpe23Type",
+     "referenceLocator": "cpe:2.3:a:go-openapi:swag\\/jsonutils\\/fixtures-test:*:*:*:*:*:*:*:*"
+    },
+    {
+     "referenceCategory": "SECURITY",
+     "referenceType": "cpe23Type",
+     "referenceLocator": "cpe:2.3:a:go-openapi:swag\\/jsonutils\\/fixtures_test:*:*:*:*:*:*:*:*"
+    },
+    {
+     "referenceCategory": "SECURITY",
+     "referenceType": "cpe23Type",
+     "referenceLocator": "cpe:2.3:a:go_openapi:swag\\/jsonutils\\/fixtures-test:*:*:*:*:*:*:*:*"
+    },
+    {
+     "referenceCategory": "SECURITY",
+     "referenceType": "cpe23Type",
+     "referenceLocator": "cpe:2.3:a:go_openapi:swag\\/jsonutils\\/fixtures_test:*:*:*:*:*:*:*:*"
+    },
+    {
+     "referenceCategory": "SECURITY",
+     "referenceType": "cpe23Type",
+     "referenceLocator": "cpe:2.3:a:go:swag\\/jsonutils\\/fixtures-test:*:*:*:*:*:*:*:*"
+    },
+    {
+     "referenceCategory": "SECURITY",
+     "referenceType": "cpe23Type",
+     "referenceLocator": "cpe:2.3:a:go:swag\\/jsonutils\\/fixtures_test:*:*:*:*:*:*:*:*"
+    },
+    {
+     "referenceCategory": "PACKAGE-MANAGER",
+     "referenceType": "purl",
+     "referenceLocator": "pkg:golang/github.com/go-openapi/swag#jsonutils/fixtures_test"
+    }
+   ]
+  },
+  {
+   "name": "github.com/go-openapi/swag/jsonutils/fixtures_test",
+   "SPDXID": "SPDXRef-Package-go-module-github.com-go-openapi-swag-jsonutils-fixtures-test-4f0c2408fa965ecd",
+   "versionInfo": "UNKNOWN",
+   "supplier": "NOASSERTION",
+   "downloadLocation": "NOASSERTION",
+   "filesAnalyzed": false,
+   "sourceInfo": "acquired package info from go module information: /benchmarks/go.mod",
+   "licenseConcluded": "NOASSERTION",
+   "licenseDeclared": "NOASSERTION",
+   "copyrightText": "NOASSERTION",
+   "externalRefs": [
+    {
+     "referenceCategory": "SECURITY",
+     "referenceType": "cpe23Type",
+     "referenceLocator": "cpe:2.3:a:go-openapi:swag\\/jsonutils\\/fixtures-test:*:*:*:*:*:*:*:*"
+    },
+    {
+     "referenceCategory": "SECURITY",
+     "referenceType": "cpe23Type",
+     "referenceLocator": "cpe:2.3:a:go-openapi:swag\\/jsonutils\\/fixtures_test:*:*:*:*:*:*:*:*"
+    },
+    {
+     "referenceCategory": "SECURITY",
+     "referenceType": "cpe23Type",
+     "referenceLocator": "cpe:2.3:a:go_openapi:swag\\/jsonutils\\/fixtures-test:*:*:*:*:*:*:*:*"
+    },
+    {
+     "referenceCategory": "SECURITY",
+     "referenceType": "cpe23Type",
+     "referenceLocator": "cpe:2.3:a:go_openapi:swag\\/jsonutils\\/fixtures_test:*:*:*:*:*:*:*:*"
+    },
+    {
+     "referenceCategory": "SECURITY",
+     "referenceType": "cpe23Type",
+     "referenceLocator": "cpe:2.3:a:go:swag\\/jsonutils\\/fixtures-test:*:*:*:*:*:*:*:*"
+    },
+    {
+     "referenceCategory": "SECURITY",
+     "referenceType": "cpe23Type",
+     "referenceLocator": "cpe:2.3:a:go:swag\\/jsonutils\\/fixtures_test:*:*:*:*:*:*:*:*"
+    },
+    {
+     "referenceCategory": "PACKAGE-MANAGER",
+     "referenceType": "purl",
+     "referenceLocator": "pkg:golang/github.com/go-openapi/swag#jsonutils/fixtures_test"
+    }
+   ]
+  },
+  {
+   "name": "github.com/go-openapi/swag/jsonutils/fixtures_test",
+   "SPDXID": "SPDXRef-Package-go-module-github.com-go-openapi-swag-jsonutils-fixtures-test-d55acba80d8bf103",
+   "versionInfo": "UNKNOWN",
+   "supplier": "NOASSERTION",
+   "downloadLocation": "NOASSERTION",
+   "filesAnalyzed": false,
+   "sourceInfo": "acquired package info from go module information: /go.mod",
+   "licenseConcluded": "NOASSERTION",
+   "licenseDeclared": "NOASSERTION",
+   "copyrightText": "NOASSERTION",
+   "externalRefs": [
+    {
+     "referenceCategory": "SECURITY",
+     "referenceType": "cpe23Type",
+     "referenceLocator": "cpe:2.3:a:go-openapi:swag\\/jsonutils\\/fixtures-test:*:*:*:*:*:*:*:*"
+    },
+    {
+     "referenceCategory": "SECURITY",
+     "referenceType": "cpe23Type",
+     "referenceLocator": "cpe:2.3:a:go-openapi:swag\\/jsonutils\\/fixtures_test:*:*:*:*:*:*:*:*"
+    },
+    {
+     "referenceCategory": "SECURITY",
+     "referenceType": "cpe23Type",
+     "referenceLocator": "cpe:2.3:a:go_openapi:swag\\/jsonutils\\/fixtures-test:*:*:*:*:*:*:*:*"
+    },
+    {
+     "referenceCategory": "SECURITY",
+     "referenceType": "cpe23Type",
+     "referenceLocator": "cpe:2.3:a:go_openapi:swag\\/jsonutils\\/fixtures_test:*:*:*:*:*:*:*:*"
+    },
+    {
+     "referenceCategory": "SECURITY",
+     "referenceType": "cpe23Type",
+     "referenceLocator": "cpe:2.3:a:go:swag\\/jsonutils\\/fixtures-test:*:*:*:*:*:*:*:*"
+    },
+    {
+     "referenceCategory": "SECURITY",
+     "referenceType": "cpe23Type",
+     "referenceLocator": "cpe:2.3:a:go:swag\\/jsonutils\\/fixtures_test:*:*:*:*:*:*:*:*"
+    },
+    {
+     "referenceCategory": "PACKAGE-MANAGER",
+     "referenceType": "purl",
+     "referenceLocator": "pkg:golang/github.com/go-openapi/swag#jsonutils/fixtures_test"
+    }
+   ]
+  },
+  {
+   "name": "github.com/go-openapi/swag/jsonutils/fixtures_test",
+   "SPDXID": "SPDXRef-Package-go-module-github.com-go-openapi-swag-jsonutils-fixtures-test-2e1fdc0a905e7cd6",
+   "versionInfo": "UNKNOWN",
+   "supplier": "NOASSERTION",
+   "downloadLocation": "NOASSERTION",
+   "filesAnalyzed": false,
+   "sourceInfo": "acquired package info from go module information: /go.mod",
+   "licenseConcluded": "NOASSERTION",
+   "licenseDeclared": "NOASSERTION",
+   "copyrightText": "NOASSERTION",
+   "externalRefs": [
+    {
+     "referenceCategory": "SECURITY",
+     "referenceType": "cpe23Type",
+     "referenceLocator": "cpe:2.3:a:go-openapi:swag\\/jsonutils\\/fixtures-test:*:*:*:*:*:*:*:*"
+    },
+    {
+     "referenceCategory": "SECURITY",
+     "referenceType": "cpe23Type",
+     "referenceLocator": "cpe:2.3:a:go-openapi:swag\\/jsonutils\\/fixtures_test:*:*:*:*:*:*:*:*"
+    },
+    {
+     "referenceCategory": "SECURITY",
+     "referenceType": "cpe23Type",
+     "referenceLocator": "cpe:2.3:a:go_openapi:swag\\/jsonutils\\/fixtures-test:*:*:*:*:*:*:*:*"
+    },
+    {
+     "referenceCategory": "SECURITY",
+     "referenceType": "cpe23Type",
+     "referenceLocator": "cpe:2.3:a:go_openapi:swag\\/jsonutils\\/fixtures_test:*:*:*:*:*:*:*:*"
+    },
+    {
+     "referenceCategory": "SECURITY",
+     "referenceType": "cpe23Type",
+     "referenceLocator": "cpe:2.3:a:go:swag\\/jsonutils\\/fixtures-test:*:*:*:*:*:*:*:*"
+    },
+    {
+     "referenceCategory": "SECURITY",
+     "referenceType": "cpe23Type",
+     "referenceLocator": "cpe:2.3:a:go:swag\\/jsonutils\\/fixtures_test:*:*:*:*:*:*:*:*"
+    },
+    {
+     "referenceCategory": "PACKAGE-MANAGER",
+     "referenceType": "purl",
+     "referenceLocator": "pkg:golang/github.com/go-openapi/swag#jsonutils/fixtures_test"
+    }
+   ]
+  },
+  {
+   "name": "github.com/go-openapi/swag/loading",
+   "SPDXID": "SPDXRef-Package-go-module-github.com-go-openapi-swag-loading-b4c65ccd464926d1",
+   "versionInfo": "UNKNOWN",
+   "supplier": "NOASSERTION",
+   "downloadLocation": "NOASSERTION",
+   "filesAnalyzed": false,
+   "sourceInfo": "acquired package info from go module information: /benchmarks/go.mod",
+   "licenseConcluded": "NOASSERTION",
+   "licenseDeclared": "NOASSERTION",
+   "copyrightText": "NOASSERTION",
+   "externalRefs": [
+    {
+     "referenceCategory": "SECURITY",
+     "referenceType": "cpe23Type",
+     "referenceLocator": "cpe:2.3:a:go-openapi:swag\\/loading:*:*:*:*:*:*:*:*"
+    },
+    {
+     "referenceCategory": "SECURITY",
+     "referenceType": "cpe23Type",
+     "referenceLocator": "cpe:2.3:a:go_openapi:swag\\/loading:*:*:*:*:*:*:*:*"
+    },
+    {
+     "referenceCategory": "SECURITY",
+     "referenceType": "cpe23Type",
+     "referenceLocator": "cpe:2.3:a:go:swag\\/loading:*:*:*:*:*:*:*:*"
+    },
+    {
+     "referenceCategory": "PACKAGE-MANAGER",
+     "referenceType": "purl",
+     "referenceLocator": "pkg:golang/github.com/go-openapi/swag#loading"
+    }
+   ]
+  },
+  {
+   "name": "github.com/go-openapi/swag/loading",
+   "SPDXID": "SPDXRef-Package-go-module-github.com-go-openapi-swag-loading-66bf3ffcdd565782",
+   "versionInfo": "UNKNOWN",
+   "supplier": "NOASSERTION",
+   "downloadLocation": "NOASSERTION",
+   "filesAnalyzed": false,
+   "sourceInfo": "acquired package info from go module information: /go.mod",
+   "licenseConcluded": "NOASSERTION",
+   "licenseDeclared": "NOASSERTION",
+   "copyrightText": "NOASSERTION",
+   "externalRefs": [
+    {
+     "referenceCategory": "SECURITY",
+     "referenceType": "cpe23Type",
+     "referenceLocator": "cpe:2.3:a:go-openapi:swag\\/loading:*:*:*:*:*:*:*:*"
+    },
+    {
+     "referenceCategory": "SECURITY",
+     "referenceType": "cpe23Type",
+     "referenceLocator": "cpe:2.3:a:go_openapi:swag\\/loading:*:*:*:*:*:*:*:*"
+    },
+    {
+     "referenceCategory": "SECURITY",
+     "referenceType": "cpe23Type",
+     "referenceLocator": "cpe:2.3:a:go:swag\\/loading:*:*:*:*:*:*:*:*"
+    },
+    {
+     "referenceCategory": "PACKAGE-MANAGER",
+     "referenceType": "purl",
+     "referenceLocator": "pkg:golang/github.com/go-openapi/swag#loading"
+    }
+   ]
+  },
+  {
+   "name": "github.com/go-openapi/swag/mangling",
+   "SPDXID": "SPDXRef-Package-go-module-github.com-go-openapi-swag-mangling-c93c2d0d56dc5054",
+   "versionInfo": "UNKNOWN",
+   "supplier": "NOASSERTION",
+   "downloadLocation": "NOASSERTION",
+   "filesAnalyzed": false,
+   "sourceInfo": "acquired package info from go module information: /benchmarks/go.mod",
+   "licenseConcluded": "NOASSERTION",
+   "licenseDeclared": "NOASSERTION",
+   "copyrightText": "NOASSERTION",
+   "externalRefs": [
+    {
+     "referenceCategory": "SECURITY",
+     "referenceType": "cpe23Type",
+     "referenceLocator": "cpe:2.3:a:go-openapi:swag\\/mangling:*:*:*:*:*:*:*:*"
+    },
+    {
+     "referenceCategory": "SECURITY",
+     "referenceType": "cpe23Type",
+     "referenceLocator": "cpe:2.3:a:go_openapi:swag\\/mangling:*:*:*:*:*:*:*:*"
+    },
+    {
+     "referenceCategory": "SECURITY",
+     "referenceType": "cpe23Type",
+     "referenceLocator": "cpe:2.3:a:go:swag\\/mangling:*:*:*:*:*:*:*:*"
+    },
+    {
+     "referenceCategory": "PACKAGE-MANAGER",
+     "referenceType": "purl",
+     "referenceLocator": "pkg:golang/github.com/go-openapi/swag#mangling"
+    }
+   ]
+  },
+  {
+   "name": "github.com/go-openapi/swag/mangling",
+   "SPDXID": "SPDXRef-Package-go-module-github.com-go-openapi-swag-mangling-70a03e9ff24e3418",
+   "versionInfo": "UNKNOWN",
+   "supplier": "NOASSERTION",
+   "downloadLocation": "NOASSERTION",
+   "filesAnalyzed": false,
+   "sourceInfo": "acquired package info from go module information: /go.mod",
+   "licenseConcluded": "NOASSERTION",
+   "licenseDeclared": "NOASSERTION",
+   "copyrightText": "NOASSERTION",
+   "externalRefs": [
+    {
+     "referenceCategory": "SECURITY",
+     "referenceType": "cpe23Type",
+     "referenceLocator": "cpe:2.3:a:go-openapi:swag\\/mangling:*:*:*:*:*:*:*:*"
+    },
+    {
+     "referenceCategory": "SECURITY",
+     "referenceType": "cpe23Type",
+     "referenceLocator": "cpe:2.3:a:go_openapi:swag\\/mangling:*:*:*:*:*:*:*:*"
+    },
+    {
+     "referenceCategory": "SECURITY",
+     "referenceType": "cpe23Type",
+     "referenceLocator": "cpe:2.3:a:go:swag\\/mangling:*:*:*:*:*:*:*:*"
+    },
+    {
+     "referenceCategory": "PACKAGE-MANAGER",
+     "referenceType": "purl",
+     "referenceLocator": "pkg:golang/github.com/go-openapi/swag#mangling"
+    }
+   ]
+  },
+  {
+   "name": "github.com/go-openapi/swag/netutils",
+   "SPDXID": "SPDXRef-Package-go-module-github.com-go-openapi-swag-netutils-0da65148a5493ee5",
+   "versionInfo": "UNKNOWN",
+   "supplier": "NOASSERTION",
+   "downloadLocation": "NOASSERTION",
+   "filesAnalyzed": false,
+   "sourceInfo": "acquired package info from go module information: /benchmarks/go.mod",
+   "licenseConcluded": "NOASSERTION",
+   "licenseDeclared": "NOASSERTION",
+   "copyrightText": "NOASSERTION",
+   "externalRefs": [
+    {
+     "referenceCategory": "SECURITY",
+     "referenceType": "cpe23Type",
+     "referenceLocator": "cpe:2.3:a:go-openapi:swag\\/netutils:*:*:*:*:*:*:*:*"
+    },
+    {
+     "referenceCategory": "SECURITY",
+     "referenceType": "cpe23Type",
+     "referenceLocator": "cpe:2.3:a:go_openapi:swag\\/netutils:*:*:*:*:*:*:*:*"
+    },
+    {
+     "referenceCategory": "SECURITY",
+     "referenceType": "cpe23Type",
+     "referenceLocator": "cpe:2.3:a:go:swag\\/netutils:*:*:*:*:*:*:*:*"
+    },
+    {
+     "referenceCategory": "PACKAGE-MANAGER",
+     "referenceType": "purl",
+     "referenceLocator": "pkg:golang/github.com/go-openapi/swag#netutils"
+    }
+   ]
+  },
+  {
+   "name": "github.com/go-openapi/swag/netutils",
+   "SPDXID": "SPDXRef-Package-go-module-github.com-go-openapi-swag-netutils-9995fc693aac8dd0",
+   "versionInfo": "UNKNOWN",
+   "supplier": "NOASSERTION",
+   "downloadLocation": "NOASSERTION",
+   "filesAnalyzed": false,
+   "sourceInfo": "acquired package info from go module information: /go.mod",
+   "licenseConcluded": "NOASSERTION",
+   "licenseDeclared": "NOASSERTION",
+   "copyrightText": "NOASSERTION",
+   "externalRefs": [
+    {
+     "referenceCategory": "SECURITY",
+     "referenceType": "cpe23Type",
+     "referenceLocator": "cpe:2.3:a:go-openapi:swag\\/netutils:*:*:*:*:*:*:*:*"
+    },
+    {
+     "referenceCategory": "SECURITY",
+     "referenceType": "cpe23Type",
+     "referenceLocator": "cpe:2.3:a:go_openapi:swag\\/netutils:*:*:*:*:*:*:*:*"
+    },
+    {
+     "referenceCategory": "SECURITY",
+     "referenceType": "cpe23Type",
+     "referenceLocator": "cpe:2.3:a:go:swag\\/netutils:*:*:*:*:*:*:*:*"
+    },
+    {
+     "referenceCategory": "PACKAGE-MANAGER",
+     "referenceType": "purl",
+     "referenceLocator": "pkg:golang/github.com/go-openapi/swag#netutils"
+    }
+   ]
+  },
+  {
+   "name": "github.com/go-openapi/swag/stringutils",
+   "SPDXID": "SPDXRef-Package-go-module-github.com-go-openapi-swag-stringutils-4f8d0d8d7897b868",
+   "versionInfo": "UNKNOWN",
+   "supplier": "NOASSERTION",
+   "downloadLocation": "NOASSERTION",
+   "filesAnalyzed": false,
+   "sourceInfo": "acquired package info from go module information: /benchmarks/go.mod",
+   "licenseConcluded": "NOASSERTION",
+   "licenseDeclared": "NOASSERTION",
+   "copyrightText": "NOASSERTION",
+   "externalRefs": [
+    {
+     "referenceCategory": "SECURITY",
+     "referenceType": "cpe23Type",
+     "referenceLocator": "cpe:2.3:a:go-openapi:swag\\/stringutils:*:*:*:*:*:*:*:*"
+    },
+    {
+     "referenceCategory": "SECURITY",
+     "referenceType": "cpe23Type",
+     "referenceLocator": "cpe:2.3:a:go_openapi:swag\\/stringutils:*:*:*:*:*:*:*:*"
+    },
+    {
+     "referenceCategory": "SECURITY",
+     "referenceType": "cpe23Type",
+     "referenceLocator": "cpe:2.3:a:go:swag\\/stringutils:*:*:*:*:*:*:*:*"
+    },
+    {
+     "referenceCategory": "PACKAGE-MANAGER",
+     "referenceType": "purl",
+     "referenceLocator": "pkg:golang/github.com/go-openapi/swag#stringutils"
+    }
+   ]
+  },
+  {
+   "name": "github.com/go-openapi/swag/stringutils",
+   "SPDXID": "SPDXRef-Package-go-module-github.com-go-openapi-swag-stringutils-c8c420a55f6ecef5",
+   "versionInfo": "UNKNOWN",
+   "supplier": "NOASSERTION",
+   "downloadLocation": "NOASSERTION",
+   "filesAnalyzed": false,
+   "sourceInfo": "acquired package info from go module information: /go.mod",
+   "licenseConcluded": "NOASSERTION",
+   "licenseDeclared": "NOASSERTION",
+   "copyrightText": "NOASSERTION",
+   "externalRefs": [
+    {
+     "referenceCategory": "SECURITY",
+     "referenceType": "cpe23Type",
+     "referenceLocator": "cpe:2.3:a:go-openapi:swag\\/stringutils:*:*:*:*:*:*:*:*"
+    },
+    {
+     "referenceCategory": "SECURITY",
+     "referenceType": "cpe23Type",
+     "referenceLocator": "cpe:2.3:a:go_openapi:swag\\/stringutils:*:*:*:*:*:*:*:*"
+    },
+    {
+     "referenceCategory": "SECURITY",
+     "referenceType": "cpe23Type",
+     "referenceLocator": "cpe:2.3:a:go:swag\\/stringutils:*:*:*:*:*:*:*:*"
+    },
+    {
+     "referenceCategory": "PACKAGE-MANAGER",
+     "referenceType": "purl",
+     "referenceLocator": "pkg:golang/github.com/go-openapi/swag#stringutils"
+    }
+   ]
+  },
+  {
+   "name": "github.com/go-openapi/swag/typeutils",
+   "SPDXID": "SPDXRef-Package-go-module-github.com-go-openapi-swag-typeutils-7cd4708b5339bb17",
+   "versionInfo": "UNKNOWN",
+   "supplier": "NOASSERTION",
+   "downloadLocation": "NOASSERTION",
+   "filesAnalyzed": false,
+   "sourceInfo": "acquired package info from go module information: /benchmarks/go.mod",
+   "licenseConcluded": "NOASSERTION",
+   "licenseDeclared": "NOASSERTION",
+   "copyrightText": "NOASSERTION",
+   "externalRefs": [
+    {
+     "referenceCategory": "SECURITY",
+     "referenceType": "cpe23Type",
+     "referenceLocator": "cpe:2.3:a:go-openapi:swag\\/typeutils:*:*:*:*:*:*:*:*"
+    },
+    {
+     "referenceCategory": "SECURITY",
+     "referenceType": "cpe23Type",
+     "referenceLocator": "cpe:2.3:a:go_openapi:swag\\/typeutils:*:*:*:*:*:*:*:*"
+    },
+    {
+     "referenceCategory": "SECURITY",
+     "referenceType": "cpe23Type",
+     "referenceLocator": "cpe:2.3:a:go:swag\\/typeutils:*:*:*:*:*:*:*:*"
+    },
+    {
+     "referenceCategory": "PACKAGE-MANAGER",
+     "referenceType": "purl",
+     "referenceLocator": "pkg:golang/github.com/go-openapi/swag#typeutils"
+    }
+   ]
+  },
+  {
+   "name": "github.com/go-openapi/swag/typeutils",
+   "SPDXID": "SPDXRef-Package-go-module-github.com-go-openapi-swag-typeutils-ef902caad22000ee",
+   "versionInfo": "UNKNOWN",
+   "supplier": "NOASSERTION",
+   "downloadLocation": "NOASSERTION",
+   "filesAnalyzed": false,
+   "sourceInfo": "acquired package info from go module information: /benchmarks/go.mod",
+   "licenseConcluded": "NOASSERTION",
+   "licenseDeclared": "NOASSERTION",
+   "copyrightText": "NOASSERTION",
+   "externalRefs": [
+    {
+     "referenceCategory": "SECURITY",
+     "referenceType": "cpe23Type",
+     "referenceLocator": "cpe:2.3:a:go-openapi:swag\\/typeutils:*:*:*:*:*:*:*:*"
+    },
+    {
+     "referenceCategory": "SECURITY",
+     "referenceType": "cpe23Type",
+     "referenceLocator": "cpe:2.3:a:go_openapi:swag\\/typeutils:*:*:*:*:*:*:*:*"
+    },
+    {
+     "referenceCategory": "SECURITY",
+     "referenceType": "cpe23Type",
+     "referenceLocator": "cpe:2.3:a:go:swag\\/typeutils:*:*:*:*:*:*:*:*"
+    },
+    {
+     "referenceCategory": "PACKAGE-MANAGER",
+     "referenceType": "purl",
+     "referenceLocator": "pkg:golang/github.com/go-openapi/swag#typeutils"
+    }
+   ]
+  },
+  {
+   "name": "github.com/go-openapi/swag/typeutils",
+   "SPDXID": "SPDXRef-Package-go-module-github.com-go-openapi-swag-typeutils-919fc5c3b2cb0a51",
+   "versionInfo": "UNKNOWN",
+   "supplier": "NOASSERTION",
+   "downloadLocation": "NOASSERTION",
+   "filesAnalyzed": false,
+   "sourceInfo": "acquired package info from go module information: /go.mod",
+   "licenseConcluded": "NOASSERTION",
+   "licenseDeclared": "NOASSERTION",
+   "copyrightText": "NOASSERTION",
+   "externalRefs": [
+    {
+     "referenceCategory": "SECURITY",
+     "referenceType": "cpe23Type",
+     "referenceLocator": "cpe:2.3:a:go-openapi:swag\\/typeutils:*:*:*:*:*:*:*:*"
+    },
+    {
+     "referenceCategory": "SECURITY",
+     "referenceType": "cpe23Type",
+     "referenceLocator": "cpe:2.3:a:go_openapi:swag\\/typeutils:*:*:*:*:*:*:*:*"
+    },
+    {
+     "referenceCategory": "SECURITY",
+     "referenceType": "cpe23Type",
+     "referenceLocator": "cpe:2.3:a:go:swag\\/typeutils:*:*:*:*:*:*:*:*"
+    },
+    {
+     "referenceCategory": "PACKAGE-MANAGER",
+     "referenceType": "purl",
+     "referenceLocator": "pkg:golang/github.com/go-openapi/swag#typeutils"
+    }
+   ]
+  },
+  {
+   "name": "github.com/go-openapi/swag/typeutils",
+   "SPDXID": "SPDXRef-Package-go-module-github.com-go-openapi-swag-typeutils-4ebc6ddd7110bca4",
+   "versionInfo": "UNKNOWN",
+   "supplier": "NOASSERTION",
+   "downloadLocation": "NOASSERTION",
+   "filesAnalyzed": false,
+   "sourceInfo": "acquired package info from go module information: /go.mod",
+   "licenseConcluded": "NOASSERTION",
+   "licenseDeclared": "NOASSERTION",
+   "copyrightText": "NOASSERTION",
+   "externalRefs": [
+    {
+     "referenceCategory": "SECURITY",
+     "referenceType": "cpe23Type",
+     "referenceLocator": "cpe:2.3:a:go-openapi:swag\\/typeutils:*:*:*:*:*:*:*:*"
+    },
+    {
+     "referenceCategory": "SECURITY",
+     "referenceType": "cpe23Type",
+     "referenceLocator": "cpe:2.3:a:go_openapi:swag\\/typeutils:*:*:*:*:*:*:*:*"
+    },
+    {
+     "referenceCategory": "SECURITY",
+     "referenceType": "cpe23Type",
+     "referenceLocator": "cpe:2.3:a:go:swag\\/typeutils:*:*:*:*:*:*:*:*"
+    },
+    {
+     "referenceCategory": "PACKAGE-MANAGER",
+     "referenceType": "purl",
+     "referenceLocator": "pkg:golang/github.com/go-openapi/swag#typeutils"
+    }
+   ]
+  },
+  {
+   "name": "github.com/go-openapi/swag/yamlutils",
+   "SPDXID": "SPDXRef-Package-go-module-github.com-go-openapi-swag-yamlutils-2d75f3e29d7be531",
+   "versionInfo": "UNKNOWN",
+   "supplier": "NOASSERTION",
+   "downloadLocation": "NOASSERTION",
+   "filesAnalyzed": false,
+   "sourceInfo": "acquired package info from go module information: /benchmarks/go.mod",
+   "licenseConcluded": "NOASSERTION",
+   "licenseDeclared": "NOASSERTION",
+   "copyrightText": "NOASSERTION",
+   "externalRefs": [
+    {
+     "referenceCategory": "SECURITY",
+     "referenceType": "cpe23Type",
+     "referenceLocator": "cpe:2.3:a:go-openapi:swag\\/yamlutils:*:*:*:*:*:*:*:*"
+    },
+    {
+     "referenceCategory": "SECURITY",
+     "referenceType": "cpe23Type",
+     "referenceLocator": "cpe:2.3:a:go_openapi:swag\\/yamlutils:*:*:*:*:*:*:*:*"
+    },
+    {
+     "referenceCategory": "SECURITY",
+     "referenceType": "cpe23Type",
+     "referenceLocator": "cpe:2.3:a:go:swag\\/yamlutils:*:*:*:*:*:*:*:*"
+    },
+    {
+     "referenceCategory": "PACKAGE-MANAGER",
+     "referenceType": "purl",
+     "referenceLocator": "pkg:golang/github.com/go-openapi/swag#yamlutils"
+    }
+   ]
+  },
+  {
+   "name": "github.com/go-openapi/swag/yamlutils",
+   "SPDXID": "SPDXRef-Package-go-module-github.com-go-openapi-swag-yamlutils-bc5438fa05ca1fb6",
+   "versionInfo": "UNKNOWN",
+   "supplier": "NOASSERTION",
+   "downloadLocation": "NOASSERTION",
+   "filesAnalyzed": false,
+   "sourceInfo": "acquired package info from go module information: /go.mod",
+   "licenseConcluded": "NOASSERTION",
+   "licenseDeclared": "NOASSERTION",
+   "copyrightText": "NOASSERTION",
+   "externalRefs": [
+    {
+     "referenceCategory": "SECURITY",
+     "referenceType": "cpe23Type",
+     "referenceLocator": "cpe:2.3:a:go-openapi:swag\\/yamlutils:*:*:*:*:*:*:*:*"
+    },
+    {
+     "referenceCategory": "SECURITY",
+     "referenceType": "cpe23Type",
+     "referenceLocator": "cpe:2.3:a:go_openapi:swag\\/yamlutils:*:*:*:*:*:*:*:*"
+    },
+    {
+     "referenceCategory": "SECURITY",
+     "referenceType": "cpe23Type",
+     "referenceLocator": "cpe:2.3:a:go:swag\\/yamlutils:*:*:*:*:*:*:*:*"
+    },
+    {
+     "referenceCategory": "PACKAGE-MANAGER",
+     "referenceType": "purl",
+     "referenceLocator": "pkg:golang/github.com/go-openapi/swag#yamlutils"
+    }
+   ]
+  },
+  {
+   "name": "github.com/go-openapi/testify/enable/yaml/v2",
+   "SPDXID": "SPDXRef-Package-go-module-github.com-go-openapi-testify-enable-yaml-v2-d568aafaf206e82f",
+   "versionInfo": "v2.0.2",
+   "supplier": "NOASSERTION",
+   "downloadLocation": "NOASSERTION",
+   "filesAnalyzed": false,
+   "sourceInfo": "acquired package info from go module information: /benchmarks/go.mod",
+   "licenseConcluded": "Apache-2.0",
+   "licenseDeclared": "NOASSERTION",
+   "copyrightText": "NOASSERTION",
+   "externalRefs": [
+    {
+     "referenceCategory": "SECURITY",
+     "referenceType": "cpe23Type",
+     "referenceLocator": "cpe:2.3:a:go-openapi:testify\\/enable\\/yaml\\/v2:v2.0.2:*:*:*:*:*:*:*"
+    },
+    {
+     "referenceCategory": "SECURITY",
+     "referenceType": "cpe23Type",
+     "referenceLocator": "cpe:2.3:a:go_openapi:testify\\/enable\\/yaml\\/v2:v2.0.2:*:*:*:*:*:*:*"
+    },
+    {
+     "referenceCategory": "SECURITY",
+     "referenceType": "cpe23Type",
+     "referenceLocator": "cpe:2.3:a:go:testify\\/enable\\/yaml\\/v2:v2.0.2:*:*:*:*:*:*:*"
+    },
+    {
+     "referenceCategory": "PACKAGE-MANAGER",
+     "referenceType": "purl",
+     "referenceLocator": "pkg:golang/github.com/go-openapi/testify@v2.0.2#enable/yaml/v2"
+    }
+   ]
+  },
+  {
+   "name": "github.com/go-openapi/testify/enable/yaml/v2",
+   "SPDXID": "SPDXRef-Package-go-module-github.com-go-openapi-testify-enable-yaml-v2-f22c9f92220c8434",
+   "versionInfo": "v2.0.2",
+   "supplier": "NOASSERTION",
+   "downloadLocation": "NOASSERTION",
+   "filesAnalyzed": false,
+   "sourceInfo": "acquired package info from go module information: /go.mod",
+   "licenseConcluded": "Apache-2.0",
+   "licenseDeclared": "NOASSERTION",
+   "copyrightText": "NOASSERTION",
+   "externalRefs": [
+    {
+     "referenceCategory": "SECURITY",
+     "referenceType": "cpe23Type",
+     "referenceLocator": "cpe:2.3:a:go-openapi:testify\\/enable\\/yaml\\/v2:v2.0.2:*:*:*:*:*:*:*"
+    },
+    {
+     "referenceCategory": "SECURITY",
+     "referenceType": "cpe23Type",
+     "referenceLocator": "cpe:2.3:a:go_openapi:testify\\/enable\\/yaml\\/v2:v2.0.2:*:*:*:*:*:*:*"
+    },
+    {
+     "referenceCategory": "SECURITY",
+     "referenceType": "cpe23Type",
+     "referenceLocator": "cpe:2.3:a:go:testify\\/enable\\/yaml\\/v2:v2.0.2:*:*:*:*:*:*:*"
+    },
+    {
+     "referenceCategory": "PACKAGE-MANAGER",
+     "referenceType": "purl",
+     "referenceLocator": "pkg:golang/github.com/go-openapi/testify@v2.0.2#enable/yaml/v2"
+    }
+   ]
+  },
+  {
+   "name": "github.com/go-openapi/testify/v2",
+   "SPDXID": "SPDXRef-Package-go-module-github.com-go-openapi-testify-v2-0acf44a88fbe5844",
+   "versionInfo": "v2.0.2",
+   "supplier": "NOASSERTION",
+   "downloadLocation": "NOASSERTION",
+   "filesAnalyzed": false,
+   "sourceInfo": "acquired package info from go module information: /benchmarks/go.mod",
+   "licenseConcluded": "Apache-2.0 AND BSD-3-Clause AND ISC AND MIT",
+   "licenseDeclared": "NOASSERTION",
+   "copyrightText": "NOASSERTION",
+   "externalRefs": [
+    {
+     "referenceCategory": "SECURITY",
+     "referenceType": "cpe23Type",
+     "referenceLocator": "cpe:2.3:a:go-openapi:testify\\/v2:v2.0.2:*:*:*:*:*:*:*"
+    },
+    {
+     "referenceCategory": "SECURITY",
+     "referenceType": "cpe23Type",
+     "referenceLocator": "cpe:2.3:a:go_openapi:testify\\/v2:v2.0.2:*:*:*:*:*:*:*"
+    },
+    {
+     "referenceCategory": "SECURITY",
+     "referenceType": "cpe23Type",
+     "referenceLocator": "cpe:2.3:a:go:testify\\/v2:v2.0.2:*:*:*:*:*:*:*"
+    },
+    {
+     "referenceCategory": "PACKAGE-MANAGER",
+     "referenceType": "purl",
+     "referenceLocator": "pkg:golang/github.com/go-openapi/testify@v2.0.2#v2"
+    }
+   ]
+  },
+  {
+   "name": "github.com/go-openapi/testify/v2",
+   "SPDXID": "SPDXRef-Package-go-module-github.com-go-openapi-testify-v2-fa43e5a5a0db7ace",
+   "versionInfo": "v2.0.2",
+   "supplier": "NOASSERTION",
+   "downloadLocation": "NOASSERTION",
+   "filesAnalyzed": false,
+   "sourceInfo": "acquired package info from go module information: /go.mod",
+   "licenseConcluded": "Apache-2.0 AND BSD-3-Clause AND ISC AND MIT",
+   "licenseDeclared": "NOASSERTION",
+   "copyrightText": "NOASSERTION",
+   "externalRefs": [
+    {
+     "referenceCategory": "SECURITY",
+     "referenceType": "cpe23Type",
+     "referenceLocator": "cpe:2.3:a:go-openapi:testify\\/v2:v2.0.2:*:*:*:*:*:*:*"
+    },
+    {
+     "referenceCategory": "SECURITY",
+     "referenceType": "cpe23Type",
+     "referenceLocator": "cpe:2.3:a:go_openapi:testify\\/v2:v2.0.2:*:*:*:*:*:*:*"
+    },
+    {
+     "referenceCategory": "SECURITY",
+     "referenceType": "cpe23Type",
+     "referenceLocator": "cpe:2.3:a:go:testify\\/v2:v2.0.2:*:*:*:*:*:*:*"
+    },
+    {
+     "referenceCategory": "PACKAGE-MANAGER",
+     "referenceType": "purl",
+     "referenceLocator": "pkg:golang/github.com/go-openapi/testify@v2.0.2#v2"
+    }
+   ]
+  },
+  {
+   "name": "github.com/josharian/intern",
+   "SPDXID": "SPDXRef-Package-go-module-github.com-josharian-intern-e343f29fedb5dd6e",
+   "versionInfo": "v1.0.0",
+   "supplier": "NOASSERTION",
+   "downloadLocation": "NOASSERTION",
+   "filesAnalyzed": false,
+   "sourceInfo": "acquired package info from go module information: /benchmarks/go.mod",
+   "licenseConcluded": "MIT",
+   "licenseDeclared": "NOASSERTION",
+   "copyrightText": "NOASSERTION",
+   "externalRefs": [
+    {
+     "referenceCategory": "SECURITY",
+     "referenceType": "cpe23Type",
+     "referenceLocator": "cpe:2.3:a:josharian:intern:v1.0.0:*:*:*:*:*:*:*"
+    },
+    {
+     "referenceCategory": "PACKAGE-MANAGER",
+     "referenceType": "purl",
+     "referenceLocator": "pkg:golang/github.com/josharian/intern@v1.0.0"
+    }
+   ]
+  },
+  {
+   "name": "github.com/josharian/intern",
+   "SPDXID": "SPDXRef-Package-go-module-github.com-josharian-intern-e163b0705425c3c9",
+   "versionInfo": "v1.0.0",
+   "supplier": "NOASSERTION",
+   "downloadLocation": "NOASSERTION",
+   "filesAnalyzed": false,
+   "sourceInfo": "acquired package info from go module information: /go.mod",
+   "licenseConcluded": "MIT",
+   "licenseDeclared": "NOASSERTION",
+   "copyrightText": "NOASSERTION",
+   "externalRefs": [
+    {
+     "referenceCategory": "SECURITY",
+     "referenceType": "cpe23Type",
+     "referenceLocator": "cpe:2.3:a:josharian:intern:v1.0.0:*:*:*:*:*:*:*"
+    },
+    {
+     "referenceCategory": "PACKAGE-MANAGER",
+     "referenceType": "purl",
+     "referenceLocator": "pkg:golang/github.com/josharian/intern@v1.0.0"
+    }
+   ]
+  },
+  {
+   "name": "github.com/kr/pretty",
+   "SPDXID": "SPDXRef-Package-go-module-github.com-kr-pretty-1e1ecacab65f6bba",
+   "versionInfo": "v0.3.1",
+   "supplier": "NOASSERTION",
+   "downloadLocation": "NOASSERTION",
+   "filesAnalyzed": false,
+   "sourceInfo": "acquired package info from go module information: /benchmarks/go.mod",
+   "licenseConcluded": "MIT",
+   "licenseDeclared": "NOASSERTION",
+   "copyrightText": "NOASSERTION",
+   "externalRefs": [
+    {
+     "referenceCategory": "SECURITY",
+     "referenceType": "cpe23Type",
+     "referenceLocator": "cpe:2.3:a:kr:pretty:v0.3.1:*:*:*:*:*:*:*"
+    },
+    {
+     "referenceCategory": "PACKAGE-MANAGER",
+     "referenceType": "purl",
+     "referenceLocator": "pkg:golang/github.com/kr/pretty@v0.3.1"
+    }
+   ]
+  },
+  {
+   "name": "github.com/kr/pretty",
+   "SPDXID": "SPDXRef-Package-go-module-github.com-kr-pretty-35ae79a5e7c8266e",
+   "versionInfo": "v0.3.1",
+   "supplier": "NOASSERTION",
+   "downloadLocation": "NOASSERTION",
+   "filesAnalyzed": false,
+   "sourceInfo": "acquired package info from go module information: /go.mod",
+   "licenseConcluded": "MIT",
+   "licenseDeclared": "NOASSERTION",
+   "copyrightText": "NOASSERTION",
+   "externalRefs": [
+    {
+     "referenceCategory": "SECURITY",
+     "referenceType": "cpe23Type",
+     "referenceLocator": "cpe:2.3:a:kr:pretty:v0.3.1:*:*:*:*:*:*:*"
+    },
+    {
+     "referenceCategory": "PACKAGE-MANAGER",
+     "referenceType": "purl",
+     "referenceLocator": "pkg:golang/github.com/kr/pretty@v0.3.1"
+    }
+   ]
+  },
+  {
+   "name": "github.com/kr/text",
+   "SPDXID": "SPDXRef-Package-go-module-github.com-kr-text-7ec845969fa95797",
+   "versionInfo": "v0.2.0",
+   "supplier": "NOASSERTION",
+   "downloadLocation": "NOASSERTION",
+   "filesAnalyzed": false,
+   "sourceInfo": "acquired package info from go module information: /benchmarks/go.mod",
+   "licenseConcluded": "MIT",
+   "licenseDeclared": "NOASSERTION",
+   "copyrightText": "NOASSERTION",
+   "externalRefs": [
+    {
+     "referenceCategory": "SECURITY",
+     "referenceType": "cpe23Type",
+     "referenceLocator": "cpe:2.3:a:kr:text:v0.2.0:*:*:*:*:*:*:*"
+    },
+    {
+     "referenceCategory": "PACKAGE-MANAGER",
+     "referenceType": "purl",
+     "referenceLocator": "pkg:golang/github.com/kr/text@v0.2.0"
+    }
+   ]
+  },
+  {
+   "name": "github.com/kr/text",
+   "SPDXID": "SPDXRef-Package-go-module-github.com-kr-text-46e13f03cdc07407",
+   "versionInfo": "v0.2.0",
+   "supplier": "NOASSERTION",
+   "downloadLocation": "NOASSERTION",
+   "filesAnalyzed": false,
+   "sourceInfo": "acquired package info from go module information: /go.mod",
+   "licenseConcluded": "MIT",
+   "licenseDeclared": "NOASSERTION",
+   "copyrightText": "NOASSERTION",
+   "externalRefs": [
+    {
+     "referenceCategory": "SECURITY",
+     "referenceType": "cpe23Type",
+     "referenceLocator": "cpe:2.3:a:kr:text:v0.2.0:*:*:*:*:*:*:*"
+    },
+    {
+     "referenceCategory": "PACKAGE-MANAGER",
+     "referenceType": "purl",
+     "referenceLocator": "pkg:golang/github.com/kr/text@v0.2.0"
+    }
+   ]
+  },
+  {
+   "name": "github.com/mailru/easyjson",
+   "SPDXID": "SPDXRef-Package-go-module-github.com-mailru-easyjson-0766866c2b745fc8",
+   "versionInfo": "v0.9.1",
+   "supplier": "NOASSERTION",
+   "downloadLocation": "NOASSERTION",
+   "filesAnalyzed": false,
+   "sourceInfo": "acquired package info from go module information: /benchmarks/go.mod",
+   "licenseConcluded": "MIT",
+   "licenseDeclared": "NOASSERTION",
+   "copyrightText": "NOASSERTION",
+   "externalRefs": [
+    {
+     "referenceCategory": "SECURITY",
+     "referenceType": "cpe23Type",
+     "referenceLocator": "cpe:2.3:a:mailru:easyjson:v0.9.1:*:*:*:*:*:*:*"
+    },
+    {
+     "referenceCategory": "PACKAGE-MANAGER",
+     "referenceType": "purl",
+     "referenceLocator": "pkg:golang/github.com/mailru/easyjson@v0.9.1"
+    }
+   ]
+  },
+  {
+   "name": "github.com/mailru/easyjson",
+   "SPDXID": "SPDXRef-Package-go-module-github.com-mailru-easyjson-64731e64c40fe227",
+   "versionInfo": "v0.9.1",
+   "supplier": "NOASSERTION",
+   "downloadLocation": "NOASSERTION",
+   "filesAnalyzed": false,
+   "sourceInfo": "acquired package info from go module information: /go.mod",
+   "licenseConcluded": "MIT",
+   "licenseDeclared": "NOASSERTION",
+   "copyrightText": "NOASSERTION",
+   "externalRefs": [
+    {
+     "referenceCategory": "SECURITY",
+     "referenceType": "cpe23Type",
+     "referenceLocator": "cpe:2.3:a:mailru:easyjson:v0.9.1:*:*:*:*:*:*:*"
+    },
+    {
+     "referenceCategory": "PACKAGE-MANAGER",
+     "referenceType": "purl",
+     "referenceLocator": "pkg:golang/github.com/mailru/easyjson@v0.9.1"
+    }
+   ]
+  },
+  {
+   "name": "github.com/rogpeppe/go-internal",
+   "SPDXID": "SPDXRef-Package-go-module-github.com-rogpeppe-go-internal-7c7b9cd9468fe063",
+   "versionInfo": "v1.14.1",
+   "supplier": "NOASSERTION",
+   "downloadLocation": "NOASSERTION",
+   "filesAnalyzed": false,
+   "sourceInfo": "acquired package info from go module information: /benchmarks/go.mod",
+   "licenseConcluded": "BSD-3-Clause",
+   "licenseDeclared": "NOASSERTION",
+   "copyrightText": "NOASSERTION",
+   "externalRefs": [
+    {
+     "referenceCategory": "SECURITY",
+     "referenceType": "cpe23Type",
+     "referenceLocator": "cpe:2.3:a:rogpeppe:go-internal:v1.14.1:*:*:*:*:*:*:*"
+    },
+    {
+     "referenceCategory": "SECURITY",
+     "referenceType": "cpe23Type",
+     "referenceLocator": "cpe:2.3:a:rogpeppe:go_internal:v1.14.1:*:*:*:*:*:*:*"
+    },
+    {
+     "referenceCategory": "PACKAGE-MANAGER",
+     "referenceType": "purl",
+     "referenceLocator": "pkg:golang/github.com/rogpeppe/go-internal@v1.14.1"
+    }
+   ]
+  },
+  {
+   "name": "github.com/rogpeppe/go-internal",
+   "SPDXID": "SPDXRef-Package-go-module-github.com-rogpeppe-go-internal-1d3acdabce33bcdb",
+   "versionInfo": "v1.14.1",
+   "supplier": "NOASSERTION",
+   "downloadLocation": "NOASSERTION",
+   "filesAnalyzed": false,
+   "sourceInfo": "acquired package info from go module information: /go.mod",
+   "licenseConcluded": "BSD-3-Clause",
+   "licenseDeclared": "NOASSERTION",
+   "copyrightText": "NOASSERTION",
+   "externalRefs": [
+    {
+     "referenceCategory": "SECURITY",
+     "referenceType": "cpe23Type",
+     "referenceLocator": "cpe:2.3:a:rogpeppe:go-internal:v1.14.1:*:*:*:*:*:*:*"
+    },
+    {
+     "referenceCategory": "SECURITY",
+     "referenceType": "cpe23Type",
+     "referenceLocator": "cpe:2.3:a:rogpeppe:go_internal:v1.14.1:*:*:*:*:*:*:*"
+    },
+    {
+     "referenceCategory": "PACKAGE-MANAGER",
+     "referenceType": "purl",
+     "referenceLocator": "pkg:golang/github.com/rogpeppe/go-internal@v1.14.1"
+    }
+   ]
+  },
+  {
+   "name": "go.yaml.in/yaml/v3",
+   "SPDXID": "SPDXRef-Package-go-module-go.yaml.in-yaml-v3-d536c7667b4ad065",
+   "versionInfo": "v3.0.4",
+   "supplier": "NOASSERTION",
+   "downloadLocation": "NOASSERTION",
+   "filesAnalyzed": false,
+   "sourceInfo": "acquired package info from go module information: /benchmarks/go.mod",
+   "licenseConcluded": "Apache-2.0 AND MIT",
+   "licenseDeclared": "NOASSERTION",
+   "copyrightText": "NOASSERTION",
+   "externalRefs": [
+    {
+     "referenceCategory": "SECURITY",
+     "referenceType": "cpe23Type",
+     "referenceLocator": "cpe:2.3:a:yaml:v3:v3.0.4:*:*:*:*:*:*:*"
+    },
+    {
+     "referenceCategory": "PACKAGE-MANAGER",
+     "referenceType": "purl",
+     "referenceLocator": "pkg:golang/go.yaml.in/yaml/v3@v3.0.4"
+    }
+   ]
+  },
+  {
+   "name": "go.yaml.in/yaml/v3",
+   "SPDXID": "SPDXRef-Package-go-module-go.yaml.in-yaml-v3-90aec56a857c9c07",
+   "versionInfo": "v3.0.4",
+   "supplier": "NOASSERTION",
+   "downloadLocation": "NOASSERTION",
+   "filesAnalyzed": false,
+   "sourceInfo": "acquired package info from go module information: /go.mod",
+   "licenseConcluded": "Apache-2.0 AND MIT",
+   "licenseDeclared": "NOASSERTION",
+   "copyrightText": "NOASSERTION",
+   "externalRefs": [
+    {
+     "referenceCategory": "SECURITY",
+     "referenceType": "cpe23Type",
+     "referenceLocator": "cpe:2.3:a:yaml:v3:v3.0.4:*:*:*:*:*:*:*"
+    },
+    {
+     "referenceCategory": "PACKAGE-MANAGER",
+     "referenceType": "purl",
+     "referenceLocator": "pkg:golang/go.yaml.in/yaml/v3@v3.0.4"
+    }
+   ]
+  },
+  {
+   "name": "gopkg.in/check.v1",
+   "SPDXID": "SPDXRef-Package-go-module-gopkg.in-check.v1-983097d0c7551161",
+   "versionInfo": "v1.0.0-20201130134442-10cb98267c6c",
+   "supplier": "NOASSERTION",
+   "downloadLocation": "NOASSERTION",
+   "filesAnalyzed": false,
+   "sourceInfo": "acquired package info from go module information: /benchmarks/go.mod",
+   "licenseConcluded": "BSD-2-Clause",
+   "licenseDeclared": "NOASSERTION",
+   "copyrightText": "NOASSERTION",
+   "externalRefs": [
+    {
+     "referenceCategory": "PACKAGE-MANAGER",
+     "referenceType": "purl",
+     "referenceLocator": "pkg:golang/gopkg.in/check.v1@v1.0.0-20201130134442-10cb98267c6c"
+    }
+   ]
+  },
+  {
+   "name": "gopkg.in/check.v1",
+   "SPDXID": "SPDXRef-Package-go-module-gopkg.in-check.v1-7d8e6593f96257df",
+   "versionInfo": "v1.0.0-20201130134442-10cb98267c6c",
+   "supplier": "NOASSERTION",
+   "downloadLocation": "NOASSERTION",
+   "filesAnalyzed": false,
+   "sourceInfo": "acquired package info from go module information: /go.mod",
+   "licenseConcluded": "BSD-2-Clause",
+   "licenseDeclared": "NOASSERTION",
+   "copyrightText": "NOASSERTION",
+   "externalRefs": [
+    {
+     "referenceCategory": "PACKAGE-MANAGER",
+     "referenceType": "purl",
+     "referenceLocator": "pkg:golang/gopkg.in/check.v1@v1.0.0-20201130134442-10cb98267c6c"
+    }
+   ]
+  },
+  {
+   "name": "github.com/go-openapi/swag",
+   "SPDXID": "SPDXRef-DocumentRoot-Directory-github.com-go-openapi-swag",
+   "versionInfo": "3ccdce91df80b668db3ee6a0f6dff9db52107415",
+   "supplier": "NOASSERTION",
+   "downloadLocation": "NOASSERTION",
+   "filesAnalyzed": false,
+   "licenseConcluded": "NOASSERTION",
+   "licenseDeclared": "NOASSERTION",
+   "copyrightText": "NOASSERTION",
+   "primaryPackagePurpose": "FILE"
+  }
+ ],
+ "files": [
+  {
+   "fileName": "benchmarks/go.mod",
+   "SPDXID": "SPDXRef-File-benchmarks-go.mod-53b843b385010bd9",
+   "fileTypes": [
+    "TEXT"
+   ],
+   "checksums": [
+    {
+     "algorithm": "SHA1",
+     "checksumValue": "8ff2b842daa68b62e92921c7e51ff217cd3359be"
+    },
+    {
+     "algorithm": "SHA256",
+     "checksumValue": "699e86473770e71c91323e29561eb0e9c6b0785eca11ffa37256746067bcdd03"
+    }
+   ],
+   "licenseConcluded": "NOASSERTION",
+   "licenseInfoInFiles": [
+    "NOASSERTION"
+   ],
+   "copyrightText": "NOASSERTION"
+  },
+  {
+   "fileName": "go.mod",
+   "SPDXID": "SPDXRef-File-go.mod-3fc5a8d3d86e9790",
+   "fileTypes": [
+    "TEXT"
+   ],
+   "checksums": [
+    {
+     "algorithm": "SHA1",
+     "checksumValue": "7dea624a341412b5f67c49b1ed3f5d0be4f8d202"
+    },
+    {
+     "algorithm": "SHA256",
+     "checksumValue": "0279068c888b46bd887c329bdcdc374867bc31f656fbcf6e421906b815726c07"
+    }
+   ],
+   "licenseConcluded": "NOASSERTION",
+   "licenseInfoInFiles": [
+    "NOASSERTION"
+   ],
+   "copyrightText": "NOASSERTION"
+  }
+ ],
+ "relationships": [
+  {
+   "spdxElementId": "SPDXRef-Package-go-module-github.com-mailru-easyjson-0766866c2b745fc8",
+   "relatedSpdxElement": "SPDXRef-Package-go-module-github.com-go-openapi-swag-jsonutils-adapters-easyjson-16dce97cfbf9dd42",
+   "relationshipType": "DEPENDENCY_OF"
+  },
+  {
+   "spdxElementId": "SPDXRef-Package-go-module-github.com-mailru-easyjson-0766866c2b745fc8",
+   "relatedSpdxElement": "SPDXRef-Package-go-module-github.com-go-openapi-swag-jsonutils-adapters-testintegration-a2d49e12db6580f9",
+   "relationshipType": "DEPENDENCY_OF"
+  },
+  {
+   "spdxElementId": "SPDXRef-Package-go-module-github.com-mailru-easyjson-0766866c2b745fc8",
+   "relatedSpdxElement": "SPDXRef-Package-go-module-github.com-go-openapi-swag-jsonutils-adapters-testintegration-benchmarks-eb8a02d6051ed8d3",
+   "relationshipType": "DEPENDENCY_OF"
+  },
+  {
+   "spdxElementId": "SPDXRef-Package-go-module-github.com-go-openapi-swag-conv-07f49ef6bed7e92e",
+   "relatedSpdxElement": "SPDXRef-Package-go-module-github.com-go-openapi-swag-jsonutils-48e17803d48f9b3d",
+   "relationshipType": "DEPENDENCY_OF"
+  },
+  {
+   "spdxElementId": "SPDXRef-Package-go-module-github.com-go-openapi-swag-conv-07f49ef6bed7e92e",
+   "relatedSpdxElement": "SPDXRef-Package-go-module-github.com-go-openapi-swag-jsonutils-adapters-easyjson-59ea66d03e56e9b8",
+   "relationshipType": "DEPENDENCY_OF"
+  },
+  {
+   "spdxElementId": "SPDXRef-Package-go-module-github.com-go-openapi-swag-conv-07f49ef6bed7e92e",
+   "relatedSpdxElement": "SPDXRef-Package-go-module-github.com-go-openapi-swag-yamlutils-bc5438fa05ca1fb6",
+   "relationshipType": "DEPENDENCY_OF"
+  },
+  {
+   "spdxElementId": "SPDXRef-Package-go-module-github.com-go-openapi-testify-v2-0acf44a88fbe5844",
+   "relatedSpdxElement": "SPDXRef-Package-go-module-github.com-go-openapi-swag-jsonutils-0b2977064b5255db",
+   "relationshipType": "DEPENDENCY_OF"
+  },
+  {
+   "spdxElementId": "SPDXRef-Package-go-module-github.com-go-openapi-testify-v2-0acf44a88fbe5844",
+   "relatedSpdxElement": "SPDXRef-Package-go-module-github.com-go-openapi-swag-netutils-0da65148a5493ee5",
+   "relationshipType": "DEPENDENCY_OF"
+  },
+  {
+   "spdxElementId": "SPDXRef-Package-go-module-github.com-go-openapi-testify-v2-0acf44a88fbe5844",
+   "relatedSpdxElement": "SPDXRef-Package-go-module-github.com-go-openapi-swag-jsonutils-adapters-easyjson-16dce97cfbf9dd42",
+   "relationshipType": "DEPENDENCY_OF"
+  },
+  {
+   "spdxElementId": "SPDXRef-Package-go-module-github.com-go-openapi-testify-v2-0acf44a88fbe5844",
+   "relatedSpdxElement": "SPDXRef-Package-go-module-github.com-go-openapi-swag-yamlutils-2d75f3e29d7be531",
+   "relationshipType": "DEPENDENCY_OF"
+  },
+  {
+   "spdxElementId": "SPDXRef-Package-go-module-github.com-go-openapi-testify-v2-0acf44a88fbe5844",
+   "relatedSpdxElement": "SPDXRef-Package-go-module-github.com-go-openapi-swag-jsonutils-fixtures-test-4f0c2408fa965ecd",
+   "relationshipType": "DEPENDENCY_OF"
+  },
+  {
+   "spdxElementId": "SPDXRef-Package-go-module-github.com-go-openapi-testify-v2-0acf44a88fbe5844",
+   "relatedSpdxElement": "SPDXRef-Package-go-module-github.com-go-openapi-swag-stringutils-4f8d0d8d7897b868",
+   "relationshipType": "DEPENDENCY_OF"
+  },
+  {
+   "spdxElementId": "SPDXRef-Package-go-module-github.com-go-openapi-testify-v2-0acf44a88fbe5844",
+   "relatedSpdxElement": "SPDXRef-Package-go-module-github.com-go-openapi-swag-jsonutils-adapters-testintegration-a2d49e12db6580f9",
+   "relationshipType": "DEPENDENCY_OF"
+  },
+  {
+   "spdxElementId": "SPDXRef-Package-go-module-github.com-go-openapi-testify-v2-0acf44a88fbe5844",
+   "relatedSpdxElement": "SPDXRef-Package-go-module-github.com-go-openapi-swag-aaf43cebfad3567d",
+   "relationshipType": "DEPENDENCY_OF"
+  },
+  {
+   "spdxElementId": "SPDXRef-Package-go-module-github.com-go-openapi-testify-v2-0acf44a88fbe5844",
+   "relatedSpdxElement": "SPDXRef-Package-go-module-github.com-go-openapi-swag-jsonname-b3f6c07c60186420",
+   "relationshipType": "DEPENDENCY_OF"
+  },
+  {
+   "spdxElementId": "SPDXRef-Package-go-module-github.com-go-openapi-testify-v2-0acf44a88fbe5844",
+   "relatedSpdxElement": "SPDXRef-Package-go-module-github.com-go-openapi-swag-loading-b4c65ccd464926d1",
+   "relationshipType": "DEPENDENCY_OF"
+  },
+  {
+   "spdxElementId": "SPDXRef-Package-go-module-github.com-go-openapi-testify-v2-0acf44a88fbe5844",
+   "relatedSpdxElement": "SPDXRef-Package-go-module-github.com-go-openapi-swag-mangling-c93c2d0d56dc5054",
+   "relationshipType": "DEPENDENCY_OF"
+  },
+  {
+   "spdxElementId": "SPDXRef-Package-go-module-github.com-go-openapi-testify-v2-0acf44a88fbe5844",
+   "relatedSpdxElement": "SPDXRef-Package-go-module-github.com-go-openapi-swag-conv-d06f549e2e72b013",
+   "relationshipType": "DEPENDENCY_OF"
+  },
+  {
+   "spdxElementId": "SPDXRef-Package-go-module-github.com-go-openapi-testify-v2-0acf44a88fbe5844",
+   "relatedSpdxElement": "SPDXRef-Package-go-module-github.com-go-openapi-testify-enable-yaml-v2-d568aafaf206e82f",
+   "relationshipType": "DEPENDENCY_OF"
+  },
+  {
+   "spdxElementId": "SPDXRef-Package-go-module-github.com-go-openapi-testify-v2-0acf44a88fbe5844",
+   "relatedSpdxElement": "SPDXRef-Package-go-module-github.com-go-openapi-swag-jsonutils-adapters-testintegration-benchmarks-eb8a02d6051ed8d3",
+   "relationshipType": "DEPENDENCY_OF"
+  },
+  {
+   "spdxElementId": "SPDXRef-Package-go-module-github.com-go-openapi-testify-v2-0acf44a88fbe5844",
+   "relatedSpdxElement": "SPDXRef-Package-go-module-github.com-go-openapi-swag-typeutils-ef902caad22000ee",
+   "relationshipType": "DEPENDENCY_OF"
+  },
+  {
+   "spdxElementId": "SPDXRef-Package-go-module-github.com-go-openapi-testify-v2-0acf44a88fbe5844",
+   "relatedSpdxElement": "SPDXRef-Package-go-module-github.com-go-openapi-swag-fileutils-f80e181f7334db53",
+   "relationshipType": "DEPENDENCY_OF"
+  },
+  {
+   "spdxElementId": "SPDXRef-Package-go-module-github.com-go-openapi-swag-jsonutils-0b2977064b5255db",
+   "relatedSpdxElement": "SPDXRef-Package-go-module-github.com-go-openapi-swag-jsonutils-adapters-easyjson-16dce97cfbf9dd42",
+   "relationshipType": "DEPENDENCY_OF"
+  },
+  {
+   "spdxElementId": "SPDXRef-Package-go-module-github.com-go-openapi-swag-jsonutils-0b2977064b5255db",
+   "relatedSpdxElement": "SPDXRef-Package-go-module-github.com-go-openapi-swag-2462565e5d2f173d",
+   "relationshipType": "DEPENDENCY_OF"
+  },
+  {
+   "spdxElementId": "SPDXRef-Package-go-module-github.com-go-openapi-swag-jsonutils-0b2977064b5255db",
+   "relatedSpdxElement": "SPDXRef-Package-go-module-github.com-go-openapi-swag-yamlutils-2d75f3e29d7be531",
+   "relationshipType": "DEPENDENCY_OF"
+  },
+  {
+   "spdxElementId": "SPDXRef-Package-go-module-github.com-go-openapi-swag-jsonutils-0b2977064b5255db",
+   "relatedSpdxElement": "SPDXRef-Package-go-module-github.com-go-openapi-swag-jsonutils-adapters-testintegration-a2d49e12db6580f9",
+   "relationshipType": "DEPENDENCY_OF"
+  },
+  {
+   "spdxElementId": "SPDXRef-Package-go-module-github.com-go-openapi-swag-jsonutils-0b2977064b5255db",
+   "relatedSpdxElement": "SPDXRef-Package-go-module-github.com-go-openapi-swag-aaf43cebfad3567d",
+   "relationshipType": "DEPENDENCY_OF"
+  },
+  {
+   "spdxElementId": "SPDXRef-Package-go-module-github.com-go-openapi-swag-jsonutils-0b2977064b5255db",
+   "relatedSpdxElement": "SPDXRef-Package-go-module-github.com-go-openapi-swag-jsonutils-adapters-testintegration-benchmarks-eb8a02d6051ed8d3",
+   "relationshipType": "DEPENDENCY_OF"
+  },
+  {
+   "spdxElementId": "SPDXRef-Package-go-module-github.com-go-openapi-swag-netutils-0da65148a5493ee5",
+   "relatedSpdxElement": "SPDXRef-Package-go-module-github.com-go-openapi-swag-2462565e5d2f173d",
+   "relationshipType": "DEPENDENCY_OF"
+  },
+  {
+   "spdxElementId": "SPDXRef-Package-go-module-github.com-go-openapi-swag-netutils-0da65148a5493ee5",
+   "relatedSpdxElement": "SPDXRef-Package-go-module-github.com-go-openapi-swag-aaf43cebfad3567d",
+   "relationshipType": "DEPENDENCY_OF"
+  },
+  {
+   "spdxElementId": "SPDXRef-Package-go-module-github.com-go-openapi-swag-jsonutils-adapters-easyjson-16dce97cfbf9dd42",
+   "relatedSpdxElement": "SPDXRef-Package-go-module-github.com-go-openapi-swag-jsonutils-adapters-testintegration-a2d49e12db6580f9",
+   "relationshipType": "DEPENDENCY_OF"
+  },
+  {
+   "spdxElementId": "SPDXRef-Package-go-module-github.com-go-openapi-swag-jsonutils-adapters-easyjson-16dce97cfbf9dd42",
+   "relatedSpdxElement": "SPDXRef-Package-go-module-github.com-go-openapi-swag-jsonutils-adapters-testintegration-benchmarks-eb8a02d6051ed8d3",
+   "relationshipType": "DEPENDENCY_OF"
+  },
+  {
+   "spdxElementId": "SPDXRef-Package-go-module-github.com-rogpeppe-go-internal-1d3acdabce33bcdb",
+   "relatedSpdxElement": "SPDXRef-Package-go-module-github.com-kr-pretty-35ae79a5e7c8266e",
+   "relationshipType": "DEPENDENCY_OF"
+  },
+  {
+   "spdxElementId": "SPDXRef-Package-go-module-github.com-kr-pretty-1e1ecacab65f6bba",
+   "relatedSpdxElement": "SPDXRef-Package-go-module-gopkg.in-check.v1-983097d0c7551161",
+   "relationshipType": "DEPENDENCY_OF"
+  },
+  {
+   "spdxElementId": "SPDXRef-Package-go-module-github.com-go-openapi-swag-fileutils-25527654bd737f93",
+   "relatedSpdxElement": "SPDXRef-Package-go-module-github.com-go-openapi-swag-d34ea2f5bef8ee55",
+   "relationshipType": "DEPENDENCY_OF"
+  },
+  {
+   "spdxElementId": "SPDXRef-Package-go-module-github.com-go-openapi-swag-fileutils-25527654bd737f93",
+   "relatedSpdxElement": "SPDXRef-Package-go-module-github.com-go-openapi-swag-d48dd29e4e487cff",
+   "relationshipType": "DEPENDENCY_OF"
+  },
+  {
+   "spdxElementId": "SPDXRef-Package-go-module-github.com-go-openapi-swag-jsonutils-adapters-easyjson-2ab689ece9879d48",
+   "relatedSpdxElement": "SPDXRef-Package-go-module-github.com-go-openapi-swag-jsonutils-adapters-testintegration-a2d49e12db6580f9",
+   "relationshipType": "DEPENDENCY_OF"
+  },
+  {
+   "spdxElementId": "SPDXRef-Package-go-module-github.com-go-openapi-swag-jsonutils-adapters-easyjson-2ab689ece9879d48",
+   "relatedSpdxElement": "SPDXRef-Package-go-module-github.com-go-openapi-swag-jsonutils-adapters-testintegration-benchmarks-eb8a02d6051ed8d3",
+   "relationshipType": "DEPENDENCY_OF"
+  },
+  {
+   "spdxElementId": "SPDXRef-Package-go-module-github.com-go-openapi-swag-yamlutils-2d75f3e29d7be531",
+   "relatedSpdxElement": "SPDXRef-Package-go-module-github.com-go-openapi-swag-loading-1e1e6af54ae12a59",
+   "relationshipType": "DEPENDENCY_OF"
+  },
+  {
+   "spdxElementId": "SPDXRef-Package-go-module-github.com-go-openapi-swag-yamlutils-2d75f3e29d7be531",
+   "relatedSpdxElement": "SPDXRef-Package-go-module-github.com-go-openapi-swag-2462565e5d2f173d",
+   "relationshipType": "DEPENDENCY_OF"
+  },
+  {
+   "spdxElementId": "SPDXRef-Package-go-module-github.com-go-openapi-swag-yamlutils-2d75f3e29d7be531",
+   "relatedSpdxElement": "SPDXRef-Package-go-module-github.com-go-openapi-swag-aaf43cebfad3567d",
+   "relationshipType": "DEPENDENCY_OF"
+  },
+  {
+   "spdxElementId": "SPDXRef-Package-go-module-github.com-go-openapi-swag-yamlutils-2d75f3e29d7be531",
+   "relatedSpdxElement": "SPDXRef-Package-go-module-github.com-go-openapi-swag-loading-b4c65ccd464926d1",
+   "relationshipType": "DEPENDENCY_OF"
+  },
+  {
+   "spdxElementId": "SPDXRef-Package-go-module-github.com-go-openapi-swag-jsonutils-fixtures-test-2e1fdc0a905e7cd6",
+   "relatedSpdxElement": "SPDXRef-Package-go-module-github.com-go-openapi-swag-jsonutils-adapters-testintegration-138856c1b1811bbe",
+   "relationshipType": "DEPENDENCY_OF"
+  },
+  {
+   "spdxElementId": "SPDXRef-Package-go-module-github.com-go-openapi-swag-jsonutils-fixtures-test-2e1fdc0a905e7cd6",
+   "relatedSpdxElement": "SPDXRef-Package-go-module-github.com-go-openapi-swag-jsonutils-adapters-testintegration-benchmarks-448d0ee56e409945",
+   "relationshipType": "DEPENDENCY_OF"
+  },
+  {
+   "spdxElementId": "SPDXRef-Package-go-module-github.com-go-openapi-swag-jsonutils-fixtures-test-2e1fdc0a905e7cd6",
+   "relatedSpdxElement": "SPDXRef-Package-go-module-github.com-go-openapi-swag-jsonutils-48e17803d48f9b3d",
+   "relationshipType": "DEPENDENCY_OF"
+  },
+  {
+   "spdxElementId": "SPDXRef-Package-go-module-github.com-go-openapi-swag-jsonutils-fixtures-test-2e1fdc0a905e7cd6",
+   "relatedSpdxElement": "SPDXRef-Package-go-module-github.com-go-openapi-swag-jsonutils-adapters-easyjson-59ea66d03e56e9b8",
+   "relationshipType": "DEPENDENCY_OF"
+  },
+  {
+   "spdxElementId": "SPDXRef-Package-go-module-github.com-go-openapi-swag-jsonutils-fixtures-test-2e1fdc0a905e7cd6",
+   "relatedSpdxElement": "SPDXRef-Package-go-module-github.com-go-openapi-swag-jsonutils-adapters-testintegration-benchmarks-5f51ed1869698f45",
+   "relationshipType": "DEPENDENCY_OF"
+  },
+  {
+   "spdxElementId": "SPDXRef-Package-go-module-github.com-go-openapi-swag-jsonutils-fixtures-test-2e1fdc0a905e7cd6",
+   "relatedSpdxElement": "SPDXRef-Package-go-module-github.com-go-openapi-swag-jsonutils-adapters-testintegration-bad7841ac742fba7",
+   "relationshipType": "DEPENDENCY_OF"
+  },
+  {
+   "spdxElementId": "SPDXRef-Package-go-module-github.com-go-openapi-swag-jsonutils-fixtures-test-2e1fdc0a905e7cd6",
+   "relatedSpdxElement": "SPDXRef-Package-go-module-github.com-go-openapi-swag-yamlutils-bc5438fa05ca1fb6",
+   "relationshipType": "DEPENDENCY_OF"
+  },
+  {
+   "spdxElementId": "SPDXRef-Package-go-module-github.com-go-openapi-swag-jsonutils-fixtures-test-2e1fdc0a905e7cd6",
+   "relatedSpdxElement": "SPDXRef-Package-go-module-github.com-go-openapi-swag-jsonutils-adapters-easyjson-e6b5a07dd5fbd853",
+   "relationshipType": "DEPENDENCY_OF"
+  },
+  {
+   "spdxElementId": "SPDXRef-Package-go-module-github.com-go-openapi-swag-jsonutils-fixtures-test-2e1fdc0a905e7cd6",
+   "relatedSpdxElement": "SPDXRef-Package-go-module-github.com-go-openapi-swag-jsonutils-fbf823370a53be5f",
+   "relationshipType": "DEPENDENCY_OF"
+  },
+  {
+   "spdxElementId": "SPDXRef-Package-go-module-github.com-kr-pretty-35ae79a5e7c8266e",
+   "relatedSpdxElement": "SPDXRef-Package-go-module-gopkg.in-check.v1-7d8e6593f96257df",
+   "relationshipType": "DEPENDENCY_OF"
+  },
+  {
+   "spdxElementId": "SPDXRef-Package-go-module-github.com-go-openapi-swag-cmdutils-45598b79d3d74526",
+   "relatedSpdxElement": "SPDXRef-Package-go-module-github.com-go-openapi-swag-2462565e5d2f173d",
+   "relationshipType": "DEPENDENCY_OF"
+  },
+  {
+   "spdxElementId": "SPDXRef-Package-go-module-github.com-go-openapi-swag-cmdutils-45598b79d3d74526",
+   "relatedSpdxElement": "SPDXRef-Package-go-module-github.com-go-openapi-swag-aaf43cebfad3567d",
+   "relationshipType": "DEPENDENCY_OF"
+  },
+  {
+   "spdxElementId": "SPDXRef-Package-go-module-github.com-kr-text-46e13f03cdc07407",
+   "relatedSpdxElement": "SPDXRef-Package-go-module-github.com-kr-pretty-35ae79a5e7c8266e",
+   "relationshipType": "DEPENDENCY_OF"
+  },
+  {
+   "spdxElementId": "SPDXRef-Package-go-module-github.com-go-openapi-swag-conv-471d2519aac11aa5",
+   "relatedSpdxElement": "SPDXRef-Package-go-module-github.com-go-openapi-swag-jsonutils-48e17803d48f9b3d",
+   "relationshipType": "DEPENDENCY_OF"
+  },
+  {
+   "spdxElementId": "SPDXRef-Package-go-module-github.com-go-openapi-swag-conv-471d2519aac11aa5",
+   "relatedSpdxElement": "SPDXRef-Package-go-module-github.com-go-openapi-swag-jsonutils-adapters-easyjson-59ea66d03e56e9b8",
+   "relationshipType": "DEPENDENCY_OF"
+  },
+  {
+   "spdxElementId": "SPDXRef-Package-go-module-github.com-go-openapi-swag-conv-471d2519aac11aa5",
+   "relatedSpdxElement": "SPDXRef-Package-go-module-github.com-go-openapi-swag-yamlutils-bc5438fa05ca1fb6",
+   "relationshipType": "DEPENDENCY_OF"
+  },
+  {
+   "spdxElementId": "SPDXRef-Package-go-module-github.com-go-openapi-swag-conv-471d2519aac11aa5",
+   "relatedSpdxElement": "SPDXRef-Package-go-module-github.com-go-openapi-swag-d34ea2f5bef8ee55",
+   "relationshipType": "DEPENDENCY_OF"
+  },
+  {
+   "spdxElementId": "SPDXRef-Package-go-module-github.com-go-openapi-swag-conv-471d2519aac11aa5",
+   "relatedSpdxElement": "SPDXRef-Package-go-module-github.com-go-openapi-swag-d48dd29e4e487cff",
+   "relationshipType": "DEPENDENCY_OF"
+  },
+  {
+   "spdxElementId": "SPDXRef-Package-go-module-github.com-go-openapi-swag-jsonutils-48e17803d48f9b3d",
+   "relatedSpdxElement": "SPDXRef-Package-go-module-github.com-go-openapi-swag-jsonutils-adapters-easyjson-59ea66d03e56e9b8",
+   "relationshipType": "DEPENDENCY_OF"
+  },
+  {
+   "spdxElementId": "SPDXRef-Package-go-module-github.com-go-openapi-swag-jsonutils-48e17803d48f9b3d",
+   "relatedSpdxElement": "SPDXRef-Package-go-module-github.com-go-openapi-swag-jsonutils-adapters-testintegration-benchmarks-5f51ed1869698f45",
+   "relationshipType": "DEPENDENCY_OF"
+  },
+  {
+   "spdxElementId": "SPDXRef-Package-go-module-github.com-go-openapi-swag-jsonutils-48e17803d48f9b3d",
+   "relatedSpdxElement": "SPDXRef-Package-go-module-github.com-go-openapi-swag-jsonutils-adapters-testintegration-bad7841ac742fba7",
+   "relationshipType": "DEPENDENCY_OF"
+  },
+  {
+   "spdxElementId": "SPDXRef-Package-go-module-github.com-go-openapi-swag-jsonutils-48e17803d48f9b3d",
+   "relatedSpdxElement": "SPDXRef-Package-go-module-github.com-go-openapi-swag-yamlutils-bc5438fa05ca1fb6",
+   "relationshipType": "DEPENDENCY_OF"
+  },
+  {
+   "spdxElementId": "SPDXRef-Package-go-module-github.com-go-openapi-swag-jsonutils-48e17803d48f9b3d",
+   "relatedSpdxElement": "SPDXRef-Package-go-module-github.com-go-openapi-swag-d34ea2f5bef8ee55",
+   "relationshipType": "DEPENDENCY_OF"
+  },
+  {
+   "spdxElementId": "SPDXRef-Package-go-module-github.com-go-openapi-swag-jsonutils-48e17803d48f9b3d",
+   "relatedSpdxElement": "SPDXRef-Package-go-module-github.com-go-openapi-swag-d48dd29e4e487cff",
+   "relationshipType": "DEPENDENCY_OF"
+  },
+  {
+   "spdxElementId": "SPDXRef-Package-go-module-github.com-go-openapi-swag-typeutils-4ebc6ddd7110bca4",
+   "relatedSpdxElement": "SPDXRef-Package-go-module-github.com-go-openapi-swag-conv-07f49ef6bed7e92e",
+   "relationshipType": "DEPENDENCY_OF"
+  },
+  {
+   "spdxElementId": "SPDXRef-Package-go-module-github.com-go-openapi-swag-typeutils-4ebc6ddd7110bca4",
+   "relatedSpdxElement": "SPDXRef-Package-go-module-github.com-go-openapi-swag-conv-471d2519aac11aa5",
+   "relationshipType": "DEPENDENCY_OF"
+  },
+  {
+   "spdxElementId": "SPDXRef-Package-go-module-github.com-go-openapi-swag-typeutils-4ebc6ddd7110bca4",
+   "relatedSpdxElement": "SPDXRef-Package-go-module-github.com-go-openapi-swag-jsonutils-48e17803d48f9b3d",
+   "relationshipType": "DEPENDENCY_OF"
+  },
+  {
+   "spdxElementId": "SPDXRef-Package-go-module-github.com-go-openapi-swag-typeutils-4ebc6ddd7110bca4",
+   "relatedSpdxElement": "SPDXRef-Package-go-module-github.com-go-openapi-swag-jsonutils-adapters-easyjson-59ea66d03e56e9b8",
+   "relationshipType": "DEPENDENCY_OF"
+  },
+  {
+   "spdxElementId": "SPDXRef-Package-go-module-github.com-go-openapi-swag-typeutils-4ebc6ddd7110bca4",
+   "relatedSpdxElement": "SPDXRef-Package-go-module-github.com-go-openapi-swag-yamlutils-bc5438fa05ca1fb6",
+   "relationshipType": "DEPENDENCY_OF"
+  },
+  {
+   "spdxElementId": "SPDXRef-Package-go-module-github.com-go-openapi-swag-typeutils-4ebc6ddd7110bca4",
+   "relatedSpdxElement": "SPDXRef-Package-go-module-github.com-go-openapi-swag-d34ea2f5bef8ee55",
+   "relationshipType": "DEPENDENCY_OF"
+  },
+  {
+   "spdxElementId": "SPDXRef-Package-go-module-github.com-go-openapi-swag-typeutils-4ebc6ddd7110bca4",
+   "relatedSpdxElement": "SPDXRef-Package-go-module-github.com-go-openapi-swag-d48dd29e4e487cff",
+   "relationshipType": "DEPENDENCY_OF"
+  },
+  {
+   "spdxElementId": "SPDXRef-Package-go-module-github.com-go-openapi-swag-typeutils-4ebc6ddd7110bca4",
+   "relatedSpdxElement": "SPDXRef-Package-go-module-github.com-go-openapi-swag-jsonutils-adapters-easyjson-e6b5a07dd5fbd853",
+   "relationshipType": "DEPENDENCY_OF"
+  },
+  {
+   "spdxElementId": "SPDXRef-Package-go-module-github.com-go-openapi-swag-typeutils-4ebc6ddd7110bca4",
+   "relatedSpdxElement": "SPDXRef-Package-go-module-github.com-go-openapi-swag-jsonutils-fbf823370a53be5f",
+   "relationshipType": "DEPENDENCY_OF"
+  },
+  {
+   "spdxElementId": "SPDXRef-Package-go-module-github.com-go-openapi-swag-jsonutils-fixtures-test-4f0c2408fa965ecd",
+   "relatedSpdxElement": "SPDXRef-Package-go-module-github.com-go-openapi-swag-jsonutils-adapters-testintegration-05c8e54531eed7a7",
+   "relationshipType": "DEPENDENCY_OF"
+  },
+  {
+   "spdxElementId": "SPDXRef-Package-go-module-github.com-go-openapi-swag-jsonutils-fixtures-test-4f0c2408fa965ecd",
+   "relatedSpdxElement": "SPDXRef-Package-go-module-github.com-go-openapi-swag-jsonutils-0b2977064b5255db",
+   "relationshipType": "DEPENDENCY_OF"
+  },
+  {
+   "spdxElementId": "SPDXRef-Package-go-module-github.com-go-openapi-swag-jsonutils-fixtures-test-4f0c2408fa965ecd",
+   "relatedSpdxElement": "SPDXRef-Package-go-module-github.com-go-openapi-swag-jsonutils-adapters-testintegration-benchmarks-0e65d36e9a04611c",
+   "relationshipType": "DEPENDENCY_OF"
+  },
+  {
+   "spdxElementId": "SPDXRef-Package-go-module-github.com-go-openapi-swag-jsonutils-fixtures-test-4f0c2408fa965ecd",
+   "relatedSpdxElement": "SPDXRef-Package-go-module-github.com-go-openapi-swag-jsonutils-adapters-easyjson-16dce97cfbf9dd42",
+   "relationshipType": "DEPENDENCY_OF"
+  },
+  {
+   "spdxElementId": "SPDXRef-Package-go-module-github.com-go-openapi-swag-jsonutils-fixtures-test-4f0c2408fa965ecd",
+   "relatedSpdxElement": "SPDXRef-Package-go-module-github.com-go-openapi-swag-jsonutils-adapters-easyjson-2ab689ece9879d48",
+   "relationshipType": "DEPENDENCY_OF"
+  },
+  {
+   "spdxElementId": "SPDXRef-Package-go-module-github.com-go-openapi-swag-jsonutils-fixtures-test-4f0c2408fa965ecd",
+   "relatedSpdxElement": "SPDXRef-Package-go-module-github.com-go-openapi-swag-yamlutils-2d75f3e29d7be531",
+   "relationshipType": "DEPENDENCY_OF"
+  },
+  {
+   "spdxElementId": "SPDXRef-Package-go-module-github.com-go-openapi-swag-jsonutils-fixtures-test-4f0c2408fa965ecd",
+   "relatedSpdxElement": "SPDXRef-Package-go-module-github.com-go-openapi-swag-jsonutils-5959b86decf53f9f",
+   "relationshipType": "DEPENDENCY_OF"
+  },
+  {
+   "spdxElementId": "SPDXRef-Package-go-module-github.com-go-openapi-swag-jsonutils-fixtures-test-4f0c2408fa965ecd",
+   "relatedSpdxElement": "SPDXRef-Package-go-module-github.com-go-openapi-swag-jsonutils-adapters-testintegration-a2d49e12db6580f9",
+   "relationshipType": "DEPENDENCY_OF"
+  },
+  {
+   "spdxElementId": "SPDXRef-Package-go-module-github.com-go-openapi-swag-jsonutils-fixtures-test-4f0c2408fa965ecd",
+   "relatedSpdxElement": "SPDXRef-Package-go-module-github.com-go-openapi-swag-jsonutils-adapters-testintegration-benchmarks-eb8a02d6051ed8d3",
+   "relationshipType": "DEPENDENCY_OF"
+  },
+  {
+   "spdxElementId": "SPDXRef-Package-go-module-github.com-go-openapi-swag-stringutils-4f8d0d8d7897b868",
+   "relatedSpdxElement": "SPDXRef-Package-go-module-github.com-go-openapi-swag-2462565e5d2f173d",
+   "relationshipType": "DEPENDENCY_OF"
+  },
+  {
+   "spdxElementId": "SPDXRef-Package-go-module-github.com-go-openapi-swag-stringutils-4f8d0d8d7897b868",
+   "relatedSpdxElement": "SPDXRef-Package-go-module-github.com-go-openapi-swag-aaf43cebfad3567d",
+   "relationshipType": "DEPENDENCY_OF"
+  },
+  {
+   "spdxElementId": "SPDXRef-Package-go-module-github.com-go-openapi-swag-jsonutils-5959b86decf53f9f",
+   "relatedSpdxElement": "SPDXRef-Package-go-module-github.com-go-openapi-swag-jsonutils-adapters-easyjson-16dce97cfbf9dd42",
+   "relationshipType": "DEPENDENCY_OF"
+  },
+  {
+   "spdxElementId": "SPDXRef-Package-go-module-github.com-go-openapi-swag-jsonutils-5959b86decf53f9f",
+   "relatedSpdxElement": "SPDXRef-Package-go-module-github.com-go-openapi-swag-yamlutils-2d75f3e29d7be531",
+   "relationshipType": "DEPENDENCY_OF"
+  },
+  {
+   "spdxElementId": "SPDXRef-Package-go-module-github.com-go-openapi-swag-jsonutils-5959b86decf53f9f",
+   "relatedSpdxElement": "SPDXRef-Package-go-module-github.com-go-openapi-swag-jsonutils-adapters-testintegration-a2d49e12db6580f9",
+   "relationshipType": "DEPENDENCY_OF"
+  },
+  {
+   "spdxElementId": "SPDXRef-Package-go-module-github.com-go-openapi-swag-jsonutils-5959b86decf53f9f",
+   "relatedSpdxElement": "SPDXRef-Package-go-module-github.com-go-openapi-swag-jsonutils-adapters-testintegration-benchmarks-eb8a02d6051ed8d3",
+   "relationshipType": "DEPENDENCY_OF"
+  },
+  {
+   "spdxElementId": "SPDXRef-Package-go-module-github.com-go-openapi-swag-jsonutils-adapters-easyjson-59ea66d03e56e9b8",
+   "relatedSpdxElement": "SPDXRef-Package-go-module-github.com-go-openapi-swag-jsonutils-adapters-testintegration-benchmarks-5f51ed1869698f45",
+   "relationshipType": "DEPENDENCY_OF"
+  },
+  {
+   "spdxElementId": "SPDXRef-Package-go-module-github.com-go-openapi-swag-jsonutils-adapters-easyjson-59ea66d03e56e9b8",
+   "relatedSpdxElement": "SPDXRef-Package-go-module-github.com-go-openapi-swag-jsonutils-adapters-testintegration-bad7841ac742fba7",
+   "relationshipType": "DEPENDENCY_OF"
+  },
+  {
+   "spdxElementId": "SPDXRef-Package-go-module-github.com-mailru-easyjson-64731e64c40fe227",
+   "relatedSpdxElement": "SPDXRef-Package-go-module-github.com-go-openapi-swag-jsonutils-adapters-easyjson-59ea66d03e56e9b8",
+   "relationshipType": "DEPENDENCY_OF"
+  },
+  {
+   "spdxElementId": "SPDXRef-Package-go-module-github.com-mailru-easyjson-64731e64c40fe227",
+   "relatedSpdxElement": "SPDXRef-Package-go-module-github.com-go-openapi-swag-jsonutils-adapters-testintegration-benchmarks-5f51ed1869698f45",
+   "relationshipType": "DEPENDENCY_OF"
+  },
+  {
+   "spdxElementId": "SPDXRef-Package-go-module-github.com-mailru-easyjson-64731e64c40fe227",
+   "relatedSpdxElement": "SPDXRef-Package-go-module-github.com-go-openapi-swag-jsonutils-adapters-testintegration-bad7841ac742fba7",
+   "relationshipType": "DEPENDENCY_OF"
+  },
+  {
+   "spdxElementId": "SPDXRef-Package-go-module-github.com-go-openapi-swag-loading-66bf3ffcdd565782",
+   "relatedSpdxElement": "SPDXRef-Package-go-module-github.com-go-openapi-swag-d34ea2f5bef8ee55",
+   "relationshipType": "DEPENDENCY_OF"
+  },
+  {
+   "spdxElementId": "SPDXRef-Package-go-module-github.com-go-openapi-swag-loading-66bf3ffcdd565782",
+   "relatedSpdxElement": "SPDXRef-Package-go-module-github.com-go-openapi-swag-d48dd29e4e487cff",
+   "relationshipType": "DEPENDENCY_OF"
+  },
+  {
+   "spdxElementId": "SPDXRef-Package-go-module-github.com-go-openapi-swag-mangling-70a03e9ff24e3418",
+   "relatedSpdxElement": "SPDXRef-Package-go-module-github.com-go-openapi-swag-d34ea2f5bef8ee55",
+   "relationshipType": "DEPENDENCY_OF"
+  },
+  {
+   "spdxElementId": "SPDXRef-Package-go-module-github.com-go-openapi-swag-mangling-70a03e9ff24e3418",
+   "relatedSpdxElement": "SPDXRef-Package-go-module-github.com-go-openapi-swag-d48dd29e4e487cff",
+   "relationshipType": "DEPENDENCY_OF"
+  },
+  {
+   "spdxElementId": "SPDXRef-Package-go-module-github.com-rogpeppe-go-internal-7c7b9cd9468fe063",
+   "relatedSpdxElement": "SPDXRef-Package-go-module-github.com-kr-pretty-1e1ecacab65f6bba",
+   "relationshipType": "DEPENDENCY_OF"
+  },
+  {
+   "spdxElementId": "SPDXRef-Package-go-module-gopkg.in-check.v1-7d8e6593f96257df",
+   "relatedSpdxElement": "SPDXRef-Package-go-module-go.yaml.in-yaml-v3-90aec56a857c9c07",
+   "relationshipType": "DEPENDENCY_OF"
+  },
+  {
+   "spdxElementId": "SPDXRef-Package-go-module-github.com-kr-text-7ec845969fa95797",
+   "relatedSpdxElement": "SPDXRef-Package-go-module-github.com-kr-pretty-1e1ecacab65f6bba",
+   "relationshipType": "DEPENDENCY_OF"
+  },
+  {
+   "spdxElementId": "SPDXRef-Package-go-module-github.com-go-openapi-swag-typeutils-87361919c5defab6",
+   "relatedSpdxElement": "SPDXRef-Package-go-module-github.com-go-openapi-swag-yamlutils-bc5438fa05ca1fb6",
+   "relationshipType": "DEPENDENCY_OF"
+  },
+  {
+   "spdxElementId": "SPDXRef-Package-go-module-github.com-go-openapi-swag-cmdutils-8d86ad0f0d5d79aa",
+   "relatedSpdxElement": "SPDXRef-Package-go-module-github.com-go-openapi-swag-d34ea2f5bef8ee55",
+   "relationshipType": "DEPENDENCY_OF"
+  },
+  {
+   "spdxElementId": "SPDXRef-Package-go-module-github.com-go-openapi-swag-cmdutils-8d86ad0f0d5d79aa",
+   "relatedSpdxElement": "SPDXRef-Package-go-module-github.com-go-openapi-swag-d48dd29e4e487cff",
+   "relationshipType": "DEPENDENCY_OF"
+  },
+  {
+   "spdxElementId": "SPDXRef-Package-go-module-go.yaml.in-yaml-v3-90aec56a857c9c07",
+   "relatedSpdxElement": "SPDXRef-Package-go-module-github.com-go-openapi-swag-jsonutils-fixtures-test-2e1fdc0a905e7cd6",
+   "relationshipType": "DEPENDENCY_OF"
+  },
+  {
+   "spdxElementId": "SPDXRef-Package-go-module-go.yaml.in-yaml-v3-90aec56a857c9c07",
+   "relatedSpdxElement": "SPDXRef-Package-go-module-github.com-go-openapi-swag-yamlutils-bc5438fa05ca1fb6",
+   "relationshipType": "DEPENDENCY_OF"
+  },
+  {
+   "spdxElementId": "SPDXRef-Package-go-module-go.yaml.in-yaml-v3-90aec56a857c9c07",
+   "relatedSpdxElement": "SPDXRef-Package-go-module-github.com-go-openapi-testify-enable-yaml-v2-f22c9f92220c8434",
+   "relationshipType": "DEPENDENCY_OF"
+  },
+  {
+   "spdxElementId": "SPDXRef-Package-go-module-gopkg.in-check.v1-983097d0c7551161",
+   "relatedSpdxElement": "SPDXRef-Package-go-module-go.yaml.in-yaml-v3-d536c7667b4ad065",
+   "relationshipType": "DEPENDENCY_OF"
+  },
+  {
+   "spdxElementId": "SPDXRef-Package-go-module-github.com-go-openapi-swag-netutils-9995fc693aac8dd0",
+   "relatedSpdxElement": "SPDXRef-Package-go-module-github.com-go-openapi-swag-d34ea2f5bef8ee55",
+   "relationshipType": "DEPENDENCY_OF"
+  },
+  {
+   "spdxElementId": "SPDXRef-Package-go-module-github.com-go-openapi-swag-netutils-9995fc693aac8dd0",
+   "relatedSpdxElement": "SPDXRef-Package-go-module-github.com-go-openapi-swag-d48dd29e4e487cff",
+   "relationshipType": "DEPENDENCY_OF"
+  },
+  {
+   "spdxElementId": "SPDXRef-Package-go-module-github.com-go-openapi-swag-jsonutils-fixtures-test-9becedade4c23375",
+   "relatedSpdxElement": "SPDXRef-Package-go-module-github.com-go-openapi-swag-yamlutils-bc5438fa05ca1fb6",
+   "relationshipType": "DEPENDENCY_OF"
+  },
+  {
+   "spdxElementId": "SPDXRef-Package-go-module-github.com-go-openapi-swag-jsonutils-fixtures-test-b189cb5d4afa64db",
+   "relatedSpdxElement": "SPDXRef-Package-go-module-github.com-go-openapi-swag-yamlutils-2d75f3e29d7be531",
+   "relationshipType": "DEPENDENCY_OF"
+  },
+  {
+   "spdxElementId": "SPDXRef-Package-go-module-github.com-go-openapi-swag-jsonname-b3f6c07c60186420",
+   "relatedSpdxElement": "SPDXRef-Package-go-module-github.com-go-openapi-swag-2462565e5d2f173d",
+   "relationshipType": "DEPENDENCY_OF"
+  },
+  {
+   "spdxElementId": "SPDXRef-Package-go-module-github.com-go-openapi-swag-jsonname-b3f6c07c60186420",
+   "relatedSpdxElement": "SPDXRef-Package-go-module-github.com-go-openapi-swag-aaf43cebfad3567d",
+   "relationshipType": "DEPENDENCY_OF"
+  },
+  {
+   "spdxElementId": "SPDXRef-Package-go-module-github.com-go-openapi-swag-loading-b4c65ccd464926d1",
+   "relatedSpdxElement": "SPDXRef-Package-go-module-github.com-go-openapi-swag-2462565e5d2f173d",
+   "relationshipType": "DEPENDENCY_OF"
+  },
+  {
+   "spdxElementId": "SPDXRef-Package-go-module-github.com-go-openapi-swag-loading-b4c65ccd464926d1",
+   "relatedSpdxElement": "SPDXRef-Package-go-module-github.com-go-openapi-swag-aaf43cebfad3567d",
+   "relationshipType": "DEPENDENCY_OF"
+  },
+  {
+   "spdxElementId": "SPDXRef-Package-go-module-github.com-go-openapi-swag-yamlutils-bc5438fa05ca1fb6",
+   "relatedSpdxElement": "SPDXRef-Package-go-module-github.com-go-openapi-swag-loading-66bf3ffcdd565782",
+   "relationshipType": "DEPENDENCY_OF"
+  },
+  {
+   "spdxElementId": "SPDXRef-Package-go-module-github.com-go-openapi-swag-yamlutils-bc5438fa05ca1fb6",
+   "relatedSpdxElement": "SPDXRef-Package-go-module-github.com-go-openapi-swag-loading-d0373a31ee44afdc",
+   "relationshipType": "DEPENDENCY_OF"
+  },
+  {
+   "spdxElementId": "SPDXRef-Package-go-module-github.com-go-openapi-swag-yamlutils-bc5438fa05ca1fb6",
+   "relatedSpdxElement": "SPDXRef-Package-go-module-github.com-go-openapi-swag-d34ea2f5bef8ee55",
+   "relationshipType": "DEPENDENCY_OF"
+  },
+  {
+   "spdxElementId": "SPDXRef-Package-go-module-github.com-go-openapi-swag-yamlutils-bc5438fa05ca1fb6",
+   "relatedSpdxElement": "SPDXRef-Package-go-module-github.com-go-openapi-swag-d48dd29e4e487cff",
+   "relationshipType": "DEPENDENCY_OF"
+  },
+  {
+   "spdxElementId": "SPDXRef-Package-go-module-github.com-go-openapi-swag-stringutils-c8c420a55f6ecef5",
+   "relatedSpdxElement": "SPDXRef-Package-go-module-github.com-go-openapi-swag-d34ea2f5bef8ee55",
+   "relationshipType": "DEPENDENCY_OF"
+  },
+  {
+   "spdxElementId": "SPDXRef-Package-go-module-github.com-go-openapi-swag-stringutils-c8c420a55f6ecef5",
+   "relatedSpdxElement": "SPDXRef-Package-go-module-github.com-go-openapi-swag-d48dd29e4e487cff",
+   "relationshipType": "DEPENDENCY_OF"
+  },
+  {
+   "spdxElementId": "SPDXRef-Package-go-module-github.com-go-openapi-swag-mangling-c93c2d0d56dc5054",
+   "relatedSpdxElement": "SPDXRef-Package-go-module-github.com-go-openapi-swag-2462565e5d2f173d",
+   "relationshipType": "DEPENDENCY_OF"
+  },
+  {
+   "spdxElementId": "SPDXRef-Package-go-module-github.com-go-openapi-swag-mangling-c93c2d0d56dc5054",
+   "relatedSpdxElement": "SPDXRef-Package-go-module-github.com-go-openapi-swag-aaf43cebfad3567d",
+   "relationshipType": "DEPENDENCY_OF"
+  },
+  {
+   "spdxElementId": "SPDXRef-Package-go-module-github.com-go-openapi-swag-conv-d06f549e2e72b013",
+   "relatedSpdxElement": "SPDXRef-Package-go-module-github.com-go-openapi-swag-jsonutils-0b2977064b5255db",
+   "relationshipType": "DEPENDENCY_OF"
+  },
+  {
+   "spdxElementId": "SPDXRef-Package-go-module-github.com-go-openapi-swag-conv-d06f549e2e72b013",
+   "relatedSpdxElement": "SPDXRef-Package-go-module-github.com-go-openapi-swag-jsonutils-adapters-easyjson-16dce97cfbf9dd42",
+   "relationshipType": "DEPENDENCY_OF"
+  },
+  {
+   "spdxElementId": "SPDXRef-Package-go-module-github.com-go-openapi-swag-conv-d06f549e2e72b013",
+   "relatedSpdxElement": "SPDXRef-Package-go-module-github.com-go-openapi-swag-2462565e5d2f173d",
+   "relationshipType": "DEPENDENCY_OF"
+  },
+  {
+   "spdxElementId": "SPDXRef-Package-go-module-github.com-go-openapi-swag-conv-d06f549e2e72b013",
+   "relatedSpdxElement": "SPDXRef-Package-go-module-github.com-go-openapi-swag-yamlutils-2d75f3e29d7be531",
+   "relationshipType": "DEPENDENCY_OF"
+  },
+  {
+   "spdxElementId": "SPDXRef-Package-go-module-github.com-go-openapi-swag-conv-d06f549e2e72b013",
+   "relatedSpdxElement": "SPDXRef-Package-go-module-github.com-go-openapi-swag-aaf43cebfad3567d",
+   "relationshipType": "DEPENDENCY_OF"
+  },
+  {
+   "spdxElementId": "SPDXRef-Package-go-module-github.com-go-openapi-swag-conv-d2b18c2417bd64e8",
+   "relatedSpdxElement": "SPDXRef-Package-go-module-github.com-go-openapi-swag-jsonutils-0b2977064b5255db",
+   "relationshipType": "DEPENDENCY_OF"
+  },
+  {
+   "spdxElementId": "SPDXRef-Package-go-module-github.com-go-openapi-swag-conv-d2b18c2417bd64e8",
+   "relatedSpdxElement": "SPDXRef-Package-go-module-github.com-go-openapi-swag-jsonutils-adapters-easyjson-16dce97cfbf9dd42",
+   "relationshipType": "DEPENDENCY_OF"
+  },
+  {
+   "spdxElementId": "SPDXRef-Package-go-module-github.com-go-openapi-swag-conv-d2b18c2417bd64e8",
+   "relatedSpdxElement": "SPDXRef-Package-go-module-github.com-go-openapi-swag-yamlutils-2d75f3e29d7be531",
+   "relationshipType": "DEPENDENCY_OF"
+  },
+  {
+   "spdxElementId": "SPDXRef-Package-go-module-go.yaml.in-yaml-v3-d536c7667b4ad065",
+   "relatedSpdxElement": "SPDXRef-Package-go-module-github.com-go-openapi-swag-yamlutils-2d75f3e29d7be531",
+   "relationshipType": "DEPENDENCY_OF"
+  },
+  {
+   "spdxElementId": "SPDXRef-Package-go-module-go.yaml.in-yaml-v3-d536c7667b4ad065",
+   "relatedSpdxElement": "SPDXRef-Package-go-module-github.com-go-openapi-swag-jsonutils-fixtures-test-4f0c2408fa965ecd",
+   "relationshipType": "DEPENDENCY_OF"
+  },
+  {
+   "spdxElementId": "SPDXRef-Package-go-module-go.yaml.in-yaml-v3-d536c7667b4ad065",
+   "relatedSpdxElement": "SPDXRef-Package-go-module-github.com-go-openapi-testify-enable-yaml-v2-d568aafaf206e82f",
+   "relationshipType": "DEPENDENCY_OF"
+  },
+  {
+   "spdxElementId": "SPDXRef-Package-go-module-github.com-go-openapi-testify-enable-yaml-v2-d568aafaf206e82f",
+   "relatedSpdxElement": "SPDXRef-Package-go-module-github.com-go-openapi-swag-yamlutils-2d75f3e29d7be531",
+   "relationshipType": "DEPENDENCY_OF"
+  },
+  {
+   "spdxElementId": "SPDXRef-Package-go-module-github.com-go-openapi-testify-enable-yaml-v2-d568aafaf206e82f",
+   "relatedSpdxElement": "SPDXRef-Package-go-module-github.com-go-openapi-swag-loading-b4c65ccd464926d1",
+   "relationshipType": "DEPENDENCY_OF"
+  },
+  {
+   "spdxElementId": "SPDXRef-Package-go-module-github.com-go-openapi-swag-jsonname-d9e912480b499ebb",
+   "relatedSpdxElement": "SPDXRef-Package-go-module-github.com-go-openapi-swag-d34ea2f5bef8ee55",
+   "relationshipType": "DEPENDENCY_OF"
+  },
+  {
+   "spdxElementId": "SPDXRef-Package-go-module-github.com-go-openapi-swag-jsonname-d9e912480b499ebb",
+   "relatedSpdxElement": "SPDXRef-Package-go-module-github.com-go-openapi-swag-d48dd29e4e487cff",
+   "relationshipType": "DEPENDENCY_OF"
+  },
+  {
+   "spdxElementId": "SPDXRef-Package-go-module-github.com-josharian-intern-e163b0705425c3c9",
+   "relatedSpdxElement": "SPDXRef-Package-go-module-github.com-mailru-easyjson-64731e64c40fe227",
+   "relationshipType": "DEPENDENCY_OF"
+  },
+  {
+   "spdxElementId": "SPDXRef-Package-go-module-github.com-josharian-intern-e343f29fedb5dd6e",
+   "relatedSpdxElement": "SPDXRef-Package-go-module-github.com-mailru-easyjson-0766866c2b745fc8",
+   "relationshipType": "DEPENDENCY_OF"
+  },
+  {
+   "spdxElementId": "SPDXRef-Package-go-module-github.com-go-openapi-swag-jsonutils-adapters-easyjson-e6b5a07dd5fbd853",
+   "relatedSpdxElement": "SPDXRef-Package-go-module-github.com-go-openapi-swag-jsonutils-adapters-testintegration-benchmarks-5f51ed1869698f45",
+   "relationshipType": "DEPENDENCY_OF"
+  },
+  {
+   "spdxElementId": "SPDXRef-Package-go-module-github.com-go-openapi-swag-jsonutils-adapters-easyjson-e6b5a07dd5fbd853",
+   "relatedSpdxElement": "SPDXRef-Package-go-module-github.com-go-openapi-swag-jsonutils-adapters-testintegration-bad7841ac742fba7",
+   "relationshipType": "DEPENDENCY_OF"
+  },
+  {
+   "spdxElementId": "SPDXRef-Package-go-module-github.com-go-openapi-swag-typeutils-e834269d6fbd5737",
+   "relatedSpdxElement": "SPDXRef-Package-go-module-github.com-go-openapi-swag-yamlutils-2d75f3e29d7be531",
+   "relationshipType": "DEPENDENCY_OF"
+  },
+  {
+   "spdxElementId": "SPDXRef-Package-go-module-github.com-go-openapi-swag-typeutils-ef902caad22000ee",
+   "relatedSpdxElement": "SPDXRef-Package-go-module-github.com-go-openapi-swag-jsonutils-0b2977064b5255db",
+   "relationshipType": "DEPENDENCY_OF"
+  },
+  {
+   "spdxElementId": "SPDXRef-Package-go-module-github.com-go-openapi-swag-typeutils-ef902caad22000ee",
+   "relatedSpdxElement": "SPDXRef-Package-go-module-github.com-go-openapi-swag-jsonutils-adapters-easyjson-16dce97cfbf9dd42",
+   "relationshipType": "DEPENDENCY_OF"
+  },
+  {
+   "spdxElementId": "SPDXRef-Package-go-module-github.com-go-openapi-swag-typeutils-ef902caad22000ee",
+   "relatedSpdxElement": "SPDXRef-Package-go-module-github.com-go-openapi-swag-2462565e5d2f173d",
+   "relationshipType": "DEPENDENCY_OF"
+  },
+  {
+   "spdxElementId": "SPDXRef-Package-go-module-github.com-go-openapi-swag-typeutils-ef902caad22000ee",
+   "relatedSpdxElement": "SPDXRef-Package-go-module-github.com-go-openapi-swag-jsonutils-adapters-easyjson-2ab689ece9879d48",
+   "relationshipType": "DEPENDENCY_OF"
+  },
+  {
+   "spdxElementId": "SPDXRef-Package-go-module-github.com-go-openapi-swag-typeutils-ef902caad22000ee",
+   "relatedSpdxElement": "SPDXRef-Package-go-module-github.com-go-openapi-swag-yamlutils-2d75f3e29d7be531",
+   "relationshipType": "DEPENDENCY_OF"
+  },
+  {
+   "spdxElementId": "SPDXRef-Package-go-module-github.com-go-openapi-swag-typeutils-ef902caad22000ee",
+   "relatedSpdxElement": "SPDXRef-Package-go-module-github.com-go-openapi-swag-jsonutils-5959b86decf53f9f",
+   "relationshipType": "DEPENDENCY_OF"
+  },
+  {
+   "spdxElementId": "SPDXRef-Package-go-module-github.com-go-openapi-swag-typeutils-ef902caad22000ee",
+   "relatedSpdxElement": "SPDXRef-Package-go-module-github.com-go-openapi-swag-aaf43cebfad3567d",
+   "relationshipType": "DEPENDENCY_OF"
+  },
+  {
+   "spdxElementId": "SPDXRef-Package-go-module-github.com-go-openapi-swag-typeutils-ef902caad22000ee",
+   "relatedSpdxElement": "SPDXRef-Package-go-module-github.com-go-openapi-swag-conv-d06f549e2e72b013",
+   "relationshipType": "DEPENDENCY_OF"
+  },
+  {
+   "spdxElementId": "SPDXRef-Package-go-module-github.com-go-openapi-swag-typeutils-ef902caad22000ee",
+   "relatedSpdxElement": "SPDXRef-Package-go-module-github.com-go-openapi-swag-conv-d2b18c2417bd64e8",
+   "relationshipType": "DEPENDENCY_OF"
+  },
+  {
+   "spdxElementId": "SPDXRef-Package-go-module-github.com-go-openapi-testify-enable-yaml-v2-f22c9f92220c8434",
+   "relatedSpdxElement": "SPDXRef-Package-go-module-github.com-go-openapi-swag-loading-66bf3ffcdd565782",
+   "relationshipType": "DEPENDENCY_OF"
+  },
+  {
+   "spdxElementId": "SPDXRef-Package-go-module-github.com-go-openapi-testify-enable-yaml-v2-f22c9f92220c8434",
+   "relatedSpdxElement": "SPDXRef-Package-go-module-github.com-go-openapi-swag-yamlutils-bc5438fa05ca1fb6",
+   "relationshipType": "DEPENDENCY_OF"
+  },
+  {
+   "spdxElementId": "SPDXRef-Package-go-module-github.com-go-openapi-swag-fileutils-f80e181f7334db53",
+   "relatedSpdxElement": "SPDXRef-Package-go-module-github.com-go-openapi-swag-2462565e5d2f173d",
+   "relationshipType": "DEPENDENCY_OF"
+  },
+  {
+   "spdxElementId": "SPDXRef-Package-go-module-github.com-go-openapi-swag-fileutils-f80e181f7334db53",
+   "relatedSpdxElement": "SPDXRef-Package-go-module-github.com-go-openapi-swag-aaf43cebfad3567d",
+   "relationshipType": "DEPENDENCY_OF"
+  },
+  {
+   "spdxElementId": "SPDXRef-Package-go-module-github.com-go-openapi-testify-v2-fa43e5a5a0db7ace",
+   "relatedSpdxElement": "SPDXRef-Package-go-module-github.com-go-openapi-swag-fileutils-25527654bd737f93",
+   "relationshipType": "DEPENDENCY_OF"
+  },
+  {
+   "spdxElementId": "SPDXRef-Package-go-module-github.com-go-openapi-testify-v2-fa43e5a5a0db7ace",
+   "relatedSpdxElement": "SPDXRef-Package-go-module-github.com-go-openapi-swag-jsonutils-fixtures-test-2e1fdc0a905e7cd6",
+   "relationshipType": "DEPENDENCY_OF"
+  },
+  {
+   "spdxElementId": "SPDXRef-Package-go-module-github.com-go-openapi-testify-v2-fa43e5a5a0db7ace",
+   "relatedSpdxElement": "SPDXRef-Package-go-module-github.com-go-openapi-swag-conv-471d2519aac11aa5",
+   "relationshipType": "DEPENDENCY_OF"
+  },
+  {
+   "spdxElementId": "SPDXRef-Package-go-module-github.com-go-openapi-testify-v2-fa43e5a5a0db7ace",
+   "relatedSpdxElement": "SPDXRef-Package-go-module-github.com-go-openapi-swag-jsonutils-48e17803d48f9b3d",
+   "relationshipType": "DEPENDENCY_OF"
+  },
+  {
+   "spdxElementId": "SPDXRef-Package-go-module-github.com-go-openapi-testify-v2-fa43e5a5a0db7ace",
+   "relatedSpdxElement": "SPDXRef-Package-go-module-github.com-go-openapi-swag-typeutils-4ebc6ddd7110bca4",
+   "relationshipType": "DEPENDENCY_OF"
+  },
+  {
+   "spdxElementId": "SPDXRef-Package-go-module-github.com-go-openapi-testify-v2-fa43e5a5a0db7ace",
+   "relatedSpdxElement": "SPDXRef-Package-go-module-github.com-go-openapi-swag-jsonutils-adapters-easyjson-59ea66d03e56e9b8",
+   "relationshipType": "DEPENDENCY_OF"
+  },
+  {
+   "spdxElementId": "SPDXRef-Package-go-module-github.com-go-openapi-testify-v2-fa43e5a5a0db7ace",
+   "relatedSpdxElement": "SPDXRef-Package-go-module-github.com-go-openapi-swag-jsonutils-adapters-testintegration-benchmarks-5f51ed1869698f45",
+   "relationshipType": "DEPENDENCY_OF"
+  },
+  {
+   "spdxElementId": "SPDXRef-Package-go-module-github.com-go-openapi-testify-v2-fa43e5a5a0db7ace",
+   "relatedSpdxElement": "SPDXRef-Package-go-module-github.com-go-openapi-swag-loading-66bf3ffcdd565782",
+   "relationshipType": "DEPENDENCY_OF"
+  },
+  {
+   "spdxElementId": "SPDXRef-Package-go-module-github.com-go-openapi-testify-v2-fa43e5a5a0db7ace",
+   "relatedSpdxElement": "SPDXRef-Package-go-module-github.com-go-openapi-swag-mangling-70a03e9ff24e3418",
+   "relationshipType": "DEPENDENCY_OF"
+  },
+  {
+   "spdxElementId": "SPDXRef-Package-go-module-github.com-go-openapi-testify-v2-fa43e5a5a0db7ace",
+   "relatedSpdxElement": "SPDXRef-Package-go-module-github.com-go-openapi-swag-netutils-9995fc693aac8dd0",
+   "relationshipType": "DEPENDENCY_OF"
+  },
+  {
+   "spdxElementId": "SPDXRef-Package-go-module-github.com-go-openapi-testify-v2-fa43e5a5a0db7ace",
+   "relatedSpdxElement": "SPDXRef-Package-go-module-github.com-go-openapi-swag-jsonutils-adapters-testintegration-bad7841ac742fba7",
+   "relationshipType": "DEPENDENCY_OF"
+  },
+  {
+   "spdxElementId": "SPDXRef-Package-go-module-github.com-go-openapi-testify-v2-fa43e5a5a0db7ace",
+   "relatedSpdxElement": "SPDXRef-Package-go-module-github.com-go-openapi-swag-yamlutils-bc5438fa05ca1fb6",
+   "relationshipType": "DEPENDENCY_OF"
+  },
+  {
+   "spdxElementId": "SPDXRef-Package-go-module-github.com-go-openapi-testify-v2-fa43e5a5a0db7ace",
+   "relatedSpdxElement": "SPDXRef-Package-go-module-github.com-go-openapi-swag-stringutils-c8c420a55f6ecef5",
+   "relationshipType": "DEPENDENCY_OF"
+  },
+  {
+   "spdxElementId": "SPDXRef-Package-go-module-github.com-go-openapi-testify-v2-fa43e5a5a0db7ace",
+   "relatedSpdxElement": "SPDXRef-Package-go-module-github.com-go-openapi-swag-d34ea2f5bef8ee55",
+   "relationshipType": "DEPENDENCY_OF"
+  },
+  {
+   "spdxElementId": "SPDXRef-Package-go-module-github.com-go-openapi-testify-v2-fa43e5a5a0db7ace",
+   "relatedSpdxElement": "SPDXRef-Package-go-module-github.com-go-openapi-swag-jsonname-d9e912480b499ebb",
+   "relationshipType": "DEPENDENCY_OF"
+  },
+  {
+   "spdxElementId": "SPDXRef-Package-go-module-github.com-go-openapi-testify-v2-fa43e5a5a0db7ace",
+   "relatedSpdxElement": "SPDXRef-Package-go-module-github.com-go-openapi-testify-enable-yaml-v2-f22c9f92220c8434",
+   "relationshipType": "DEPENDENCY_OF"
+  },
+  {
+   "spdxElementId": "SPDXRef-Package-go-module-github.com-go-openapi-swag-jsonutils-fbf823370a53be5f",
+   "relatedSpdxElement": "SPDXRef-Package-go-module-github.com-go-openapi-swag-jsonutils-adapters-easyjson-59ea66d03e56e9b8",
+   "relationshipType": "DEPENDENCY_OF"
+  },
+  {
+   "spdxElementId": "SPDXRef-Package-go-module-github.com-go-openapi-swag-jsonutils-fbf823370a53be5f",
+   "relatedSpdxElement": "SPDXRef-Package-go-module-github.com-go-openapi-swag-jsonutils-adapters-testintegration-benchmarks-5f51ed1869698f45",
+   "relationshipType": "DEPENDENCY_OF"
+  },
+  {
+   "spdxElementId": "SPDXRef-Package-go-module-github.com-go-openapi-swag-jsonutils-fbf823370a53be5f",
+   "relatedSpdxElement": "SPDXRef-Package-go-module-github.com-go-openapi-swag-jsonutils-adapters-testintegration-bad7841ac742fba7",
+   "relationshipType": "DEPENDENCY_OF"
+  },
+  {
+   "spdxElementId": "SPDXRef-Package-go-module-github.com-go-openapi-swag-jsonutils-fbf823370a53be5f",
+   "relatedSpdxElement": "SPDXRef-Package-go-module-github.com-go-openapi-swag-yamlutils-bc5438fa05ca1fb6",
+   "relationshipType": "DEPENDENCY_OF"
+  },
+  {
+   "spdxElementId": "SPDXRef-Package-go-module-github.com-mailru-easyjson-0766866c2b745fc8",
+   "relatedSpdxElement": "SPDXRef-File-benchmarks-go.mod-53b843b385010bd9",
+   "relationshipType": "OTHER",
+   "comment": "evident-by: indicates the package's existence is evident by the given file"
+  },
+  {
+   "spdxElementId": "SPDXRef-Package-go-module-github.com-go-openapi-testify-v2-0acf44a88fbe5844",
+   "relatedSpdxElement": "SPDXRef-File-benchmarks-go.mod-53b843b385010bd9",
+   "relationshipType": "OTHER",
+   "comment": "evident-by: indicates the package's existence is evident by the given file"
+  },
+  {
+   "spdxElementId": "SPDXRef-Package-go-module-github.com-go-openapi-swag-jsonutils-0b2977064b5255db",
+   "relatedSpdxElement": "SPDXRef-File-benchmarks-go.mod-53b843b385010bd9",
+   "relationshipType": "OTHER",
+   "comment": "evident-by: indicates the package's existence is evident by the given file"
+  },
+  {
+   "spdxElementId": "SPDXRef-Package-go-module-github.com-go-openapi-swag-conv-0c6b1b3d99b5dcea",
+   "relatedSpdxElement": "SPDXRef-File-benchmarks-go.mod-53b843b385010bd9",
+   "relationshipType": "OTHER",
+   "comment": "evident-by: indicates the package's existence is evident by the given file"
+  },
+  {
+   "spdxElementId": "SPDXRef-Package-go-module-github.com-go-openapi-swag-netutils-0da65148a5493ee5",
+   "relatedSpdxElement": "SPDXRef-File-benchmarks-go.mod-53b843b385010bd9",
+   "relationshipType": "OTHER",
+   "comment": "evident-by: indicates the package's existence is evident by the given file"
+  },
+  {
+   "spdxElementId": "SPDXRef-Package-go-module-github.com-go-openapi-swag-jsonutils-adapters-easyjson-16dce97cfbf9dd42",
+   "relatedSpdxElement": "SPDXRef-File-benchmarks-go.mod-53b843b385010bd9",
+   "relationshipType": "OTHER",
+   "comment": "evident-by: indicates the package's existence is evident by the given file"
+  },
+  {
+   "spdxElementId": "SPDXRef-Package-go-module-github.com-rogpeppe-go-internal-1d3acdabce33bcdb",
+   "relatedSpdxElement": "SPDXRef-File-go.mod-3fc5a8d3d86e9790",
+   "relationshipType": "OTHER",
+   "comment": "evident-by: indicates the package's existence is evident by the given file"
+  },
+  {
+   "spdxElementId": "SPDXRef-Package-go-module-github.com-kr-pretty-1e1ecacab65f6bba",
+   "relatedSpdxElement": "SPDXRef-File-benchmarks-go.mod-53b843b385010bd9",
+   "relationshipType": "OTHER",
+   "comment": "evident-by: indicates the package's existence is evident by the given file"
+  },
+  {
+   "spdxElementId": "SPDXRef-Package-go-module-github.com-go-openapi-swag-fileutils-25527654bd737f93",
+   "relatedSpdxElement": "SPDXRef-File-go.mod-3fc5a8d3d86e9790",
+   "relationshipType": "OTHER",
+   "comment": "evident-by: indicates the package's existence is evident by the given file"
+  },
+  {
+   "spdxElementId": "SPDXRef-Package-go-module-github.com-go-openapi-swag-yamlutils-2d75f3e29d7be531",
+   "relatedSpdxElement": "SPDXRef-File-benchmarks-go.mod-53b843b385010bd9",
+   "relationshipType": "OTHER",
+   "comment": "evident-by: indicates the package's existence is evident by the given file"
+  },
+  {
+   "spdxElementId": "SPDXRef-Package-go-module-github.com-go-openapi-swag-jsonutils-fixtures-test-2e1fdc0a905e7cd6",
+   "relatedSpdxElement": "SPDXRef-File-go.mod-3fc5a8d3d86e9790",
+   "relationshipType": "OTHER",
+   "comment": "evident-by: indicates the package's existence is evident by the given file"
+  },
+  {
+   "spdxElementId": "SPDXRef-Package-go-module-github.com-kr-pretty-35ae79a5e7c8266e",
+   "relatedSpdxElement": "SPDXRef-File-go.mod-3fc5a8d3d86e9790",
+   "relationshipType": "OTHER",
+   "comment": "evident-by: indicates the package's existence is evident by the given file"
+  },
+  {
+   "spdxElementId": "SPDXRef-Package-go-module-github.com-go-openapi-swag-cmdutils-45598b79d3d74526",
+   "relatedSpdxElement": "SPDXRef-File-benchmarks-go.mod-53b843b385010bd9",
+   "relationshipType": "OTHER",
+   "comment": "evident-by: indicates the package's existence is evident by the given file"
+  },
+  {
+   "spdxElementId": "SPDXRef-Package-go-module-github.com-kr-text-46e13f03cdc07407",
+   "relatedSpdxElement": "SPDXRef-File-go.mod-3fc5a8d3d86e9790",
+   "relationshipType": "OTHER",
+   "comment": "evident-by: indicates the package's existence is evident by the given file"
+  },
+  {
+   "spdxElementId": "SPDXRef-Package-go-module-github.com-go-openapi-swag-conv-471d2519aac11aa5",
+   "relatedSpdxElement": "SPDXRef-File-go.mod-3fc5a8d3d86e9790",
+   "relationshipType": "OTHER",
+   "comment": "evident-by: indicates the package's existence is evident by the given file"
+  },
+  {
+   "spdxElementId": "SPDXRef-Package-go-module-github.com-go-openapi-swag-jsonutils-48e17803d48f9b3d",
+   "relatedSpdxElement": "SPDXRef-File-go.mod-3fc5a8d3d86e9790",
+   "relationshipType": "OTHER",
+   "comment": "evident-by: indicates the package's existence is evident by the given file"
+  },
+  {
+   "spdxElementId": "SPDXRef-Package-go-module-github.com-go-openapi-swag-typeutils-4ebc6ddd7110bca4",
+   "relatedSpdxElement": "SPDXRef-File-go.mod-3fc5a8d3d86e9790",
+   "relationshipType": "OTHER",
+   "comment": "evident-by: indicates the package's existence is evident by the given file"
+  },
+  {
+   "spdxElementId": "SPDXRef-Package-go-module-github.com-go-openapi-swag-jsonutils-fixtures-test-4f0c2408fa965ecd",
+   "relatedSpdxElement": "SPDXRef-File-benchmarks-go.mod-53b843b385010bd9",
+   "relationshipType": "OTHER",
+   "comment": "evident-by: indicates the package's existence is evident by the given file"
+  },
+  {
+   "spdxElementId": "SPDXRef-Package-go-module-github.com-go-openapi-swag-stringutils-4f8d0d8d7897b868",
+   "relatedSpdxElement": "SPDXRef-File-benchmarks-go.mod-53b843b385010bd9",
+   "relationshipType": "OTHER",
+   "comment": "evident-by: indicates the package's existence is evident by the given file"
+  },
+  {
+   "spdxElementId": "SPDXRef-Package-go-module-github.com-go-openapi-swag-jsonutils-adapters-easyjson-59ea66d03e56e9b8",
+   "relatedSpdxElement": "SPDXRef-File-go.mod-3fc5a8d3d86e9790",
+   "relationshipType": "OTHER",
+   "comment": "evident-by: indicates the package's existence is evident by the given file"
+  },
+  {
+   "spdxElementId": "SPDXRef-Package-go-module-github.com-go-openapi-swag-jsonutils-adapters-testintegration-benchmarks-5f51ed1869698f45",
+   "relatedSpdxElement": "SPDXRef-File-go.mod-3fc5a8d3d86e9790",
+   "relationshipType": "OTHER",
+   "comment": "evident-by: indicates the package's existence is evident by the given file"
+  },
+  {
+   "spdxElementId": "SPDXRef-Package-go-module-github.com-mailru-easyjson-64731e64c40fe227",
+   "relatedSpdxElement": "SPDXRef-File-go.mod-3fc5a8d3d86e9790",
+   "relationshipType": "OTHER",
+   "comment": "evident-by: indicates the package's existence is evident by the given file"
+  },
+  {
+   "spdxElementId": "SPDXRef-Package-go-module-github.com-go-openapi-swag-loading-66bf3ffcdd565782",
+   "relatedSpdxElement": "SPDXRef-File-go.mod-3fc5a8d3d86e9790",
+   "relationshipType": "OTHER",
+   "comment": "evident-by: indicates the package's existence is evident by the given file"
+  },
+  {
+   "spdxElementId": "SPDXRef-Package-go-module-github.com-go-openapi-swag-mangling-70a03e9ff24e3418",
+   "relatedSpdxElement": "SPDXRef-File-go.mod-3fc5a8d3d86e9790",
+   "relationshipType": "OTHER",
+   "comment": "evident-by: indicates the package's existence is evident by the given file"
+  },
+  {
+   "spdxElementId": "SPDXRef-Package-go-module-github.com-rogpeppe-go-internal-7c7b9cd9468fe063",
+   "relatedSpdxElement": "SPDXRef-File-benchmarks-go.mod-53b843b385010bd9",
+   "relationshipType": "OTHER",
+   "comment": "evident-by: indicates the package's existence is evident by the given file"
+  },
+  {
+   "spdxElementId": "SPDXRef-Package-go-module-github.com-go-openapi-swag-typeutils-7cd4708b5339bb17",
+   "relatedSpdxElement": "SPDXRef-File-benchmarks-go.mod-53b843b385010bd9",
+   "relationshipType": "OTHER",
+   "comment": "evident-by: indicates the package's existence is evident by the given file"
+  },
+  {
+   "spdxElementId": "SPDXRef-Package-go-module-gopkg.in-check.v1-7d8e6593f96257df",
+   "relatedSpdxElement": "SPDXRef-File-go.mod-3fc5a8d3d86e9790",
+   "relationshipType": "OTHER",
+   "comment": "evident-by: indicates the package's existence is evident by the given file"
+  },
+  {
+   "spdxElementId": "SPDXRef-Package-go-module-github.com-kr-text-7ec845969fa95797",
+   "relatedSpdxElement": "SPDXRef-File-benchmarks-go.mod-53b843b385010bd9",
+   "relationshipType": "OTHER",
+   "comment": "evident-by: indicates the package's existence is evident by the given file"
+  },
+  {
+   "spdxElementId": "SPDXRef-Package-go-module-github.com-go-openapi-swag-cmdutils-8d86ad0f0d5d79aa",
+   "relatedSpdxElement": "SPDXRef-File-go.mod-3fc5a8d3d86e9790",
+   "relationshipType": "OTHER",
+   "comment": "evident-by: indicates the package's existence is evident by the given file"
+  },
+  {
+   "spdxElementId": "SPDXRef-Package-go-module-go.yaml.in-yaml-v3-90aec56a857c9c07",
+   "relatedSpdxElement": "SPDXRef-File-go.mod-3fc5a8d3d86e9790",
+   "relationshipType": "OTHER",
+   "comment": "evident-by: indicates the package's existence is evident by the given file"
+  },
+  {
+   "spdxElementId": "SPDXRef-Package-go-module-github.com-go-openapi-swag-typeutils-919fc5c3b2cb0a51",
+   "relatedSpdxElement": "SPDXRef-File-go.mod-3fc5a8d3d86e9790",
+   "relationshipType": "OTHER",
+   "comment": "evident-by: indicates the package's existence is evident by the given file"
+  },
+  {
+   "spdxElementId": "SPDXRef-Package-go-module-gopkg.in-check.v1-983097d0c7551161",
+   "relatedSpdxElement": "SPDXRef-File-benchmarks-go.mod-53b843b385010bd9",
+   "relationshipType": "OTHER",
+   "comment": "evident-by: indicates the package's existence is evident by the given file"
+  },
+  {
+   "spdxElementId": "SPDXRef-Package-go-module-github.com-go-openapi-swag-netutils-9995fc693aac8dd0",
+   "relatedSpdxElement": "SPDXRef-File-go.mod-3fc5a8d3d86e9790",
+   "relationshipType": "OTHER",
+   "comment": "evident-by: indicates the package's existence is evident by the given file"
+  },
+  {
+   "spdxElementId": "SPDXRef-Package-go-module-github.com-go-openapi-swag-jsonutils-adapters-testintegration-a2d49e12db6580f9",
+   "relatedSpdxElement": "SPDXRef-File-benchmarks-go.mod-53b843b385010bd9",
+   "relationshipType": "OTHER",
+   "comment": "evident-by: indicates the package's existence is evident by the given file"
+  },
+  {
+   "spdxElementId": "SPDXRef-Package-go-module-github.com-go-openapi-swag-aaf43cebfad3567d",
+   "relatedSpdxElement": "SPDXRef-File-benchmarks-go.mod-53b843b385010bd9",
+   "relationshipType": "OTHER",
+   "comment": "evident-by: indicates the package's existence is evident by the given file"
+  },
+  {
+   "spdxElementId": "SPDXRef-Package-go-module-github.com-go-openapi-swag-jsonname-b3f6c07c60186420",
+   "relatedSpdxElement": "SPDXRef-File-benchmarks-go.mod-53b843b385010bd9",
+   "relationshipType": "OTHER",
+   "comment": "evident-by: indicates the package's existence is evident by the given file"
+  },
+  {
+   "spdxElementId": "SPDXRef-Package-go-module-github.com-go-openapi-swag-conv-b448a3a84b76aa00",
+   "relatedSpdxElement": "SPDXRef-File-go.mod-3fc5a8d3d86e9790",
+   "relationshipType": "OTHER",
+   "comment": "evident-by: indicates the package's existence is evident by the given file"
+  },
+  {
+   "spdxElementId": "SPDXRef-Package-go-module-github.com-go-openapi-swag-loading-b4c65ccd464926d1",
+   "relatedSpdxElement": "SPDXRef-File-benchmarks-go.mod-53b843b385010bd9",
+   "relationshipType": "OTHER",
+   "comment": "evident-by: indicates the package's existence is evident by the given file"
+  },
+  {
+   "spdxElementId": "SPDXRef-Package-go-module-github.com-go-openapi-swag-jsonutils-adapters-testintegration-bad7841ac742fba7",
+   "relatedSpdxElement": "SPDXRef-File-go.mod-3fc5a8d3d86e9790",
+   "relationshipType": "OTHER",
+   "comment": "evident-by: indicates the package's existence is evident by the given file"
+  },
+  {
+   "spdxElementId": "SPDXRef-Package-go-module-github.com-go-openapi-swag-yamlutils-bc5438fa05ca1fb6",
+   "relatedSpdxElement": "SPDXRef-File-go.mod-3fc5a8d3d86e9790",
+   "relationshipType": "OTHER",
+   "comment": "evident-by: indicates the package's existence is evident by the given file"
+  },
+  {
+   "spdxElementId": "SPDXRef-Package-go-module-github.com-go-openapi-swag-jsonutils-adapters-easyjson-c619ee3ee54a6cf1",
+   "relatedSpdxElement": "SPDXRef-File-go.mod-3fc5a8d3d86e9790",
+   "relationshipType": "OTHER",
+   "comment": "evident-by: indicates the package's existence is evident by the given file"
+  },
+  {
+   "spdxElementId": "SPDXRef-Package-go-module-github.com-go-openapi-swag-stringutils-c8c420a55f6ecef5",
+   "relatedSpdxElement": "SPDXRef-File-go.mod-3fc5a8d3d86e9790",
+   "relationshipType": "OTHER",
+   "comment": "evident-by: indicates the package's existence is evident by the given file"
+  },
+  {
+   "spdxElementId": "SPDXRef-Package-go-module-github.com-go-openapi-swag-mangling-c93c2d0d56dc5054",
+   "relatedSpdxElement": "SPDXRef-File-benchmarks-go.mod-53b843b385010bd9",
+   "relationshipType": "OTHER",
+   "comment": "evident-by: indicates the package's existence is evident by the given file"
+  },
+  {
+   "spdxElementId": "SPDXRef-Package-go-module-github.com-go-openapi-swag-conv-d06f549e2e72b013",
+   "relatedSpdxElement": "SPDXRef-File-benchmarks-go.mod-53b843b385010bd9",
+   "relationshipType": "OTHER",
+   "comment": "evident-by: indicates the package's existence is evident by the given file"
+  },
+  {
+   "spdxElementId": "SPDXRef-Package-go-module-github.com-go-openapi-swag-d34ea2f5bef8ee55",
+   "relatedSpdxElement": "SPDXRef-File-go.mod-3fc5a8d3d86e9790",
+   "relationshipType": "OTHER",
+   "comment": "evident-by: indicates the package's existence is evident by the given file"
+  },
+  {
+   "spdxElementId": "SPDXRef-Package-go-module-go.yaml.in-yaml-v3-d536c7667b4ad065",
+   "relatedSpdxElement": "SPDXRef-File-benchmarks-go.mod-53b843b385010bd9",
+   "relationshipType": "OTHER",
+   "comment": "evident-by: indicates the package's existence is evident by the given file"
+  },
+  {
+   "spdxElementId": "SPDXRef-Package-go-module-github.com-go-openapi-swag-jsonutils-fixtures-test-d55acba80d8bf103",
+   "relatedSpdxElement": "SPDXRef-File-go.mod-3fc5a8d3d86e9790",
+   "relationshipType": "OTHER",
+   "comment": "evident-by: indicates the package's existence is evident by the given file"
+  },
+  {
+   "spdxElementId": "SPDXRef-Package-go-module-github.com-go-openapi-testify-enable-yaml-v2-d568aafaf206e82f",
+   "relatedSpdxElement": "SPDXRef-File-benchmarks-go.mod-53b843b385010bd9",
+   "relationshipType": "OTHER",
+   "comment": "evident-by: indicates the package's existence is evident by the given file"
+  },
+  {
+   "spdxElementId": "SPDXRef-Package-go-module-github.com-go-openapi-swag-jsonutils-d63607f3d9c3d740",
+   "relatedSpdxElement": "SPDXRef-File-go.mod-3fc5a8d3d86e9790",
+   "relationshipType": "OTHER",
+   "comment": "evident-by: indicates the package's existence is evident by the given file"
+  },
+  {
+   "spdxElementId": "SPDXRef-Package-go-module-github.com-go-openapi-swag-jsonname-d9e912480b499ebb",
+   "relatedSpdxElement": "SPDXRef-File-go.mod-3fc5a8d3d86e9790",
+   "relationshipType": "OTHER",
+   "comment": "evident-by: indicates the package's existence is evident by the given file"
+  },
+  {
+   "spdxElementId": "SPDXRef-Package-go-module-github.com-josharian-intern-e163b0705425c3c9",
+   "relatedSpdxElement": "SPDXRef-File-go.mod-3fc5a8d3d86e9790",
+   "relationshipType": "OTHER",
+   "comment": "evident-by: indicates the package's existence is evident by the given file"
+  },
+  {
+   "spdxElementId": "SPDXRef-Package-go-module-github.com-josharian-intern-e343f29fedb5dd6e",
+   "relatedSpdxElement": "SPDXRef-File-benchmarks-go.mod-53b843b385010bd9",
+   "relationshipType": "OTHER",
+   "comment": "evident-by: indicates the package's existence is evident by the given file"
+  },
+  {
+   "spdxElementId": "SPDXRef-Package-go-module-github.com-go-openapi-swag-jsonutils-adapters-testintegration-benchmarks-eb8a02d6051ed8d3",
+   "relatedSpdxElement": "SPDXRef-File-benchmarks-go.mod-53b843b385010bd9",
+   "relationshipType": "OTHER",
+   "comment": "evident-by: indicates the package's existence is evident by the given file"
+  },
+  {
+   "spdxElementId": "SPDXRef-Package-go-module-github.com-go-openapi-swag-jsonutils-ed50e53ff66b76de",
+   "relatedSpdxElement": "SPDXRef-File-benchmarks-go.mod-53b843b385010bd9",
+   "relationshipType": "OTHER",
+   "comment": "evident-by: indicates the package's existence is evident by the given file"
+  },
+  {
+   "spdxElementId": "SPDXRef-Package-go-module-github.com-go-openapi-swag-typeutils-ef902caad22000ee",
+   "relatedSpdxElement": "SPDXRef-File-benchmarks-go.mod-53b843b385010bd9",
+   "relationshipType": "OTHER",
+   "comment": "evident-by: indicates the package's existence is evident by the given file"
+  },
+  {
+   "spdxElementId": "SPDXRef-Package-go-module-github.com-go-openapi-swag-jsonutils-adapters-easyjson-f1a777ed25920473",
+   "relatedSpdxElement": "SPDXRef-File-benchmarks-go.mod-53b843b385010bd9",
+   "relationshipType": "OTHER",
+   "comment": "evident-by: indicates the package's existence is evident by the given file"
+  },
+  {
+   "spdxElementId": "SPDXRef-Package-go-module-github.com-go-openapi-testify-enable-yaml-v2-f22c9f92220c8434",
+   "relatedSpdxElement": "SPDXRef-File-go.mod-3fc5a8d3d86e9790",
+   "relationshipType": "OTHER",
+   "comment": "evident-by: indicates the package's existence is evident by the given file"
+  },
+  {
+   "spdxElementId": "SPDXRef-Package-go-module-github.com-go-openapi-swag-jsonutils-fixtures-test-f56896aaa1b00dd4",
+   "relatedSpdxElement": "SPDXRef-File-benchmarks-go.mod-53b843b385010bd9",
+   "relationshipType": "OTHER",
+   "comment": "evident-by: indicates the package's existence is evident by the given file"
+  },
+  {
+   "spdxElementId": "SPDXRef-Package-go-module-github.com-go-openapi-swag-fileutils-f80e181f7334db53",
+   "relatedSpdxElement": "SPDXRef-File-benchmarks-go.mod-53b843b385010bd9",
+   "relationshipType": "OTHER",
+   "comment": "evident-by: indicates the package's existence is evident by the given file"
+  },
+  {
+   "spdxElementId": "SPDXRef-Package-go-module-github.com-go-openapi-testify-v2-fa43e5a5a0db7ace",
+   "relatedSpdxElement": "SPDXRef-File-go.mod-3fc5a8d3d86e9790",
+   "relationshipType": "OTHER",
+   "comment": "evident-by: indicates the package's existence is evident by the given file"
+  },
+  {
+   "spdxElementId": "SPDXRef-DocumentRoot-Directory-github.com-go-openapi-swag",
+   "relatedSpdxElement": "SPDXRef-Package-go-module-github.com-go-openapi-swag-aaf43cebfad3567d",
+   "relationshipType": "CONTAINS"
+  },
+  {
+   "spdxElementId": "SPDXRef-DocumentRoot-Directory-github.com-go-openapi-swag",
+   "relatedSpdxElement": "SPDXRef-Package-go-module-github.com-go-openapi-swag-d34ea2f5bef8ee55",
+   "relationshipType": "CONTAINS"
+  },
+  {
+   "spdxElementId": "SPDXRef-DocumentRoot-Directory-github.com-go-openapi-swag",
+   "relatedSpdxElement": "SPDXRef-Package-go-module-github.com-go-openapi-swag-cmdutils-45598b79d3d74526",
+   "relationshipType": "CONTAINS"
+  },
+  {
+   "spdxElementId": "SPDXRef-DocumentRoot-Directory-github.com-go-openapi-swag",
+   "relatedSpdxElement": "SPDXRef-Package-go-module-github.com-go-openapi-swag-cmdutils-8d86ad0f0d5d79aa",
+   "relationshipType": "CONTAINS"
+  },
+  {
+   "spdxElementId": "SPDXRef-DocumentRoot-Directory-github.com-go-openapi-swag",
+   "relatedSpdxElement": "SPDXRef-Package-go-module-github.com-go-openapi-swag-conv-0c6b1b3d99b5dcea",
+   "relationshipType": "CONTAINS"
+  },
+  {
+   "spdxElementId": "SPDXRef-DocumentRoot-Directory-github.com-go-openapi-swag",
+   "relatedSpdxElement": "SPDXRef-Package-go-module-github.com-go-openapi-swag-conv-d06f549e2e72b013",
+   "relationshipType": "CONTAINS"
+  },
+  {
+   "spdxElementId": "SPDXRef-DocumentRoot-Directory-github.com-go-openapi-swag",
+   "relatedSpdxElement": "SPDXRef-Package-go-module-github.com-go-openapi-swag-conv-b448a3a84b76aa00",
+   "relationshipType": "CONTAINS"
+  },
+  {
+   "spdxElementId": "SPDXRef-DocumentRoot-Directory-github.com-go-openapi-swag",
+   "relatedSpdxElement": "SPDXRef-Package-go-module-github.com-go-openapi-swag-conv-471d2519aac11aa5",
+   "relationshipType": "CONTAINS"
+  },
+  {
+   "spdxElementId": "SPDXRef-DocumentRoot-Directory-github.com-go-openapi-swag",
+   "relatedSpdxElement": "SPDXRef-Package-go-module-github.com-go-openapi-swag-fileutils-f80e181f7334db53",
+   "relationshipType": "CONTAINS"
+  },
+  {
+   "spdxElementId": "SPDXRef-DocumentRoot-Directory-github.com-go-openapi-swag",
+   "relatedSpdxElement": "SPDXRef-Package-go-module-github.com-go-openapi-swag-fileutils-25527654bd737f93",
+   "relationshipType": "CONTAINS"
+  },
+  {
+   "spdxElementId": "SPDXRef-DocumentRoot-Directory-github.com-go-openapi-swag",
+   "relatedSpdxElement": "SPDXRef-Package-go-module-github.com-go-openapi-swag-jsonname-b3f6c07c60186420",
+   "relationshipType": "CONTAINS"
+  },
+  {
+   "spdxElementId": "SPDXRef-DocumentRoot-Directory-github.com-go-openapi-swag",
+   "relatedSpdxElement": "SPDXRef-Package-go-module-github.com-go-openapi-swag-jsonname-d9e912480b499ebb",
+   "relationshipType": "CONTAINS"
+  },
+  {
+   "spdxElementId": "SPDXRef-DocumentRoot-Directory-github.com-go-openapi-swag",
+   "relatedSpdxElement": "SPDXRef-Package-go-module-github.com-go-openapi-swag-jsonutils-ed50e53ff66b76de",
+   "relationshipType": "CONTAINS"
+  },
+  {
+   "spdxElementId": "SPDXRef-DocumentRoot-Directory-github.com-go-openapi-swag",
+   "relatedSpdxElement": "SPDXRef-Package-go-module-github.com-go-openapi-swag-jsonutils-0b2977064b5255db",
+   "relationshipType": "CONTAINS"
+  },
+  {
+   "spdxElementId": "SPDXRef-DocumentRoot-Directory-github.com-go-openapi-swag",
+   "relatedSpdxElement": "SPDXRef-Package-go-module-github.com-go-openapi-swag-jsonutils-d63607f3d9c3d740",
+   "relationshipType": "CONTAINS"
+  },
+  {
+   "spdxElementId": "SPDXRef-DocumentRoot-Directory-github.com-go-openapi-swag",
+   "relatedSpdxElement": "SPDXRef-Package-go-module-github.com-go-openapi-swag-jsonutils-48e17803d48f9b3d",
+   "relationshipType": "CONTAINS"
+  },
+  {
+   "spdxElementId": "SPDXRef-DocumentRoot-Directory-github.com-go-openapi-swag",
+   "relatedSpdxElement": "SPDXRef-Package-go-module-github.com-go-openapi-swag-jsonutils-adapters-easyjson-f1a777ed25920473",
+   "relationshipType": "CONTAINS"
+  },
+  {
+   "spdxElementId": "SPDXRef-DocumentRoot-Directory-github.com-go-openapi-swag",
+   "relatedSpdxElement": "SPDXRef-Package-go-module-github.com-go-openapi-swag-jsonutils-adapters-easyjson-16dce97cfbf9dd42",
+   "relationshipType": "CONTAINS"
+  },
+  {
+   "spdxElementId": "SPDXRef-DocumentRoot-Directory-github.com-go-openapi-swag",
+   "relatedSpdxElement": "SPDXRef-Package-go-module-github.com-go-openapi-swag-jsonutils-adapters-easyjson-c619ee3ee54a6cf1",
+   "relationshipType": "CONTAINS"
+  },
+  {
+   "spdxElementId": "SPDXRef-DocumentRoot-Directory-github.com-go-openapi-swag",
+   "relatedSpdxElement": "SPDXRef-Package-go-module-github.com-go-openapi-swag-jsonutils-adapters-easyjson-59ea66d03e56e9b8",
+   "relationshipType": "CONTAINS"
+  },
+  {
+   "spdxElementId": "SPDXRef-DocumentRoot-Directory-github.com-go-openapi-swag",
+   "relatedSpdxElement": "SPDXRef-Package-go-module-github.com-go-openapi-swag-jsonutils-adapters-testintegration-a2d49e12db6580f9",
+   "relationshipType": "CONTAINS"
+  },
+  {
+   "spdxElementId": "SPDXRef-DocumentRoot-Directory-github.com-go-openapi-swag",
+   "relatedSpdxElement": "SPDXRef-Package-go-module-github.com-go-openapi-swag-jsonutils-adapters-testintegration-bad7841ac742fba7",
+   "relationshipType": "CONTAINS"
+  },
+  {
+   "spdxElementId": "SPDXRef-DocumentRoot-Directory-github.com-go-openapi-swag",
+   "relatedSpdxElement": "SPDXRef-Package-go-module-github.com-go-openapi-swag-jsonutils-adapters-testintegration-benchmarks-eb8a02d6051ed8d3",
+   "relationshipType": "CONTAINS"
+  },
+  {
+   "spdxElementId": "SPDXRef-DocumentRoot-Directory-github.com-go-openapi-swag",
+   "relatedSpdxElement": "SPDXRef-Package-go-module-github.com-go-openapi-swag-jsonutils-adapters-testintegration-benchmarks-5f51ed1869698f45",
+   "relationshipType": "CONTAINS"
+  },
+  {
+   "spdxElementId": "SPDXRef-DocumentRoot-Directory-github.com-go-openapi-swag",
+   "relatedSpdxElement": "SPDXRef-Package-go-module-github.com-go-openapi-swag-jsonutils-fixtures-test-f56896aaa1b00dd4",
+   "relationshipType": "CONTAINS"
+  },
+  {
+   "spdxElementId": "SPDXRef-DocumentRoot-Directory-github.com-go-openapi-swag",
+   "relatedSpdxElement": "SPDXRef-Package-go-module-github.com-go-openapi-swag-jsonutils-fixtures-test-4f0c2408fa965ecd",
+   "relationshipType": "CONTAINS"
+  },
+  {
+   "spdxElementId": "SPDXRef-DocumentRoot-Directory-github.com-go-openapi-swag",
+   "relatedSpdxElement": "SPDXRef-Package-go-module-github.com-go-openapi-swag-jsonutils-fixtures-test-d55acba80d8bf103",
+   "relationshipType": "CONTAINS"
+  },
+  {
+   "spdxElementId": "SPDXRef-DocumentRoot-Directory-github.com-go-openapi-swag",
+   "relatedSpdxElement": "SPDXRef-Package-go-module-github.com-go-openapi-swag-jsonutils-fixtures-test-2e1fdc0a905e7cd6",
+   "relationshipType": "CONTAINS"
+  },
+  {
+   "spdxElementId": "SPDXRef-DocumentRoot-Directory-github.com-go-openapi-swag",
+   "relatedSpdxElement": "SPDXRef-Package-go-module-github.com-go-openapi-swag-loading-b4c65ccd464926d1",
+   "relationshipType": "CONTAINS"
+  },
+  {
+   "spdxElementId": "SPDXRef-DocumentRoot-Directory-github.com-go-openapi-swag",
+   "relatedSpdxElement": "SPDXRef-Package-go-module-github.com-go-openapi-swag-loading-66bf3ffcdd565782",
+   "relationshipType": "CONTAINS"
+  },
+  {
+   "spdxElementId": "SPDXRef-DocumentRoot-Directory-github.com-go-openapi-swag",
+   "relatedSpdxElement": "SPDXRef-Package-go-module-github.com-go-openapi-swag-mangling-c93c2d0d56dc5054",
+   "relationshipType": "CONTAINS"
+  },
+  {
+   "spdxElementId": "SPDXRef-DocumentRoot-Directory-github.com-go-openapi-swag",
+   "relatedSpdxElement": "SPDXRef-Package-go-module-github.com-go-openapi-swag-mangling-70a03e9ff24e3418",
+   "relationshipType": "CONTAINS"
+  },
+  {
+   "spdxElementId": "SPDXRef-DocumentRoot-Directory-github.com-go-openapi-swag",
+   "relatedSpdxElement": "SPDXRef-Package-go-module-github.com-go-openapi-swag-netutils-0da65148a5493ee5",
+   "relationshipType": "CONTAINS"
+  },
+  {
+   "spdxElementId": "SPDXRef-DocumentRoot-Directory-github.com-go-openapi-swag",
+   "relatedSpdxElement": "SPDXRef-Package-go-module-github.com-go-openapi-swag-netutils-9995fc693aac8dd0",
+   "relationshipType": "CONTAINS"
+  },
+  {
+   "spdxElementId": "SPDXRef-DocumentRoot-Directory-github.com-go-openapi-swag",
+   "relatedSpdxElement": "SPDXRef-Package-go-module-github.com-go-openapi-swag-stringutils-4f8d0d8d7897b868",
+   "relationshipType": "CONTAINS"
+  },
+  {
+   "spdxElementId": "SPDXRef-DocumentRoot-Directory-github.com-go-openapi-swag",
+   "relatedSpdxElement": "SPDXRef-Package-go-module-github.com-go-openapi-swag-stringutils-c8c420a55f6ecef5",
+   "relationshipType": "CONTAINS"
+  },
+  {
+   "spdxElementId": "SPDXRef-DocumentRoot-Directory-github.com-go-openapi-swag",
+   "relatedSpdxElement": "SPDXRef-Package-go-module-github.com-go-openapi-swag-typeutils-7cd4708b5339bb17",
+   "relationshipType": "CONTAINS"
+  },
+  {
+   "spdxElementId": "SPDXRef-DocumentRoot-Directory-github.com-go-openapi-swag",
+   "relatedSpdxElement": "SPDXRef-Package-go-module-github.com-go-openapi-swag-typeutils-ef902caad22000ee",
+   "relationshipType": "CONTAINS"
+  },
+  {
+   "spdxElementId": "SPDXRef-DocumentRoot-Directory-github.com-go-openapi-swag",
+   "relatedSpdxElement": "SPDXRef-Package-go-module-github.com-go-openapi-swag-typeutils-919fc5c3b2cb0a51",
+   "relationshipType": "CONTAINS"
+  },
+  {
+   "spdxElementId": "SPDXRef-DocumentRoot-Directory-github.com-go-openapi-swag",
+   "relatedSpdxElement": "SPDXRef-Package-go-module-github.com-go-openapi-swag-typeutils-4ebc6ddd7110bca4",
+   "relationshipType": "CONTAINS"
+  },
+  {
+   "spdxElementId": "SPDXRef-DocumentRoot-Directory-github.com-go-openapi-swag",
+   "relatedSpdxElement": "SPDXRef-Package-go-module-github.com-go-openapi-swag-yamlutils-2d75f3e29d7be531",
+   "relationshipType": "CONTAINS"
+  },
+  {
+   "spdxElementId": "SPDXRef-DocumentRoot-Directory-github.com-go-openapi-swag",
+   "relatedSpdxElement": "SPDXRef-Package-go-module-github.com-go-openapi-swag-yamlutils-bc5438fa05ca1fb6",
+   "relationshipType": "CONTAINS"
+  },
+  {
+   "spdxElementId": "SPDXRef-DocumentRoot-Directory-github.com-go-openapi-swag",
+   "relatedSpdxElement": "SPDXRef-Package-go-module-github.com-go-openapi-testify-enable-yaml-v2-d568aafaf206e82f",
+   "relationshipType": "CONTAINS"
+  },
+  {
+   "spdxElementId": "SPDXRef-DocumentRoot-Directory-github.com-go-openapi-swag",
+   "relatedSpdxElement": "SPDXRef-Package-go-module-github.com-go-openapi-testify-enable-yaml-v2-f22c9f92220c8434",
+   "relationshipType": "CONTAINS"
+  },
+  {
+   "spdxElementId": "SPDXRef-DocumentRoot-Directory-github.com-go-openapi-swag",
+   "relatedSpdxElement": "SPDXRef-Package-go-module-github.com-go-openapi-testify-v2-0acf44a88fbe5844",
+   "relationshipType": "CONTAINS"
+  },
+  {
+   "spdxElementId": "SPDXRef-DocumentRoot-Directory-github.com-go-openapi-swag",
+   "relatedSpdxElement": "SPDXRef-Package-go-module-github.com-go-openapi-testify-v2-fa43e5a5a0db7ace",
+   "relationshipType": "CONTAINS"
+  },
+  {
+   "spdxElementId": "SPDXRef-DocumentRoot-Directory-github.com-go-openapi-swag",
+   "relatedSpdxElement": "SPDXRef-Package-go-module-github.com-josharian-intern-e343f29fedb5dd6e",
+   "relationshipType": "CONTAINS"
+  },
+  {
+   "spdxElementId": "SPDXRef-DocumentRoot-Directory-github.com-go-openapi-swag",
+   "relatedSpdxElement": "SPDXRef-Package-go-module-github.com-josharian-intern-e163b0705425c3c9",
+   "relationshipType": "CONTAINS"
+  },
+  {
+   "spdxElementId": "SPDXRef-DocumentRoot-Directory-github.com-go-openapi-swag",
+   "relatedSpdxElement": "SPDXRef-Package-go-module-github.com-kr-pretty-1e1ecacab65f6bba",
+   "relationshipType": "CONTAINS"
+  },
+  {
+   "spdxElementId": "SPDXRef-DocumentRoot-Directory-github.com-go-openapi-swag",
+   "relatedSpdxElement": "SPDXRef-Package-go-module-github.com-kr-pretty-35ae79a5e7c8266e",
+   "relationshipType": "CONTAINS"
+  },
+  {
+   "spdxElementId": "SPDXRef-DocumentRoot-Directory-github.com-go-openapi-swag",
+   "relatedSpdxElement": "SPDXRef-Package-go-module-github.com-kr-text-7ec845969fa95797",
+   "relationshipType": "CONTAINS"
+  },
+  {
+   "spdxElementId": "SPDXRef-DocumentRoot-Directory-github.com-go-openapi-swag",
+   "relatedSpdxElement": "SPDXRef-Package-go-module-github.com-kr-text-46e13f03cdc07407",
+   "relationshipType": "CONTAINS"
+  },
+  {
+   "spdxElementId": "SPDXRef-DocumentRoot-Directory-github.com-go-openapi-swag",
+   "relatedSpdxElement": "SPDXRef-Package-go-module-github.com-mailru-easyjson-0766866c2b745fc8",
+   "relationshipType": "CONTAINS"
+  },
+  {
+   "spdxElementId": "SPDXRef-DocumentRoot-Directory-github.com-go-openapi-swag",
+   "relatedSpdxElement": "SPDXRef-Package-go-module-github.com-mailru-easyjson-64731e64c40fe227",
+   "relationshipType": "CONTAINS"
+  },
+  {
+   "spdxElementId": "SPDXRef-DocumentRoot-Directory-github.com-go-openapi-swag",
+   "relatedSpdxElement": "SPDXRef-Package-go-module-github.com-rogpeppe-go-internal-7c7b9cd9468fe063",
+   "relationshipType": "CONTAINS"
+  },
+  {
+   "spdxElementId": "SPDXRef-DocumentRoot-Directory-github.com-go-openapi-swag",
+   "relatedSpdxElement": "SPDXRef-Package-go-module-github.com-rogpeppe-go-internal-1d3acdabce33bcdb",
+   "relationshipType": "CONTAINS"
+  },
+  {
+   "spdxElementId": "SPDXRef-DocumentRoot-Directory-github.com-go-openapi-swag",
+   "relatedSpdxElement": "SPDXRef-Package-go-module-go.yaml.in-yaml-v3-d536c7667b4ad065",
+   "relationshipType": "CONTAINS"
+  },
+  {
+   "spdxElementId": "SPDXRef-DocumentRoot-Directory-github.com-go-openapi-swag",
+   "relatedSpdxElement": "SPDXRef-Package-go-module-go.yaml.in-yaml-v3-90aec56a857c9c07",
+   "relationshipType": "CONTAINS"
+  },
+  {
+   "spdxElementId": "SPDXRef-DocumentRoot-Directory-github.com-go-openapi-swag",
+   "relatedSpdxElement": "SPDXRef-Package-go-module-gopkg.in-check.v1-983097d0c7551161",
+   "relationshipType": "CONTAINS"
+  },
+  {
+   "spdxElementId": "SPDXRef-DocumentRoot-Directory-github.com-go-openapi-swag",
+   "relatedSpdxElement": "SPDXRef-Package-go-module-gopkg.in-check.v1-7d8e6593f96257df",
+   "relationshipType": "CONTAINS"
+  },
+  {
+   "spdxElementId": "SPDXRef-DOCUMENT",
+   "relatedSpdxElement": "SPDXRef-DocumentRoot-Directory-github.com-go-openapi-swag",
+   "relationshipType": "DESCRIBES"
+  }
+ ]
+}

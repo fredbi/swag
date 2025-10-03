@@ -1,0 +1,28 @@
+#output:
+#  - syft-json=sbom/sbom-syft.json
+#  - spdx-json=sbom/sbom-spdx.json
+#  - cyclonedx-json=sbom/sbom-cyclonedx.json
+exclude:
+  - './.git/**'
+  - './.github/**'
+  - ./hack/**
+  - './**.yml'
+  - './**.yaml'
+  - './**.json'
+  - './vendor/**'
+platform: ""
+format:
+  pretty: true
+#spdx-json:
+#  pretty: true
+#cyclonedx-json:
+#  pretty: true
+golang:
+  search-local-mod-cache-licenses: true
+file:
+  metadata:
+    digest:
+      - sha256
+#source:
+#  name: go-openapi-source
+quiet: true
