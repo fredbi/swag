@@ -87,17 +87,19 @@ Bug fix
 
 Minor changes due to internal maintenance that don't affect the behavior of the library.
 
+**New with this release**:
+
 * [x] removed indirect test dependencies by switching all tests to `go-openapi/testify`,
-  a fork of `stretch/testify` with zero-dependencies.
+      a fork of `stretch/testify` with zero-dependencies.
 * [x] improvements to CI to catch test reports.
 * [x] modernized licensing annotations in source code, using the more compact SPDX annotations
-  rather than the full license terms.
+      rather than the full license terms.
 * [x] simplified a bit JSON & YAML testing by using newly available assertions
 * started the journey to an OpenSSF score card badge:
   * [x] explicited permissions in CI workflows
   * [x] published security policy
-  * pinned dependencies to github actions
-  * introduced fuzzing in tests
+  * [x] pinned dependencies to github actions
+  * [ ] introduced fuzzing in tests
 
 ### v0.25.1
 
@@ -178,6 +180,8 @@ With this release, we have largely modernized the API of `swag`:
 
 ## Licensing
 
+`SPDX-FileCopyrightText: Copyright 2015-2025 go-swagger maintainers`
+
 This library ships under the [SPDX-License-Identifier: Apache-2.0](./LICENSE).
 
 ## Note to contributors
@@ -194,6 +198,10 @@ A mono-repo structure comes with some unavoidable extra pains...
 >
 > There are also some alternative tricks using `go work`, for local development, if you feel comfortable with
 > go workspaces. Perhaps some day, we'll have a `go work test` to run all tests without any hack.
+>
+> **NEW with go1.25**
+>
+> Now you can run all tests with `go test work`.
 
 * Releasing
 
