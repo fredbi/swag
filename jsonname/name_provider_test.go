@@ -11,9 +11,17 @@ import (
 )
 
 type testNameStruct struct {
-	Name       string `json:"name"`
-	NotTheSame int64  `json:"plain"`
-	Ignored    string `json:"-"`
+	Promoted   testNameEmbedded `json:"promoted"`
+	Name       string           `json:"name"`
+	NotTheSame int64            `json:"plain"`
+	Ignored    string           `json:"-"`
+	Untagged   string           `json:""`
+	NoTag      string
+	unexported string
+}
+
+type testNameEmbedded struct {
+	Nested string `json:"nested"`
 }
 
 func TestNameProvider(t *testing.T) {
@@ -123,4 +131,22 @@ func TestNameProvider(t *testing.T) {
 	assert.Len(t, nms, 2)
 
 	assert.Len(t, provider.index, 1)
+
+	nm, ok = provider.GetGoName(obj, "Untagged")
+	assert.True(t, ok)
+	assert.Equal(t, "Untagged", nm)
+
+	_, ok = provider.GetGoName(obj, "NoTag")
+	assert.False(t, ok)
+
+	_, ok = provider.GetGoName(obj, "unexported")
+	assert.False(t, ok)
+
+	nm, ok = provider.GetGoName(obj, "nested")
+	assert.True(t, ok)
+	assert.Equal(t, "nested", nm)
+
+	nm, ok = provider.GetGoName(obj.Promoted, "nested")
+	assert.True(t, ok)
+	assert.Equal(t, "nested", nm)
 }
