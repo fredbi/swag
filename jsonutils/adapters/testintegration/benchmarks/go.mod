@@ -2,7 +2,7 @@ module github.com/go-openapi/swag/jsonutils/adapters/testintegration/benchmarks
 
 require (
 	github.com/go-openapi/swag/jsonutils v0.25.4
-	github.com/go-openapi/swag/jsonutils/adapters/easyjson v0.25.4
+	github.com/go-openapi/swag/jsonutils/adapters/easyjson v0.25.1
 	github.com/go-openapi/swag/jsonutils/fixtures_test v0.25.4
 	github.com/go-openapi/testify/v2 v2.0.2
 	github.com/mailru/easyjson v0.9.1
