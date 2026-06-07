@@ -1,0 +1,1 @@
+- [Mangling v2 project](mangling-v2-project.md) — clean-slate redesign of name mangling, future core codegen package, design-doc-first
