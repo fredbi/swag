@@ -1,17 +1,12 @@
 use (
 	.
-	./cmdutils
 	./conv
-	./fileutils
-	./jsonname
 	./jsonutils
 	./jsonutils/adapters/easyjson
 	./jsonutils/adapters/testintegration
 	./jsonutils/adapters/testintegration/benchmarks
 	./jsonutils/fixtures_test
 	./loading
-	./mangling
-	./netutils
 	./stringutils
 	./typeutils
 	./yamlutils
