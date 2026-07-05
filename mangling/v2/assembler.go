@@ -1,0 +1,155 @@
+package mangling
+
+import (
+	"strings"
+	"unicode"
+)
+
+// wordCasing is how a word token is cased at assembly.
+type wordCasing uint8
+
+const (
+	casingAsIs  wordCasing = iota // leave as segmented
+	casingLower                   // all lower: "http"
+	casingTitle                   // first rune title, rest lower: "Http"
+	casingUpper                   // all upper: "HTTP"
+)
+
+// symbolPolicy decides what assembly does with a symbol token (§4.7).
+//
+// The zero value is symbolVerbalize: the neutral presets replace a known symbol with its word
+// (e.g. "@" => "at"). Value/Go targets may override to drop leading markers, etc.
+type symbolPolicy uint8
+
+const (
+	symbolVerbalize symbolPolicy = iota // replace with its word (defaultSymbolWords), cased like a word (default)
+	symbolDrop                          // elide the symbol
+	symbolKeep                          // emit the symbol rune verbatim
+)
+
+// assemble renders the token stream into a string per the target recipe: casing × separator ×
+// symbol policy.
+//
+// The "first word" casing (which lets camelCase lowercase word 0) tracks the first *emitted word*,
+// so a dropped leading symbol or a leading number doesn't consume it. Initialism casing, when
+// present, is preserved from the token rather than re-cased.
+func (m Mangler) assemble(t *Tokens, target TargetTransform) string {
+	var b strings.Builder
+	b.Grow(t.runeLen()) // one buffer alloc; ~exact for ASCII output
+
+	firstWord := true
+	wrote := false
+
+	// writeSep emits the separator before a non-glued, non-first token. Number tokens glue to the
+	// preceding token (no separator), so "simple 1" => "simple1", while a following word still
+	// separates ("simple1_text2") and a leading number is separated by the word after it.
+	writeSep := func(glue bool) {
+		if wrote && !glue && target.separator != "" {
+			b.WriteString(target.separator)
+		}
+		wrote = true
+	}
+
+	// nextCasing returns the casing for the next word and advances the first-word slot (camelCase
+	// lowercases word 0).
+	nextCasing := func() wordCasing {
+		if firstWord {
+			firstWord = false
+
+			return target.firstCasing
+		}
+
+		return target.restCasing
+	}
+
+	for i := range t.Len() {
+		runes, override := t.span(i)
+
+		switch t.Kind(i) {
+		case KindWord:
+			writeSep(false)
+			writeCased(&b, runes, override, nextCasing())
+		case KindInitialism:
+			writeSep(false)
+			writeCased(&b, runes, override, casingAsIs) // canonical casing preserved
+			firstWord = false
+		case KindNumber:
+			writeSep(true) // glue to the preceding token
+			writeCased(&b, runes, override, casingAsIs)
+		case KindSymbol:
+			switch target.symbolPolicy {
+			case symbolDrop:
+				// elide
+			case symbolKeep:
+				writeSep(false)
+				writeCased(&b, runes, override, casingAsIs)
+			default: // symbolVerbalize (the zero-value default)
+				if w, ok := defaultSymbolWords[runes[0]]; ok {
+					writeSep(false)
+					writeStringCased(&b, w, nextCasing())
+				}
+			}
+		}
+	}
+
+	return b.String()
+}
+
+// writeCased writes a token's content (its rune span, or its override string) to b, applying the
+// casing per rune — no per-token string is materialized.
+func writeCased(b *strings.Builder, runes []rune, override string, c wordCasing) {
+	if override != "" {
+		writeStringCased(b, override, c)
+
+		return
+	}
+
+	switch c {
+	case casingLower:
+		for _, r := range runes {
+			b.WriteRune(unicode.ToLower(r))
+		}
+	case casingUpper:
+		for _, r := range runes {
+			b.WriteRune(unicode.ToUpper(r))
+		}
+	case casingTitle:
+		for i, r := range runes {
+			if i == 0 {
+				b.WriteRune(unicode.ToTitle(r))
+			} else {
+				b.WriteRune(unicode.ToLower(r))
+			}
+		}
+	default: // casingAsIs
+		for _, r := range runes {
+			b.WriteRune(r)
+		}
+	}
+}
+
+// writeStringCased is writeCased for a string (override content, or a verbalized symbol word).
+func writeStringCased(b *strings.Builder, s string, c wordCasing) {
+	switch c {
+	case casingLower:
+		for _, r := range s {
+			b.WriteRune(unicode.ToLower(r))
+		}
+	case casingUpper:
+		for _, r := range s {
+			b.WriteRune(unicode.ToUpper(r))
+		}
+	case casingTitle:
+		first := true
+		for _, r := range s {
+			if first {
+				b.WriteRune(unicode.ToTitle(r))
+				first = false
+			} else {
+				b.WriteRune(unicode.ToLower(r))
+			}
+		}
+	default: // casingAsIs
+		b.WriteString(s)
+	}
+}

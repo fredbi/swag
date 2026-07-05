@@ -8,6 +8,8 @@ metadata:
 Designing a v2 of the `mangling` module (name mangling for codegen: identifiers, file names, JSON keys).
 Work started 2026-06-05 on branch `exp/mangling-v2`.
 
+Clean-slate redesign of name mangling, future core codegen package, design-doc-first
+
 Key framing decided with the user:
 - This is **temporary exploratory work**. v2 will most likely **move to its own repo** and be elevated to a
   **core reusable package** shared across all go-openapi/go-swagger codegen modules — no longer "a submodule of swag".
@@ -56,12 +58,29 @@ Working copy on branch: `mangling/DESIGN_v2.md` (slightly behind). Prefer the pl
   (casing×separator×affix)→validate/repair. Transform order opinionated per ruleset; callers inject at named stages.
 - Ruleset = data (initialisms, reservedWords, reservedSuffixes, reservedDirs, inflection, repairToken) + named targets.
 - Exported & Unexported = ONE target differing only by initial-rune case; reserved-word repair decided on shared
-  case-insensitive basis → stay pure case-variants (`type_`/`Type_`). Default repair = trailing underscore. Symmetric
-  by default, decoupling optional. Facade naming: `m.Go().Exported()/.Unexported()` (GoNameMangler), not ToGoName/ToVarName.
+  case-insensitive basis → stay pure case-variants. Symmetric by default, decoupling optional.
 - Mangler immutable after construction (no AddInitialisms mutation).
 - **Ownership asymmetry**: names are self-driven (system owns policy, strong defaults, bare `(string)→string` methods);
-  values are knob-driven (caller owns policy, best-effort on gibberish). API reflects it: value methods `ConstName`/
-  `EnumName` take `...ValueOption` (OnSymbol/OnNumber/OnUnknownRune/WithValuePrefix); name methods take just a string.
+  values are knob-driven (caller owns policy, best-effort on gibberish). API reflects it: value methods take
+  `...ValueOption` (OnSymbol/OnNumber/OnUnknownRune/WithValuePrefix); name methods take just a string.
+
+## 2026-07-05 review — decisions refined (supersede where they conflict above)
+Full detail in `mangling/DESIGN_v2.md` §10. Deltas from the earlier "locked" list:
+- **No `.Go()` facade.** Concrete `GoMangler` (embeds `Mangler` + `NumberMangler`), enlarged scope: idents,
+  packages, files, modules. Methods `IdentExported`/`IdentUnexported` (not `ToGoName`/`.Go().Exported()`).
+- **Composable core = `Mangler.Transform(TargetTransform, string)`** (not `To(Target,…)`). `TargetTransform` is a
+  compiled immutable recipe (casing×separator×affix×stages×repair), opaque fields, `MakeTargetTransform(opts…)`;
+  **presets are functions** (`TargetCamel()`, `TargetSnake()`, `TargetAllCaps()`, …), named after the form.
+- **Stages operate on `*Tokens`, never strings** (`type Transform func(*Tokens)`); the string `Transformer` tier is
+  retired. Pure functions → concurrency-safe; per-call scratch from a pool.
+- **Repair** is rule-based (detection set `map[string]struct{}` + repair token). Go ident token default `Var`
+  (`type`→`TypeVar`/`typeVar`); files `_swagger` (app override). Per-word repair map deferred.
+- **Tokenizer stays opinionated** (no public `SplitRule`); digit-group/thousands rule moves to the `numbers` subpackage.
+- **`numbers` is its own subpackage** (cardinals/ordinals/Roman/fractions/digit-group).
+- **Value API**: `ValueMangler.Verbalize` + thin `GoMangler.ConstName` (chains verbalize→ident). `EnumName` dropped
+  (type-name prefixing is codegen's job).
+- **Construction**: `MakeXxx`→value, `NewXxx`→pointer.
+- Decimal point elided by default (`index 0.1`→`Index01`); fraction verbalization opt-in.
 
 v1 documented limitations to fix: all-caps explodes ("THIS_IS_ALL_CAPS" → "t_h_i_s..."), fragile initialism-boundary
 heuristics (IDS/IDx/IDs), English-only hardcoded pluralization, no Unicode→ASCII transliteration, bespoke ToXXX methods

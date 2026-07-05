@@ -126,7 +126,28 @@ Operates on the already-segmented token stream:
 - **sub-token match within an all-caps token**: `IDS` → longest dictionary prefix `ID` + remainder `S`, or plural
   `IDs`. The fragile global lookahead becomes a **local decision on a single token**, testable in isolation and
   unable to corrupt neighbors.
-- plural detection shares the inflection engine (§6), so `IDs → ID` is no longer bespoke.
+- **multi-token merge across natural breaks**: some initialisms *contain their own segmentation boundaries* — `IPv4`
+  splits on case-alternance (`[IP, v, 4]`), `UTF8` on the letter↔digit boundary (`[UTF, 8]`). Segmentation stays
+  dictionary-free (no v1 trap), so the overlay reassembles these by matching the dictionary against a **window of
+  adjacent tokens**: it concatenates the window, lowercases it, and looks it up in a precomputed table (longest window
+  wins). On a hit it merges + retags to the canonical casing. To keep this off the hot path, the entries that contain a
+  natural break are **precomputed at `Mangler` construction** — the merge pass only runs when such entries exist
+  (default: `IPv4`, `IPv6`, `UTF8`, plus every pluralized initialism; callers may add more).
+- **pluralized initialisms** (`IDs`, `URLs`, `IPs`, `SiteURLs`) are the *same* window-merge, with the table extended by
+  precomputed plural keys — not a bespoke path. This is the v1 pain point (`split.go`/`initialism_index.go`) redone
+  cleanly:
+  - *Plural precompute* (carried over from v1's `pluralForm`, at construction): an initialism is **invariant** (no
+    plural key) if it ends in `S`/`s` (`DNS`, `CSS`), or if `key+"s"`/`key+"S"` is itself an initialism (the `HTTP`
+    vs `HTTPS` conflict — keeps `"https"` mapping to `HTTPS`, not a spurious plural of `HTTP`); otherwise **simple**,
+    adding a lowercased key → canonical `"URLs"` (base casing + **lowercase** suffix). Irregulars via
+    `WithGoInitialismPlurals`.
+  - *The fuzz edge (`TTLss` vs `TLS`, issue #159) is handled structurally*, because the overlay matches whole
+    **token windows**, not rune-level substrings: `TTLss` segments to `[TT, Lss]`, whose windows (`tt`, `ttlss`, `lss`)
+    match no key, so it stays `TTLss` — `TLS` can't be found mid-run. And v1's runtime "trailing-lowercase = new word"
+    lookahead guard is free: a plural `s` followed by more lowercase lands in the *same* token
+    (`IDsomething → [I, Dsomething]`, window `idsomething` ≠ `ids`), so only genuine plurals (`IDs → [I, Ds]`,
+    window `ids`) match. The token boundary *is* the guard.
+  - Plural generation shares the inflection engine (§6), so `URL → URLs` is not bespoke.
 
 ### 4.5 Assembly — `casing × separator × affix`
 
@@ -142,9 +163,13 @@ A **Target** describes how to render the token stream:
 other decision — segmentation, transforms, and especially the reserved-word repair (§4.6) — is shared, so the two
 outputs stay pure case-variants of each other. Because all Go keywords and predeclared identifiers are lowercase, the
 exported form never collides on its own; deciding repair per-target independently would desync them (`Unexported("type")`
-→ `type_` while `Exported("type")` → `Type`). We therefore decide repair on the shared, case-insensitive basis and apply
-it to both: `type_` / `Type_`. Symmetric repair is the **default**; an option may decouple it for callers who prefer the
+→ `typeVar` while `Exported("type")` → `Type`). We therefore decide repair on the shared, case-insensitive basis and apply
+it to both: `typeVar` / `TypeVar`. Symmetric repair is the **default**; an option may decouple it for callers who prefer the
 exported form left un-repaired.
+
+The repair **token** is a ruleset field (§4.6). The Go ruleset defaults to the word suffix `Var` (matching
+go-swagger's current behavior, easing migration); the token is a plain word rather than a trailing `_`, but the
+symmetry argument is unchanged — `typeVar` and `TypeVar` remain pure case-variants regardless of the token.
 
 ### 4.6 Validate / repair (the consolidation seam)
 
@@ -153,13 +178,40 @@ rules move in. Each is *detect collision → mutate*:
 
 | Target | Check | Default repair |
 |---|---|---|
-| identifier | not a Go keyword/predeclared; valid identifier | trailing underscore (`type_`) |
+| identifier | not a Go keyword/predeclared (also builtins for unexported); valid identifier | word suffix (`type`→`TypeVar`) |
 | package name | lower, no separator, valid, not a keyword, not reserved dir | repair |
 | dir name | not `vendor` / `internal` | suffix (go-swagger: `_swagger`) |
-| file name | last `_`-segment ∉ {GOOS, GOARCH, `test`} | append safe token (go-swagger: `swagger`) |
+| file name | last `_`-segment ∉ {GOOS, GOARCH, `test`} | append safe token (go-swagger: `swagger` → `test_swagger.go`) |
 | module name | valid module path string | repair |
 
-The repair token is a **ruleset field, not a hardcode** — a neutral core cannot assume the word "swagger".
+Repair is **rule-based**: *reserved-word detection (a `map[string]struct{}` set) + a single repair-token rule*.
+The repair token is a **ruleset field, not a hardcode** — a neutral core cannot assume the word "swagger" (the Go
+ruleset defaults idents to `Var`; app layers like go-swagger override file/dir tokens to `swagger`). A more powerful
+**per-word repair map** (`map[string]string`, e.g. `type`→`typ`) is deliberately **deferred**; if needed it layers on
+top of detection as an exceptions table.
+
+#### 4.6.1 Path-returning targets (`Package`, `Module`) — preprocess, keep the tokenizer path-agnostic
+
+Methods that produce **paths** (`Package` → `(alias, pkg)`, `Module`) must preserve `/`, which is *path grammar*, not a
+word boundary. We do **not** teach the tokenizer about `/` (no "keep this separator" mode — that's exactly the
+target-specific leakage §4.2 avoids). Instead these methods **preprocess the path** and delegate only word-like
+fragments to the core mangler:
+
+1. **Split on the last `/`.** The **prefix** (`github.com/toktok`) is a real VCS location — kept **verbatim**, never
+   re-mangled (rewriting it would break the import). Host dots, a trailing `@version`, etc. live in the untouched
+   prefix and are therefore not our concern.
+2. **The basename yields two forms, by different rules:**
+   - **import path** ← basename as a **path-legal element**: hyphens *kept* (legal in a path element), symbols
+     verbalized, lowercased. `@alpha-beta` → `at-alpha-beta`, so `pkg = github.com/toktok/at-alpha-beta`.
+   - **package name / alias** ← the **last `-`-delimited segment** of the basename, made a valid lowercase identifier.
+     `alpha-beta` → `beta`; `go-redis` → `redis`. This is a *code-generation* convention (we own the emitted
+     `package X` name), distinct from `IdentExported`/`Unexported`, which keep every word (`alphaBeta`).
+3. **`/vN` major-version elements**: a trailing `/v2` is a version, not the name-bearer — skip it when choosing the
+   basename to name from (`github.com/user/repo/v2` → name from `repo`).
+4. **Bare input** (no `/`): basename = whole string, empty prefix; falls out naturally.
+
+So `Package`/`Module` are thin path-aware compositions over the primitives (split → mangle basename two ways → rejoin
+with `/`), and the tokenizer stays single-purpose.
 
 ### 4.7 Verbalizing non-word input (values → identifiers)
 
@@ -174,9 +226,14 @@ numbers are already their own tokens after §4.2):
 1. **Symbol policy** — `(symbol, position, target) → action ∈ {drop, verbalize, phonetic}`. A *leading marker* (`@id`)
    defaults to **drop** → `Id`/`ID`; an *interior* symbol (`read@write`) verbalizes → `ReadAtWrite`. Per-symbol and
    per-target overridable.
-2. **Number verbalization** — `1 → One`, `12 → Twelve`, optionally as the **leading-digit repair** strategy (an
-   alternative to the `X` prefix: `12foo → TwelveFoo` rather than `X12Foo`). Bounded and locale-aware; policy may
-   instead **keep digits** for value-like targets (an HTTP status enum wants `Status200`, not `TwoHundred`).
+2. **Number verbalization** — `1 → One`, `12 → Twelve`, position-aware: **verbalize a leading numeral** (as the
+   leading-digit repair, an alternative to the `X` prefix: `12 variable → TwelveVariable` rather than `X12Variable`)
+   but **keep interior digits** (`variable 12 → Variable12`). Bounded and locale-aware; policy may instead **keep
+   digits** even when leading for value-like targets (an HTTP status enum wants `Status200`, not `TwoHundred`).
+   The decimal point is treated as a separator and **elided by default** (`index 0.1 → Index01`), *not* verbalized to
+   `Dot`; full fraction verbalization (`OneTenth`) is opt-in via the `numbers` engine and reaches `GoMangler` only
+   through the affix rule (`0.1 index → OneTenthIndex` when that mode is selected). This keeps the default separator
+   predicate simple (it may use `unicode.IsPunct`, which elides `.` and `,`).
 3. **Rune-name / phonetic fallback** — for tokens with no transliteration (emoji, exotic scripts), derive a word from
    the Unicode name (`golang.org/x/text/unicode/runenames`, e.g. 😀 → "grinning face" → `GrinningFace`). Opt-in, since
    it pulls a sizable generated table.
@@ -186,6 +243,46 @@ numbers are already their own tokens after §4.2):
 Verbalization policy is therefore a property of the **target**, not a global table: a `const`-name target verbalizes
 aggressively, a field-name target drops leading markers, a doc-comment target may keep symbols literally. This is the
 seam where v1's "everything goes through `ToGoName`" pressure is relieved.
+
+#### 4.7.1 Asciification tiers (rune → ASCII/word) and the "never render" set
+
+The rune-name fallback (§4.7 layer 3) is the general escape hatch, but most runes resolve more cheaply. Tiers, tried
+in order:
+
+1. **Latin diacritics** → the `asciiFold` map (fold to base, case-preserving; digraphs for `æ œ ß þ ð`).
+2. **Decimal digits (`Nd`)** → ASCII value via a compact per-script *digit-zero offset* table
+   (`'0' + (r - 0x0660)` for Arabic-Indic, etc.). Detect with `unicode.IsDigit` / `unicode.Is(unicode.Nd, …)`, which
+   is `Nd`-**only** (verified): `Ⅶ` (Roman, `Nl`) and `½ ②` (`No`) return `IsDigit=false`, so they *automatically*
+   fall through to tier 4. (Do **not** use `unicode.IsNumber`, which is `Nd+Nl+No` and would wrongly capture them.)
+3. **Combining marks (`Mn`/`Mc`/`Me`)** → **stripped in place** (pure deletion; the base rune is untouched, nothing is
+   renormalized). This pairs with tier 1 to cover *both* Unicode forms without `x/text/unicode/norm`: precomposed `é`
+   → map; decomposed `e`+`◌́` → strip mark, base `e` survives. (An optional future NFD pass would only add coverage of
+   exotic *precomposed* letters missing from the map, e.g. Vietnamese `ế`.)
+4. **Everything else renderable** (non-Latin base letters, `Nl`/`No` numbers, unmapped symbols, single-codepoint
+   emoji) → **rune-name fallback**, opt-in via `runenames` (`Ⅶ`→"…SEVEN", `Г`→"…GHE", `😀`→`GrinningFace`).
+   Hard limit: **CJK unified ideographs have no phonetic name** (`中` = "CJK UNIFIED IDEOGRAPH-4E2D") → elide or
+   placeholder. Hangul/Greek/Cyrillic/etc. have real names and work.
+
+**The "never render" set** — elided even though `runenames` could name them:
+
+| Category | What | Note |
+|---|---|---|
+| `Mn` `Mc` `Me` | combining marks | stripped (tier 3) — "COMBINING ACUTE ACCENT" is not a word |
+| `Cc` `Cf` | control, format | ZWJ, ZWNJ, ZWSP, BOM, LRM/RLM, soft hyphen, tag chars |
+| `Cs` `Co` `Cn` | surrogate, private-use, unassigned | no meaningful name |
+| `Lm` `Sk` | modifier letters & symbols | standalone accents, backtick — already elided as separators |
+
+Caveat: some of these (`ZWJ` `Cf`, variation selectors `Mn`, skin-tone modifiers `Sk`, tag chars `Cf`) are
+*structural glue* inside emoji grapheme clusters — consumed by a future emoji decoder, not rendered standalone.
+
+**Forthcoming enhancement (planned, not this iteration): grapheme clusters + extended Unicode properties.**
+The value path will eventually segment by **grapheme cluster** so multi-codepoint units resolve as one name:
+flag sequences (`🇮🇪` = regional-indicator pair `IE` → ISO-3166 → `Ireland`), ZWJ emoji (`👨‍👩‍👧` → family),
+skin-tone/VS modifiers (`👍🏽`), tag flags. This needs an emoji/CLDR annotation table beyond per-codepoint
+`runenames`; Fred has a generator (à la `mattn/go-runewidth`, which embeds Unicode attribute tables) to produce the
+extended-property tables when we get there. Until then: **single-codepoint emoji via `runenames`; flags/sequences
+resolve per-codepoint** (`🇮🇪` names its two indicators rather than "Ireland"). This matters mostly for `ValueMangler`
+(enums, values), rarely for real Go idents (JSON-key-derived).
 
 ### 4.8 Ruleset = data + targets
 
@@ -202,61 +299,120 @@ The ruleset is the seam where another language would plug in. Go is the only con
 
 > Illustrative, not final. Names and shapes are up for debate.
 
+> Reconciled with the 2026-07-05 review (see §10). Key shape changes from the earlier sketch:
+> no `.Go()` facade (concrete `GoMangler`); no `To(Target, …)` free entry — the composable core is
+> `Mangler.Transform(TargetTransform, string)`; targets are **compiled immutable recipes**, presets are
+> **functions**; the string `Transformer` tier is retired (all stages operate on `*Tokens`); `numbers`
+> becomes its own subpackage; `Make`/`New` construction convention.
+
 ```go
 package mangling // v2
 
-// Mangler is an immutable, concurrency-safe engine.
-type Mangler struct { /* ruleset + precomputed dictionaries + pools */ }
+// ─── Construction convention ───────────────────────────────────────────────
+// MakeXxx returns a value; NewXxx returns a pointer. Every mangler is immutable
+// after construction and safe for concurrent use (per-call scratch comes from a pool).
 
-func New(opts ...Option) *Mangler
+// ─── Tokenizer: segmentation only (opinionated, not user-pluggable yet) ─────
+type Tokenizer struct { /* tokenOptions */ }
+func MakeTokenizer(opts ...TokenOption) Tokenizer
+func (t Tokenizer) Tokenize(s string) iter.Seq[string]   // convenience; materializes per-token strings
+// internal: tokenize([]rune) iter.Seq[[]rune] — the zero-copy hot path used by everything else.
+// Knobs: WithTokenSeparator(func(rune) bool); (maybe) WithLetterDigitBoundary(bool) for utf8/oauth2.
+// No public SplitRule: the §4.2 boundary signals are opinionated per ruleset for this iteration.
 
-// Composable entry point (generic core, ruleset-neutral).
-func (m *Mangler) To(target Target, input string) string
+// ─── Mangler: ruleset-neutral casing/inflection presets over TargetTransform ─
+type Mangler struct { Tokenizer /* + options */ }
+func MakeMangler(opts ...Option) Mangler
+func NewMangler(opts ...Option) *Mangler
 
-// Language facade: a ruleset bound to a mangler, exposing language-named methods.
-// Keeps the generic core clean while giving Go callers ergonomic, well-named entry points.
-func (m *Mangler) Go() *GoNameMangler
+// The composable core — ONE mechanism, many outputs. A TargetTransform is a compiled, immutable
+// recipe (casing × separator × affix × stages × repair). The mangler supplies the *data* the
+// stages bind to at run time, so the same target degrades gracefully across manglers (§4.5).
+func (m Mangler) Transform(t TargetTransform, s string) string
 
-// --- Name targets: word-like input, self-driven (strong defaults, no per-call tuning) ---
-func (g *GoNameMangler) Exported(s string) string   // was ToGoName; exported identifier
-func (g *GoNameMangler) Unexported(s string) string // was ToVarName; same rules, lower initial rune
-func (g *GoNameMangler) PackageName(s string) string
-func (g *GoNameMangler) ModuleName(s string) string
-func (g *GoNameMangler) FileName(s string) string
-func (g *GoNameMangler) DirName(s string) string
-func (g *GoNameMangler) JSONName(s string) string
-func (g *GoNameMangler) HumanName(s string, title bool) string
+// Neutral preset methods — thin wrappers over Transform + a preset target:
+func (m Mangler) Titleize(s string) string    // TargetTitle
+func (m Mangler) Humanize(s string) string    // TargetSentence
+func (m Mangler) Snakize(s string) string     // TargetSnake
+func (m Mangler) Kebabize(s string) string    // TargetKebab
+func (m Mangler) Camelize(s string) string    // TargetCamel
+func (m Mangler) AllCaps(s string) string     // TargetAllCaps (was "Capitalize" → renamed)
+func (m Mangler) Pluralize(s string) string   // shared inflection engine
+func (m Mangler) Singularize(s string) string
 
-// --- Value targets: arbitrary literals → const/var idents, knob-driven (best-effort; caller owns policy) ---
-func (g *GoNameMangler) ConstName(value string, opts ...ValueOption) string
-func (g *GoNameMangler) EnumName(typeName, value string, opts ...ValueOption) string
+// ─── TargetTransform: opaque, immutable recipe; presets are functions ───────
+type TargetTransform struct { /* ALL fields unexported */ }
+func MakeTargetTransform(opts ...TargetOption) TargetTransform
 
-// Value knobs — surfaced per call because, for gibberish input, the caller (not the system) owns the policy:
-func OnSymbol(p SymbolPolicy) ValueOption     // drop | verbalize | phonetic, per symbol & position
-func OnNumber(p NumberPolicy) ValueOption     // to-words | keep-digits | bounded
-func OnUnknownRune(p RunePolicy) ValueOption  // drop | rune-name | prefix
-func WithValuePrefix(word string) ValueOption // leading-digit / empty-result safeguard
+// Presets return a fresh immutable value (no exported mutable surface, impossible to corrupt).
+// Named after the FORM they produce — no participles of neologized verbs (TargetCamel, not …Camelized).
+func TargetTitle() TargetTransform
+func TargetSentence() TargetTransform
+func TargetSnake() TargetTransform
+func TargetKebab() TargetTransform
+func TargetCamel() TargetTransform
+func TargetAllCaps() TargetTransform
 
-// --- Inflection (shared engine) ---
-func (g *GoNameMangler) Pluralize(s string) string
-func (g *GoNameMangler) Singularize(s string) string
+// Target build options:
+func WithCasing(c CasingByPosition) TargetOption  // word casing as a function of position
+func WithSeparator(sep string) TargetOption        // "", "_", "-", " ", "."  (output separator)
+func WithAffix(a AffixRule) TargetOption            // leading-non-letter repair: prefix|rune-name|strip|number-words
+func WithRepair(r RepairRule) TargetOption          // reserved-word detection + repair token
+func InjectStage(at Stage, st Transform) TargetOption // power hook: a raw closure over *Tokens
 
-// Exported and Unexported are the same target with the initial-case rule flipped; reserved-word
-// repair is shared so they remain pure case-variants (type_ / Type_). See §4.5–4.6.
+// ─── Stage model — the retired string tier lives on here as *Tokens closures ─
+// A stage NEVER sees strings: it operates on the pooled zero-copy token model (position, kind,
+// casing, split/merge). "Stateful vs stateless" is invisible — a stage is a pure function of its
+// argument, capturing no mutable per-call state, so the same recipe runs concurrently.
+type Transform func(*Tokens)  // was `Transformer func(string) string` — retired
+type Stage int                // AfterSegment, AfterTransliterate, AfterInitialism, BeforeAssemble
 
-// Options
-func WithRuleset(r Ruleset) Option
-func WithInitialisms(words ...string) Option
-func WithAdditionalInitialisms(words ...string) Option
-func WithReservedWords(words ...string) Option
+// ─── GoMangler: Go ruleset — idents, packages, files, modules (enlarged scope) ─
+type GoMangler struct { Mangler /* + NumberMangler; goOptions */ }
+func MakeGoMangler(opts ...GoOption) GoMangler
+func NewGoMangler(opts ...GoOption) *GoMangler
+
+func (g GoMangler) IdentExported(s string) string    // was ToGoName
+func (g GoMangler) IdentUnexported(s string) string  // was ToVarName; case-variant, shared repair (TypeVar/typeVar)
+func (g GoMangler) Package(s string) (alias, pkg string)
+func (g GoMangler) Module(s string) string
+func (g GoMangler) File(s string) string             // neutralizes _test, _linux, _amd64, … suffixes
+func (g GoMangler) DirName(s string) string
+func (g GoMangler) JSONName(s string) string
+func (g GoMangler) HumanName(s string, title bool) string
+
+// Value → identifier convenience. ConstName ONLY — type-name prefixing for enum members is the
+// codegen template's job (typeName + ConstName(value)), not the mangler's. (EnumName dropped.)
+func (g GoMangler) ConstName(value string, opts ...ValueOption) string
+
+// ─── ValueMangler: arbitrary literals → words (best-effort, knob-driven) ────
+type ValueMangler struct { Tokenizer /* + valueOptions */ }
+func MakeValueMangler(opts ...ValueOption) ValueMangler
+func (v ValueMangler) Verbalize(s string) string
+// Value knobs — the caller owns policy for gibberish input:
+func OnSymbol(p SymbolPolicy) ValueOption      // drop | verbalize | phonetic, per (symbol, position)
+func OnNumber(p NumberPolicy) ValueOption       // to-words | keep-digits | bounded
+func OnUnknownRune(p RunePolicy) ValueOption    // drop | rune-name | prefix
+func WithValuePrefix(word string) ValueOption   // leading-digit / empty-result safeguard
+
+// ─── package numbers: separate subpackage (own scope & complexity) ──────────
+type NumberMangler struct { /* numberOptions */ }
+func (m NumberMangler) NumberWords(s string) string  // "123" → "one hundred and twenty three"
+func (m NumberMangler) DigitWords(s string) string   // "123" → "one two three"
+func NumberWords[T Numerical](n T) string
+func NumberOrdinal[T Numerical](n T) string          // 31 → 31st
+func NumberRoman[T Integer](n T) string              // 6 → vi (codegen: compact loop indices)
+// Digit-group reconstruction (1 234 → 1234) lives HERE, not in the tokenizer (keeps the scanner
+// single-pass, lookahead-free). Fraction inference (0.25 → one quarter) is opt-in; consumed by
+// ValueMangler and, via the affix rule, optionally by GoMangler.
+
+// ─── Options (root) ─────────────────────────────────────────────────────────
+func WithInitialisms(words ...string) Option            // replace the default set
+func WithAdditionalInitialisms(words ...string) Option   // augment the default set
+func WithReservedWords(words ...string) Option            // detection set (map[string]struct{}, not a repair map)
 func WithTransliterator(t Transliterator) Option
 func WithInflection(rules InflectionRules) Option
-func WithRepairToken(tok string) Option
-func InjectTransform(at Stage, t Transform) Option
-
-// Transform model
-type Transform func(*Tokens)
-type Stage int // AfterSegment, AfterTransliterate, AfterInitialism, BeforeAssemble
+func WithRepairToken(tok string) Option                  // ruleset field (Go default "Var"); not a hardcode
 ```
 
 ## 6. Capabilities
@@ -268,7 +424,24 @@ type Stage int // AfterSegment, AfterTransliterate, AfterInitialism, BeforeAssem
   - *number-to-words*: bounded, locale-aware cardinal verbalizer (`12`→`Twelve`); doubles as leading-digit repair;
     per-target "keep digits" escape (`Status200`).
   - *rune-name fallback*: opt-in `golang.org/x/text/unicode/runenames` for emoji/exotic runes.
-- **ASCII folding** — diacritic folding (`é`→`e`) for linter-clean output; default table, overridable.
+- **ASCII folding** — diacritic folding (`é`→`e`, `ż`→`z`) as a **ruleset policy toggle**, not a hard rule.
+  - *Motivation*: linter-clean output (`gosmopolitan`, `asciicheck`). **Not** a language requirement — Go's spec
+    admits any Unicode letter in identifiers (`type Żaba struct{}` compiles), so folding is *always* a preference,
+    never mandatory for any target.
+  - *Plug shape*: a fold **stage** (runs before assembly, `é`→`e` unconditionally — orthogonal to casing, so it
+    also folds lowercase bodies), toggled by one option (`WithAsciiFolding(bool)`). The capability is **neutral**
+    (lives on `Mangler`, uses the `Ascii()` / `ToAscii()` helpers); only the *default* is ruleset-driven.
+  - *Defaults are per-target policy*, same family as initialisms / reserved words ("what does clean Go output look
+    like for this project"):
+    - Go **machine-name** targets (idents, package/file/dir names) default folding **ON** — because the
+      go-openapi/go-swagger ecosystem ships `gosmopolitan`-clean code. Fully overridable: a caller who doesn't run
+      that linter sets `WithAsciiFolding(false)` and legitimately gets `Żaba` as a valid identifier.
+    - **Human-facing** casing (`Titleize`, `Humanize`, `GoMangler.HumanName`) defaults **OFF** — preserve `Éric` /
+      `Żaba`. Folding accents out of human text is a bug, and dropping them changes letter identity in
+      Polish/Czech/Hungarian/Turkish (`Ż`≠`Z`, `ł`≠`l`).
+  - *Out of scope as a default*: the narrow "drop accent on capitals **only**" (French typography, i.e.
+    `Ascii(unicode.ToUpper(r))` — fold the cased rune, keep the body). It is neither faithful Unicode nor full ASCII;
+    it is culture-bound, so it stays an **injectable stage** for the rare caller, never a core default or named option.
 - **Inflection** — singular/plural engine absorbed from `go-openapi/inflect` (irregulars, uncountables, suffix
   rules). Shares the dictionary with initialism plural detection. Primary new use case: doc-comment generation.
   Closing `go-openapi/inflect` is in scope.
@@ -287,17 +460,61 @@ type Stage int // AfterSegment, AfterTransliterate, AfterInitialism, BeforeAssem
 
 ## 9. Open questions
 
+Still open:
+
 - `override` field vs side arena for rewritten content (transliteration/inflection allocation strategy).
-- ~~Reserved-word repair strategy for identifiers~~ — **resolved (§4.5–4.6)**: trailing underscore by default,
-  decided on the shared case-insensitive basis so exported/unexported stay aligned (`type_` / `Type_`); symmetry is
-  default, decoupling is an option. Still open: is trailing `_` the right token, or should the ruleset prefer a word
-  suffix for some targets?
+- Repair token: `Var` is the Go ident default — is it right for *all* colliding idents (a `range` **type** → `RangeVar`
+  reads oddly), or should type-position idents prefer a different token? (Deferred; single token for now.)
 - Module-name rule: how much of "valid module path" belongs here vs. the future environment helper.
-- Letter↔digit boundary default per target (`utf8`/`oauth2` cases).
-- Facade shape: `m.Go().Exported(...)` per-call vs. constructing a `*GoNameMangler` once and reusing it.
 - Number verbalization bounds & locale: cap (e.g. ≤ 9999?) then fall back to digits + prefix? English-only first?
 - Leading-marker default: is *drop* always right for `@`/`#`, or per-symbol (drop `@`, but `#`→`Hash`)?
 - `runenames` dependency: opt-in transform only, to keep the core table-free — confirm it never lands in the default Go ruleset.
+
+Resolved in the 2026-07-05 review (→ §10):
+
+- ~~Facade shape~~ — no `.Go()`; a concrete `GoMangler` with an enlarged scope (idents, packages, files, modules).
+- ~~Reserved-word repair strategy~~ — rule-based (detection set + repair token); Go default token `Var`; per-word
+  repair map deferred; symmetry preserved (`typeVar`/`TypeVar`).
+- ~~Letter↔digit boundary / digit-group rule~~ — tokenizer stays opinionated & lookahead-free; digit-group
+  reconstruction moves to `numbers`.
+- ~~`To(Target, …)` vs facade~~ — the composable core is `Mangler.Transform(TargetTransform, string)`; targets are
+  compiled immutable recipes, presets are functions; the string `Transformer` tier is retired.
+
+## 10. Decisions locked — 2026-07-05 review
+
+1. **One composable mechanism.** `Mangler.Transform(TargetTransform, string)` is the core; every preset method and
+   every `GoMangler` output routes through it. No duplicated casing logic (the v1 sin).
+2. **`TargetTransform` = compiled, immutable recipe** (casing × separator × affix × stages × repair), opaque
+   (all fields unexported), built via `MakeTargetTransform(opts…)`. **Presets are functions** returning fresh values
+   (`TargetCamel()`, …), named after the form (no `-ized` participles). `TargetAllCaps` replaces `TargetCapitalized`.
+3. **Recipe vs data split.** Targets carry the recipe only; dictionaries (initialisms, keywords, reserved suffixes)
+   live on the mangler and bind to stages at run time, so a target degrades gracefully across manglers.
+4. **Stages operate on `*Tokens`, never strings.** `type Transform func(*Tokens)`. Zero-copy pooled token model
+   (position/kind/casing, split/merge). Pure functions of their argument (no captured mutable state) → concurrency-safe;
+   per-call scratch from a `sync.Pool`. The public string `Transformer` type is retired.
+5. **Tokenizer stays opinionated.** No public `SplitRule` this iteration; only `WithTokenSeparator` (+ maybe a
+   letter↔digit bool). The digit-group / thousands rule leaves the tokenizer for `numbers`.
+6. **`numbers` becomes its own subpackage.** Full numeral surface (cardinals, ordinals, Roman, fractions, digit-group
+   reconstruction). Roman/ordinal/fraction have real codegen consumers (compact loop indices, `OneQuarter` consts);
+   gold-plating is spec-only for now, present to stress-test extensibility.
+7. **Value path.** `ValueMangler.Verbalize` (knob-driven, best-effort) + a thin `GoMangler.ConstName` convenience that
+   chains verbalize→ident. `EnumName` dropped — type-name prefixing is the codegen template's job.
+8. **Construction convention.** `MakeXxx` → value, `NewXxx` → pointer; immutable after construction.
+9. **Reserved words as sets** (`map[string]struct{}`), not a per-word repair map (deferred).
+10. **Decimal point elided by default** (`index 0.1 → Index01`); fraction verbalization opt-in via `numbers`.
+11. **ASCII folding is a ruleset policy toggle** (§6), never a hard rule (Go admits Unicode idents). Capability is
+    neutral (on `Mangler`, via `Ascii()`); default is per-target — ON for Go machine-name targets (`gosmopolitan`-clean),
+    OFF for human-facing casing (`Éric`/`Żaba` preserved), overridable via `WithAsciiFolding`. The French
+    "drop-accent-on-capitals-only" variant is an injectable stage, not a default.
+12. **Path-returning targets preprocess; tokenizer stays path-agnostic** (§4.6.1). `Package`/`Module` split on the
+    last `/`, keep the prefix verbatim, and mangle only the basename — two ways: full path element for the import path
+    (`@alpha-beta`→`at-alpha-beta`), last `-`-segment identifier for the package name/alias (`alpha-beta`→`beta`).
+    Skip a trailing `/vN` when picking the name-bearer.
+13. **Asciification tiers** (§4.7.1): Latin-diacritic map → `Nd` digit-offset (`IsDigit`, not `IsNumber`) → strip
+    combining marks in place (no renormalization; pairs with the map to cover NFC+NFD dep-free) → `runenames` opt-in
+    for the rest (CJK ideographs excepted). A defined **never-render set** (`Mn/Mc/Me`, `Cc/Cf`, `Cs/Co/Cn`, `Lm/Sk`)
+    is always elided. **Graphemes + extended-Unicode tables** (flags→ISO-3166, ZWJ emoji, generator à la
+    `go-runewidth`) are a **forthcoming enhancement**; for now single-codepoint emoji only.
 
 ---
 
