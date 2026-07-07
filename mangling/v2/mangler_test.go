@@ -26,7 +26,7 @@ func TestMangler(t *testing.T) {
 	t.Run("with ASCII folding", func(t *testing.T) {
 		t.Parallel()
 
-		m := MakeMangler(WithAsciiFolding(true))
+		m := MakeMangler(WithASCIIFolding(true))
 
 		for tc := range manglerTestCases() {
 			t.Run(tc.name, testMangler(m, testModeASCIIMangler, tc))
@@ -203,7 +203,7 @@ func TestGoManglerRuneNames(t *testing.T) {
 	}
 
 	// asciify off preserves the original runes (no folding, no naming).
-	raw := MakeGoMangler(WithManglerOptions(WithAsciiFolding(false)))
+	raw := MakeGoMangler(WithManglerOptions(WithASCIIFolding(false)))
 	assert.EqualT(t, "Café", raw.IdentExported("café"))
 }
 

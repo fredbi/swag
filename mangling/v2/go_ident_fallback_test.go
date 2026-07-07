@@ -69,7 +69,7 @@ func TestGoIdentFallback(t *testing.T) {
 
 	t.Run("the base Mangler has no such contract (may return empty)", func(t *testing.T) {
 		t.Parallel()
-		m := MakeMangler(WithAsciiFolding(true))
+		m := MakeMangler(WithASCIIFolding(true))
 		assert.EqualT(t, "", m.Camelize("___"))
 		assert.EqualT(t, "", m.Pascalize("日本"))
 	})

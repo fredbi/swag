@@ -127,11 +127,11 @@ func WithTokenOptions(opts ...TokenOption) Option {
 	}
 }
 
-// WithAsciiFolding toggles folding of Latin diacritics to ASCII (é→e, ñ→n, ß→ss, combining marks stripped).
+// WithASCIIFolding toggles folding of Latin diacritics to ASCII (é→e, ñ→n, ß→ss, combining marks stripped).
 //
 // It is off by default in the base [Mangler] and on by default in the [GoMangler] (gosmopolitan-clean output).
 // Non-Latin scripts (CJK, …) are left as-is — a future rune-name concern.
-func WithAsciiFolding(enabled bool) Option {
+func WithASCIIFolding(enabled bool) Option {
 	return func(o options) options {
 		o.asciify = enabled
 
@@ -174,26 +174,17 @@ func WithGoIdentFallback(word string) GoOption {
 	}
 }
 
-func WithGoDefaults() GoOption {
-	return func(o goOptions) goOptions {
-		return o
-	}
-}
-
+// WithGoInitialisms adds entries to the default list of initialisms.
+// TODO: wire
 func WithGoInitialisms(...string) GoOption {
 	return func(o goOptions) goOptions {
 		return o
 	}
 }
 
+// UseGoInitialisms replaces all default initialisms by a specific list.
+// TODO: wire
 func UseGoInitialisms(...string) GoOption {
-	return func(o goOptions) goOptions {
-		return o
-	}
-}
-
-// set plural forms for initialisms
-func WithGoInitialismPlurals(...string) GoOption {
 	return func(o goOptions) goOptions {
 		return o
 	}

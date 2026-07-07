@@ -2,10 +2,21 @@ package runewords
 
 import (
 	"testing"
+	"unicode/utf8"
 
 	"github.com/go-openapi/testify/v2/assert"
 	"github.com/go-openapi/testify/v2/require"
 )
+
+// codePoint converts a table codepoint (stored as uint32) to a rune, asserting it is in range. The
+// generator only emits valid codepoints, so this never truncates — the check also catches a corrupt
+// table and keeps the uint32→rune conversion honest (gosec G115).
+func codePoint(t *testing.T, cp uint32) rune {
+	t.Helper()
+	require.LessOrEqualf(t, cp, uint32(utf8.MaxRune), "table codepoint U+%X out of range", cp)
+
+	return rune(cp) //nolint:gosec // cp is bounds-checked to utf8.MaxRune just above; the table holds only valid codepoints
+}
 
 func TestWordSpotChecks(t *testing.T) {
 	t.Parallel()
@@ -78,12 +89,11 @@ func TestCoverageRoundTrip(t *testing.T) {
 	t.Parallel()
 
 	for i := 0; i < len(runStart); i++ {
-		start := rune(runStart[i])
-		count := int(runFirstIndex[i+1] - runFirstIndex[i])
-		for k := 0; k < count; k++ {
-			r := start + rune(k)
-			pos := runFirstIndex[i] + uint32(k)
-			id := nameWordID[pos]
+		base := runStart[i]                            // codepoint of the run's first rune
+		count := runFirstIndex[i+1] - runFirstIndex[i] // number of runes in the run
+		for k := uint32(0); k < count; k++ {
+			r := codePoint(t, base+k)
+			id := nameWordID[runFirstIndex[i]+k]
 			want := wordBlob[offset18(id):offset18(id+1)]
 
 			got, ok := Word(r)
@@ -91,11 +101,11 @@ func TestCoverageRoundTrip(t *testing.T) {
 			require.Equalf(t, want, got, "Word(U+%04X)", r)
 		}
 
-		// The rune just past this run's end (before the next run starts) must not be covered,
+		// The codepoint just past this run's end (before the next run starts) must not be covered,
 		// unless it is the next run's start.
-		gap := start + rune(count)
-		if i+1 < len(runStart) && gap < rune(runStart[i+1]) {
-			_, ok := Word(gap)
+		gap := base + count
+		if i+1 < len(runStart) && gap < runStart[i+1] {
+			_, ok := Word(codePoint(t, gap))
 			require.Falsef(t, ok, "gap rune U+%04X after run %d should miss", gap, i)
 		}
 	}

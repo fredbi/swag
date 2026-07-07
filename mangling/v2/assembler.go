@@ -1,6 +1,7 @@
 package mangling
 
 import (
+	"fmt"
 	"strings"
 	"unicode"
 )
@@ -15,7 +16,7 @@ const (
 	casingUpper                   // all upper: "HTTP"
 )
 
-// symbolPolicy decides what assembly does with a symbol token (§4.7).
+// symbolPolicy decides what assembly does with a symbol token.
 //
 // The zero value is symbolVerbalize: the neutral presets replace a known symbol with its word (e.g. "@" => "at").
 // Value/Go targets may override to drop leading markers, etc.
@@ -99,6 +100,8 @@ func (m Mangler) assemble(t *Tokens, target TargetTransform) string {
 					writeStringCased(&b, w, nextCasing())
 				}
 			}
+		default:
+			panic(fmt.Errorf("internal error: invalid Kind: %v", t.Kind(i)))
 		}
 	}
 

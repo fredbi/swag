@@ -1,4 +1,5 @@
-// Command gen builds a compact rune -> word table from ucd/DerivedName.txt.
+// Command gen_runewords builds the compact rune -> word table (default tables.go) from the UCD
+// DerivedName.txt and emoji-data.txt extracts.
 //
 // Pipeline (see DESIGN_v2.md §4.7.1):
 //  1. exclude runes already handled elsewhere (ASCII, Latin+diacritics, digits) or elided
@@ -8,7 +9,15 @@
 //  4. emit an interned word blob + interval-encoded rune keys (maximal runs) + 18-bit
 //     split offsets (uint16 low + 2-bit high sidecar). See DESIGN_v2.md §12.
 //
-// Run: go run gen.go   (from the runewords directory)
+// Usage:
+//
+//	go run github.com/go-openapi/swag/mangling/v2/ucd/cmd/gen_runewords [package [outfile [ucd-dir]]]
+//
+// package and outfile default to "runewords" and "tables.go"; ucd-dir defaults to the versioned UCD data
+// directory resolved from the repo git root (see ucd/internal/locate). Normally invoked via go generate
+// from the runewords package:
+//
+//	//go:generate go run ../ucd/cmd/gen_runewords runewords tables.go
 package main
 
 import (
@@ -193,10 +202,10 @@ func loadPictographic(path string) ([]rrange, error) {
 		codes = strings.TrimSpace(codes)
 		var lo, hi rune
 		if a, b, isRange := strings.Cut(codes, ".."); isRange {
-			fmt.Sscanf(a, "%X", &lo)
-			fmt.Sscanf(strings.TrimLeft(b, "."), "%X", &hi)
+			_, _ = fmt.Sscanf(a, "%X", &lo)
+			_, _ = fmt.Sscanf(strings.TrimLeft(b, "."), "%X", &hi)
 		} else {
-			fmt.Sscanf(codes, "%X", &lo)
+			_, _ = fmt.Sscanf(codes, "%X", &lo)
 			hi = lo
 		}
 		out = append(out, rrange{lo, hi})
@@ -501,10 +510,10 @@ func emit(source, packageName, outFile string, entries []kept, idOf map[string]i
 	out, err := format.Source(b.Bytes())
 	if err != nil {
 		// write unformatted for debugging
-		_ = os.WriteFile(outFile, b.Bytes(), 0o644)
+		_ = os.WriteFile(outFile, b.Bytes(), 0o644) //nolint:gosec // permissions are okay for our codegen
 		return fmt.Errorf("format: %w", err)
 	}
-	return os.WriteFile(outFile, out, 0o644)
+	return os.WriteFile(outFile, out, 0o644) //nolint:gosec // permissions are okay for our codegen
 }
 
 func report(st *stats, entries []kept, order []string, blobLen int, offsets []int) {

@@ -5,6 +5,7 @@ linters:
     - cyclop
     - depguard
     - errchkjson
+    - err113
     - errorlint
     - exhaustruct
     - forcetypeassert
@@ -23,6 +24,7 @@ linters:
     - intrange
     - ireturn
     - lll
+    - mnd
     - musttag
     - modernize
     - nestif
@@ -49,6 +51,9 @@ linters:
       min-occurrences: 3
     gocyclo:
       min-complexity: 45
+    exhaustive:
+      default-signifies-exhaustive: true
+      default-case-required: true
   exclusions:
     generated: lax
     presets:

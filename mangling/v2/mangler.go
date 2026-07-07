@@ -74,18 +74,6 @@ func (m Mangler) Transform(target TargetTransform, str string) string {
 	return m.assemble(&t, target)
 }
 
-// asciifyInput is the string-level half of ASCII-fication, applied before segmentation when folding
-// is enabled: it expands non-foldable runes to their phonetic name (§4.7.1 tier 4) so multi-word names
-// re-segment. Diacritics and combining marks are left for the token-level foldASCII stage. This is a
-// neutral Mangler capability — shared by every preset and by GoMangler's ident pipeline.
-func (m Mangler) asciifyInput(str string) string {
-	if !m.asciify {
-		return str
-	}
-
-	return expandRuneNames(str)
-}
-
 // Titleize transforms all words in titled case.
 //
 // The remainder of each word is lower-cased.
@@ -159,4 +147,18 @@ func (m Mangler) Pluralize(string) string {
 // wolves -> wolf -> (unchanged)
 func (m Mangler) Singularize(string) string {
 	return ""
+}
+
+// asciifyInput is the string-level half of ASCII-fication, applied before segmentation when folding
+// is enabled: it expands non-foldable runes to their phonetic name so multi-word names re-segment.
+//
+// Diacritics and combining marks are left for the token-level foldASCII stage.
+//
+// This is a neutral Mangler capability — shared by every preset and by GoMangler's ident pipeline.
+func (m Mangler) asciifyInput(str string) string {
+	if !m.asciify {
+		return str
+	}
+
+	return expandRuneNames(str)
 }

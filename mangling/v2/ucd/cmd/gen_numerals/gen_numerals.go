@@ -1,4 +1,5 @@
-// Command gen_numerals builds the rune -> numeric value table from ucd/DerivedNumericValues.txt.
+// Command gen_numerals builds the rune -> numeric value table (default numerals.go) from the UCD
+// DerivedNumericValues.txt extract.
 //
 // It keeps the No (Number, other: vulgar fractions, superscripts, circled digits, ...) and Nl
 // (Number, letter: roman/acrophonic/cuneiform numerals) categories, and drops:
@@ -9,7 +10,15 @@
 // same engine as an ASCII number (½ -> "one half"), and the asciify tier can render it as a plain
 // number (½ -> "0.5"). See DESIGN_v2.md §4.7.2.
 //
-// Run: go run gen_numerals.go [package] [file] (from the numbers directory)
+// Usage:
+//
+//	go run github.com/go-openapi/swag/mangling/v2/ucd/cmd/gen_numerals [package [outfile [ucd-dir]]]
+//
+// package and outfile default to "numbers" and "numerals.go"; ucd-dir defaults to the versioned UCD data
+// directory resolved from the repo git root (see ucd/internal/locate). Normally invoked via go generate
+// from the numbers package:
+//
+//	//go:generate go run ../ucd/cmd/gen_numerals numbers numerals.go
 package main
 
 import (
@@ -159,11 +168,11 @@ func emit(source, packageName, outFile string, nums []numeral) error {
 
 	out, err := format.Source(b.Bytes())
 	if err != nil {
-		_ = os.WriteFile(outFile, b.Bytes(), 0o644)
+		_ = os.WriteFile(outFile, b.Bytes(), 0o644) //nolint:gosec // permissions are okay for our codegen
 		return fmt.Errorf("format: %w", err)
 	}
 
-	return os.WriteFile(outFile, out, 0o644)
+	return os.WriteFile(outFile, out, 0o644) //nolint:gosec // permissions are okay for our codegen
 }
 
 func resolveArgs() (pkg, outFile, ucdLocation string) {

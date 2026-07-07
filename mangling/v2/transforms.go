@@ -48,9 +48,11 @@ func WithSeparator(sep string) TargetOption {
 
 // Preset targets.
 //
-// These return a fresh immutable value (they are functions, not variables, so a caller can never corrupt a shared
-// preset).
+// These return a fresh immutable value.
+// (they are functions, not variables, so a caller can never corrupt a shared preset).
 // Named after the form they produce.
+
+// TargetTitle...
 func TargetTitle() TargetTransform {
 	return TargetTransform{firstCasing: casingTitle, restCasing: casingTitle, separator: " "}
 }
@@ -79,12 +81,15 @@ func TargetAllCaps() TargetTransform {
 	return TargetTransform{firstCasing: casingUpper, restCasing: casingUpper, separator: "_"}
 }
 
-// expandRuneNames is the rune-name tier of asciification (§4.7.1 tier 4): every non-ASCII rune that
-// diacritic folding won't handle (non-Latin letters, symbols, single-codepoint emoji) is replaced by
-// its space-delimited phonetic name (π → " pi ", 😀 → " grinning face ") so it re-segments into words
-// and re-cases per word (GrinningFace, not "Grinning face"). Runes the table elides (CJK ideographs,
-// decorative symbols) are dropped. Foldable diacritics and combining marks pass through untouched for
-// the token-level fold stage. Allocates only when a substitution or drop is actually needed.
+// expandRuneNames is the rune-name tier of asciification.
+//
+// Every non-ASCII rune that diacritic folding won't handle (non-Latin letters, symbols, single-codepoint emoji)
+// is replaced by its space-delimited phonetic name (π → " pi ", 😀 → " grinning face ")
+// so it re-segments into words and re-cases per word (GrinningFace, not "Grinning face").
+//
+// Runes the table elides (CJK ideographs, decorative symbols) are dropped.
+// Foldable diacritics and combining marks pass through untouched for the token-level fold stage.
+// Allocates only when a substitution or drop is actually needed.
 func expandRuneNames(str string) string {
 	need := false
 	for _, r := range str {
@@ -100,8 +105,12 @@ func expandRuneNames(str string) string {
 		return str // pure ASCII, or only diacritics/combining marks the fold stage handles
 	}
 
+	// runes that expand to a word or number make the result longer than the input; a small margin
+	// avoids the first reallocation for the common case of a few substitutions.
+	const expansionMargin = 16
+
 	var b strings.Builder
-	b.Grow(len(str) + 16)
+	b.Grow(len(str) + expansionMargin)
 	for _, r := range str {
 		switch {
 		case r < utf8.RuneSelf, isCombiningMark(r):

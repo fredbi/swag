@@ -1,13 +1,14 @@
 package mangling
 
 import (
+	"fmt"
 	"iter"
 	"unicode"
 
 	"github.com/go-openapi/swag/pools"
 )
 
-// Pooled backings for the zero-copy token model (§4.3), reused across [Mangler.Transform] calls.
+// Pooled backings for the zero-copy token model, reused across [Mangler.Transform] calls.
 //
 // The token slice is the churny one; the rune slice holds the single shared copy of the input.
 var (
@@ -15,7 +16,7 @@ var (
 	runeSlicePool  = pools.NewPoolSlice[rune]()
 )
 
-// Tokenizer splits an UTF-8 string into tokens along opinionated segmentation rules (§4.2).
+// Tokenizer splits an UTF-8 string into tokens along opinionated segmentation rules.
 //
 // # Token boundaries
 //
@@ -31,8 +32,9 @@ var (
 //   - lower→Upper, e.g. "fooBar" => [foo, Bar];
 //   - an Upper-run→lower, with one-rune lookback, e.g. "HTTPServer" => [HTTP, Server].
 //
-// Combining marks (Mn/Mc/Me) never start a boundary: they attach to the current token (and are stripped later, in the
-// fold stage).
+// Combining marks (Mn/Mc/Me) never start a boundary: they attach to the current token
+// (and are stripped later, in the fold stage).
+//
 // Script/Unicode-category change (§4.2 signal #4) is not yet implemented.
 //
 // Separators may be customized by injecting a predicate with option [WithTokenSeparator].
@@ -85,8 +87,9 @@ func (m Tokenizer) segment(t *Tokens) {
 
 	for i := 0; i < n; i++ {
 		r := runes[i]
+		class := classify(r, sep)
 
-		switch classify(r, sep) {
+		switch class {
 		case classSeparator:
 			flush(i) // elided, not emitted
 
@@ -130,9 +133,12 @@ func (m Tokenizer) segment(t *Tokens) {
 					// Upper-run(>=2) → lower: HTTPServer => HTTP | Server (boundary before the last upper)
 					flush(i - 1)
 					runStart, runKind = i-1, KindWord
+				default:
 				}
 				// otherwise: same case / single-upper / caseless → extend the run
 			}
+		default:
+			panic(fmt.Errorf("internal error: invalid classification: %v", class))
 		}
 	}
 	flush(n)
@@ -142,7 +148,7 @@ func (m Tokenizer) segment(t *Tokens) {
 // A half-open span plus the classification computed by the scanner.
 //
 // It is internal: transforms reach token data only through [Tokens]' index-based methods, so the struct can evolve
-// (e.g. the override vs. side-arena question, §9) without touching the public API.
+// without touching the public API.
 type token struct {
 	start, end int    // half-open span [start,end) into Tokens.runes
 	kind       Kind   // word | number | symbol | initialism
@@ -152,8 +158,8 @@ type token struct {
 
 // Kind classifies a token produced by segmentation.
 //
-// The tokenizer emits [KindWord], [KindNumber] and [KindSymbol]; [KindInitialism] is set later by the initialism
-// overlay (§4.4), never by the tokenizer.
+// The tokenizer emits [KindWord], [KindNumber] and [KindSymbol].
+// [KindInitialism] is set later by the initialism overlay, never by the tokenizer.
 type Kind uint8
 
 const (
@@ -296,33 +302,6 @@ func borrowTokens(in string) Tokens {
 	}
 }
 
-// runeLen is the number of runes in the shared input (a size hint for assembly).
-func (t *Tokens) runeLen() int { return t.runes.Len() }
-
-// span returns token i's raw rune span (a view into the shared slice — no copy) and its override (empty unless a
-// transform rewrote it).
-func (t *Tokens) span(i int) ([]rune, string) {
-	tk := t.toks.Slice()[i]
-
-	return t.runes.Slice()[tk.start:tk.end], tk.override
-}
-
-// redeem returns the pooled backings.
-//
-// The Tokens must not be used afterwards.
-func (t *Tokens) redeem() {
-	t.releaseToks()
-	t.releaseRunes()
-}
-
-// push appends a token spanning [start,end) with its classification.
-//
-// Scanner-only.
-func (t *Tokens) push(start, end int, kind Kind, casing Casing) {
-	t.toks.Append(token{start: start, end: end, kind: kind, casing: casing})
-	t.count++
-}
-
 // --- read API ---
 
 // Len is the number of live tokens.
@@ -385,6 +364,33 @@ func (t *Tokens) Merge(i, j int) {
 	_, _ = i, j
 }
 
+// runeLen is the number of runes in the shared input (a size hint for assembly).
+func (t *Tokens) runeLen() int { return t.runes.Len() }
+
+// span returns token i's raw rune span (a view into the shared slice — no copy) and its override (empty unless a
+// transform rewrote it).
+func (t *Tokens) span(i int) ([]rune, string) {
+	tk := t.toks.Slice()[i]
+
+	return t.runes.Slice()[tk.start:tk.end], tk.override
+}
+
+// redeem returns the pooled backings.
+//
+// The Tokens must not be used afterwards.
+func (t *Tokens) redeem() {
+	t.releaseToks()
+	t.releaseRunes()
+}
+
+// push appends a token spanning [start,end) with its classification.
+//
+// Scanner-only.
+func (t *Tokens) push(start, end int, kind Kind, casing Casing) {
+	t.toks.Append(token{start: start, end: end, kind: kind, casing: casing})
+	t.count++
+}
+
 // defaultTokenSeparator reports whether a rune is a token separator — a rune that is *elided* (dropped, never
 // emitted) and marks a boundary between tokens.
 //
@@ -393,7 +399,7 @@ func (t *Tokens) Merge(i, j int) {
 //  1. letters & digits    -> token content (never a separator).
 //  2. verbalized symbols  -> NOT a separator. A rune in [defaultSymbolWords] (@ ! # & . …) becomes
 //     its own single-rune *symbol token*; whether it is then dropped or turned into a word is the
-//     target's symbol policy (§4.7), decided downstream — not here. This is why "." can both be
+//     target's symbol policy, decided downstream — not here. This is why "." can both be
 //     elided for an identifier (Index01) and spelled "dot" when a target verbalizes.
 //  3. everything else      -> separator (this function): whitespace, non-printable runes, and the
 //     structural punctuation categories not claimed by bucket 2.

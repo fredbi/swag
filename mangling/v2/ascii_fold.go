@@ -237,7 +237,7 @@ var asciiFold = map[rune]string{
 
 // defaultSymbolWords maps a symbol rune to the word it verbalizes to (e.g. "@" => "at", "!" => "bang").
 //
-// This is the default data for the symbol policy of §4.7 (verbalization): when a target chooses to *verbalize* a
+// This is the default data for the symbol verbalization policy: when a target chooses to *verbalize* a
 // symbol rather than drop it, this table supplies the word.
 // It is deliberately narrow — only symbols that read meaningfully as a word.
 //

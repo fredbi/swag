@@ -12,9 +12,9 @@ import (
 // GoMangler is a name mangler specialized in producing strings that abide by naming conventions used by go.
 type GoMangler struct {
 	Mangler
-	n numbers.NumberMangler
-
 	goOptions
+
+	n        numbers.NumberMangler
 	trie     *initialismTrie     // precomputed initialism index (shared, read-only)
 	reserved map[string]struct{} // keywords ∪ builtins, for unexported-ident repair
 }
@@ -35,63 +35,17 @@ func MakeGoMangler(opts ...GoOption) GoMangler {
 	return g
 }
 
-// repairReserved appends the reserved-word suffix (default "Var") when id collides with a Go keyword or builtin.
-//
-// Only unexported idents can collide — an exported (Title-cased) ident never equals a lowercase keyword/builtin, so
-// it needs no repair.
-func (g GoMangler) repairReserved(id string) string {
-	if _, ok := g.reserved[id]; ok {
-		return id + g.reservedSuffix
-	}
-
-	return id
-}
-
-// defaultIdentFallback is the built-in word used when an identifier reduces to nothing and the
-// configured [WithGoIdentFallback] word (if any) also reduces to nothing. It must be a clean word that
-// always survives mangling.
-const defaultIdentFallback = "empty"
-
-// orFallback guarantees a non-empty identifier: it returns id when non-empty, otherwise the configured
-// fallback word mangled at the same target (so it is valid and cased to match — "Empty"/"empty"/snake),
-// and finally the built-in [defaultIdentFallback] if even the configured word reduces to nothing.
-//
-// It is applied by the Go identifier producers (idents, const, file), never inside [GoMangler.identifier]
-// itself — Package/Module intentionally allow an empty (dir-only) result.
-func (g GoMangler) orFallback(id string, target TargetTransform) string {
-	if id != "" {
-		return id
-	}
-	if fb := g.identifier(g.identFallback, target); fb != "" {
-		return fb
-	}
-
-	return g.identifier(defaultIdentFallback, target)
-}
-
-// identifier runs the Go ident pipeline: rune-name expansion → segment → ASCII fold → initialism
-// overlay → assemble.
-func (g GoMangler) identifier(str string, target TargetTransform) string {
-	str = g.asciifyInput(str)
-
-	t := borrowTokens(str)
-	defer t.redeem()
-
-	g.segment(&t)
-	if g.Mangler.asciify {
-		g.foldASCII(&t)
-	}
-	g.applyInitialisms(&t)
-
-	return g.assemble(&t, target)
-}
-
 // NewGoMangler returns a pointer to a [GoMangler].
 func NewGoMangler(opts ...GoOption) *GoMangler {
 	g := MakeGoMangler(opts...)
 
 	return &g
 }
+
+// defaultIdentFallback is the built-in word used when an identifier reduces to nothing and the
+// configured [WithGoIdentFallback] word (if any) also reduces to nothing. It must be a clean word that
+// always survives mangling.
+const defaultIdentFallback = "empty"
 
 // IdentUnexported produces a valid unexported go variable identifier from a string, possibly containing multiple words.
 //
@@ -140,6 +94,113 @@ func (g GoMangler) Package(pth string) (shortName string, pkg string) {
 // Useful when the caller wants to derive a deconflicted import alias from the other significant parts of the package.
 func (g GoMangler) PackageWithParts(pth string) (shortName string, pkg string, parts []string) {
 	return g.packageParts(pth)
+}
+
+// Module produces a legit go module path.
+//
+// It mangles only the basename (kebab-cased, with the Go ruleset), reconducting the "/"-separated directory prefix
+// verbatim — the same shape as [GoMangler.Package]'s pkg — with the same reserved name and major-version repairs,
+// plus a repair of Windows device names (con, nul, com1…, lpt1…).
+//
+// Note: the major-version repair means a trailing "v2" becomes "version2", so an actual semantic-import-versioning
+// suffix (".../repo/v2") must be appended by the caller *after* Module, not passed through it.
+func (g GoMangler) Module(pth string) string {
+	dir, kebab := g.pathBaseKebab(pth)
+	if kebab == "" {
+		return dir
+	}
+
+	// A module path element is repaired as a whole: a directory "my-con" is legal — only bare "con" is a Windows device
+	// name, only bare "v2" is a version, etc.
+	return dir + repairModuleShort(kebab)
+}
+
+// File produces a valid go file name, transforming any trailing segment that bears semantics to the go build system.
+//
+// Mangling applies only to the file **stem**: the directory prefix (either "/" or "\" separated) and any existing
+// extension are reconducted verbatim; the stem is lower-cased and snakized (no ".go" is added).
+//
+// When the last snake segment is a reserved GOOS/GOARCH/test suffix (which would make the file build-constrained), a
+// repair suffix is appended (default "swagger"):
+//
+//   - "test.go"          -> "test_swagger.go"
+//   - "config_linux"     -> "config_linux_swagger"
+//   - "some/dir/MyModel" -> "some/dir/my_model"
+//   - "IPv4Config.json"  -> "ipv4_config.json"
+func (g GoMangler) File(input string) string {
+	// isolate the stem; the directory prefix and the extension are reconducted verbatim.
+	dir := ""
+	base := input
+	if i := strings.LastIndexAny(base, `/\`); i >= 0 {
+		dir, base = base[:i+1], base[i+1:]
+	}
+	ext := ""
+	stem := base
+	if dot := strings.LastIndexByte(base, '.'); dot > 0 { // dot > 0: keep a leading-dot (hidden) name whole
+		ext, stem = base[dot:], base[:dot]
+	}
+
+	// identifier merges break-crossing initialisms so "IPv4" snakizes to "ipv4", not "i_pv4".
+	return dir + g.repairFileSuffix(g.orFallback(g.identifier(stem, TargetSnake()), TargetSnake())) + ext
+}
+
+// ConstName produces a valid exported Go identifier from an arbitrary value (e.g. an enum member).
+//
+// Every number in the value is verbalized ("0.25" -> "one quarter", "300" -> "three hundred") and the result is turned
+// into an exported identifier.
+// Type-name prefixing of enum members (Color + Red -> ColorRed) is the code generator's job.
+//
+//	ConstName("0.25") == "OneQuarter"   ConstName("300") == "ThreeHundred"   ConstName("read only") == "ReadOnly"
+func (g GoMangler) ConstName(value string, opts ...ValueOption) string {
+	_ = opts // TODO: value options (symbol / keep-digits / rune-name policies)
+
+	return g.IdentExported(g.n.NumberWords(value))
+}
+
+// repairReserved appends the reserved-word suffix (default "Var") when id collides with a Go keyword or builtin.
+//
+// Only unexported idents can collide — an exported (Title-cased) ident never equals a lowercase keyword/builtin, so
+// it needs no repair.
+func (g GoMangler) repairReserved(id string) string {
+	if _, ok := g.reserved[id]; ok {
+		return id + g.reservedSuffix
+	}
+
+	return id
+}
+
+// orFallback guarantees a non-empty identifier: it returns id when non-empty, otherwise the configured
+// fallback word mangled at the same target (so it is valid and cased to match — "Empty"/"empty"/snake),
+// and finally the built-in [defaultIdentFallback] if even the configured word reduces to nothing.
+//
+// It is applied by the Go identifier producers (idents, const, file), never inside [GoMangler.identifier]
+// itself — Package/Module intentionally allow an empty (dir-only) result.
+func (g GoMangler) orFallback(id string, target TargetTransform) string {
+	if id != "" {
+		return id
+	}
+	if fb := g.identifier(g.identFallback, target); fb != "" {
+		return fb
+	}
+
+	return g.identifier(defaultIdentFallback, target)
+}
+
+// identifier runs the Go ident pipeline: rune-name expansion → segment → ASCII fold → initialism
+// overlay → assemble.
+func (g GoMangler) identifier(str string, target TargetTransform) string {
+	str = g.asciifyInput(str)
+
+	t := borrowTokens(str)
+	defer t.redeem()
+
+	g.segment(&t)
+	if g.Mangler.asciify {
+		g.foldASCII(&t)
+	}
+	g.applyInitialisms(&t)
+
+	return g.assemble(&t, target)
 }
 
 // pathBaseKebab splits a "/"-separated path into its verbatim directory prefix and its basename mangled to kebab (fold
@@ -213,54 +274,6 @@ func repairModuleShort(short string) string {
 	return repairPackageShort(short)
 }
 
-// Module produces a legit go module path.
-//
-// It mangles only the basename (kebab-cased, with the Go ruleset), reconducting the "/"-separated directory prefix
-// verbatim — the same shape as [GoMangler.Package]'s pkg — with the same reserved name and major-version repairs,
-// plus a repair of Windows device names (con, nul, com1…, lpt1…).
-//
-// Note: the major-version repair means a trailing "v2" becomes "version2", so an actual semantic-import-versioning
-// suffix (".../repo/v2") must be appended by the caller *after* Module, not passed through it.
-func (g GoMangler) Module(pth string) string {
-	dir, kebab := g.pathBaseKebab(pth)
-	if kebab == "" {
-		return dir
-	}
-
-	// A module path element is repaired as a whole: a directory "my-con" is legal — only bare "con" is a Windows device
-	// name, only bare "v2" is a version, etc.
-	return dir + repairModuleShort(kebab)
-}
-
-// File produces a valid go file name, transforming any trailing segment that bears semantics to the go build system.
-//
-// Mangling applies only to the file **stem**: the directory prefix (either "/" or "\" separated) and any existing
-// extension are reconducted verbatim; the stem is lower-cased and snakized (no ".go" is added).
-//
-// When the last snake segment is a reserved GOOS/GOARCH/test suffix (which would make the file build-constrained), a
-// repair suffix is appended (default "swagger"):
-//
-//   - "test.go"          -> "test_swagger.go"
-//   - "config_linux"     -> "config_linux_swagger"
-//   - "some/dir/MyModel" -> "some/dir/my_model"
-//   - "IPv4Config.json"  -> "ipv4_config.json"
-func (g GoMangler) File(input string) string {
-	// isolate the stem; the directory prefix and the extension are reconducted verbatim.
-	dir := ""
-	base := input
-	if i := strings.LastIndexAny(base, `/\`); i >= 0 {
-		dir, base = base[:i+1], base[i+1:]
-	}
-	ext := ""
-	stem := base
-	if dot := strings.LastIndexByte(base, '.'); dot > 0 { // dot > 0: keep a leading-dot (hidden) name whole
-		ext, stem = base[dot:], base[:dot]
-	}
-
-	// identifier merges break-crossing initialisms so "IPv4" snakizes to "ipv4", not "i_pv4".
-	return dir + g.repairFileSuffix(g.orFallback(g.identifier(stem, TargetSnake()), TargetSnake())) + ext
-}
-
 // repairFileSuffix appends the file repair suffix (default "swagger") when the last snake segment is a reserved
 // GOOS/GOARCH/test suffix, so the result is not accidentally build-constrained.
 func (g GoMangler) repairFileSuffix(snake string) string {
@@ -274,19 +287,6 @@ func (g GoMangler) repairFileSuffix(snake string) string {
 	}
 
 	return snake
-}
-
-// ConstName produces a valid exported Go identifier from an arbitrary value (e.g. an enum member).
-//
-// Every number in the value is verbalized ("0.25" -> "one quarter", "300" -> "three hundred") and the result is turned
-// into an exported identifier.
-// Type-name prefixing of enum members (Color + Red -> ColorRed) is the code generator's job.
-//
-//	ConstName("0.25") == "OneQuarter"   ConstName("300") == "ThreeHundred"   ConstName("read only") == "ReadOnly"
-func (g GoMangler) ConstName(value string, opts ...ValueOption) string {
-	_ = opts // TODO: value options (symbol / keep-digits / rune-name policies)
-
-	return g.IdentExported(g.n.NumberWords(value))
 }
 
 // verbalizeLeadingNumber verbalizes a *leading* numeric token so an identifier never starts with a digit: when the
