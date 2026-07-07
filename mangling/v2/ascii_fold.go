@@ -155,6 +155,44 @@ func isCombiningMark(r rune) bool {
 	return unicode.In(r, unicode.Mn, unicode.Mc, unicode.Me)
 }
 
+// asciiDigit maps a decimal-digit rune (category Nd, any script: ASCII, Arabic-Indic ٧, Devanagari ०,
+// Thai ๗, fullwidth ７, …) to its ASCII digit byte '0'–'9', and reports whether r is a decimal digit.
+//
+// No table is needed: Unicode lays out every script's digits as 10 consecutive codepoints (a hard
+// invariant of Nd), so the value is r minus its unicode.Nd block start. Only the ~64 Nd blocks are
+// scanned, and only for non-ASCII runes (a cold path).
+func asciiDigit(r rune) (byte, bool) {
+	if r >= '0' && r <= '9' {
+		return byte(r), true
+	}
+	for _, rg := range unicode.Nd.R16 {
+		lo, hi := rune(rg.Lo), rune(rg.Hi)
+		if lo <= r && r <= hi {
+			return byte('0' + (r-lo)%10), true
+		}
+	}
+	for _, rg := range unicode.Nd.R32 {
+		lo, hi := rune(rg.Lo), rune(rg.Hi) //nolint:gosec // unicode.Nd range bounds are valid codepoints (<= MaxRune)
+		if lo <= r && r <= hi {
+			return byte('0' + (r-lo)%10), true
+		}
+	}
+
+	return 0, false
+}
+
+// isAllCombiningMarks reports whether every rune is a combining mark (so the token renders to nothing
+// once marks are stripped). An empty slice counts as all-marks (also renders to nothing).
+func isAllCombiningMarks(runes []rune) bool {
+	for _, r := range runes {
+		if !isCombiningMark(r) {
+			return false
+		}
+	}
+
+	return true
+}
+
 // asciiFold maps a Latin letter bearing a diacritic (or a distinct Latin letter such as æ, ß, þ)
 // to its plain ASCII equivalent, preserving case.
 //

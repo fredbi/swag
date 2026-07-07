@@ -57,7 +57,7 @@ const defaultIdentFallback = "empty"
 //
 // An unexported identifier is camelized, with the casing of initialisms respected (e.g. "getHTTP" and not "getHttp").
 func (g GoMangler) IdentUnexported(str string) string {
-	return g.repairReserved(g.orFallback(g.identifier(g.verbalizeLeadingNumber(str), TargetCamel()), TargetCamel()))
+	return g.repairReserved(g.orFallback(g.goIdent(str, TargetCamel()), TargetCamel()))
 }
 
 // IdentExported produces a valid exported go variable identifier from a string, possibly containing multiple words.
@@ -68,7 +68,7 @@ func (g GoMangler) IdentUnexported(str string) string {
 //
 // Unlike their unexported counterpart, exported identifiers can't conflict with go reserved keywords or builtins.
 func (g GoMangler) IdentExported(str string) string {
-	return g.orFallback(g.identifier(g.verbalizeLeadingNumber(str), TargetPascal()), TargetPascal())
+	return g.orFallback(g.goIdent(str, TargetPascal()), TargetPascal())
 }
 
 // Package produces a legit go package import path and its short (declaration) name.
@@ -289,48 +289,115 @@ func (g GoMangler) repairFileSuffix(snake string) string {
 	return snake
 }
 
+// goIdent runs the full Go-identifier pipeline at the given target casing:
+//   - asciify first, so a numeral rune (½, Ⅶ, ②) becomes a number that verbalizeLeadingNumber can catch
+//     at the front (identifier re-asciifies idempotently on the resulting ASCII);
+//   - verbalize a leading number so the identifier never starts with a digit;
+//   - a safety net: elision (invalid UTF-8, combining marks) can strip the rune that shielded a digit,
+//     leaving the mangled identifier starting with a digit — verbalize that exposed leading digit too.
+func (g GoMangler) goIdent(str string, target TargetTransform) string {
+	str = g.asciifyInput(str)
+	id := g.identifier(g.verbalizeLeadingNumber(str), target)
+
+	if id != "" {
+		if r, _ := utf8.DecodeRuneInString(id); isASCIIDigit(r) || isNonASCIIDigit(r) {
+			id = g.identifier(g.verbalizeLeadingNumber(id), target)
+		}
+	}
+
+	return id
+}
+
 // verbalizeLeadingNumber verbalizes a *leading* numeric token so an identifier never starts with a digit: when the
-// first token of str is made of digits it is replaced by its words ("12 angry men" -> "twelve angry men"), while
-// interior numbers are left as-is ("variable 12" is unchanged, becoming "Variable12").
+// first token of str is a number it is replaced by its words ("12 angry men" -> "twelve angry men"), while interior
+// numbers are left as-is ("variable 12" is unchanged, becoming "Variable12").
+//
+// It recognizes every kind of leading number: ASCII digit runs, non-ASCII decimal digits (Nd — Arabic-Indic ٧,
+// Devanagari, …), and No/Nl numeral runes (½, Ⅶ). Non-ASCII digits are converted to ASCII before verbalizing.
 //
 // Used by the Ident* methods (ConstName verbalizes every number).
 func (g GoMangler) verbalizeLeadingNumber(str string) string {
-	// Find the first token's byte offset (skipping leading, elided separators) without allocating a []rune — range
-	// decodes runes in place.
-	// The first non-separator rune decides: a number iff a digit.
+	// The first non-separator rune decides whether the first token is a number.
 	start := -1
+	var r0 rune
 	for i, r := range str {
 		if defaultTokenSeparator(r) {
 			continue
 		}
-		if isASCIIDigit(r) {
-			start = i
-		}
+		start, r0 = i, r
 
 		break
 	}
 	if start < 0 {
-		return str // first token is not a number — fast path, nothing allocated
+		return str // no content — fast path, nothing allocated
 	}
 
-	// Extend over the leading numeric run (ASCII digits + one interior decimal point).
-	end, seenDot := start, false
-loop:
-	for end < len(str) {
-		switch c := str[end]; {
-		case c >= '0' && c <= '9':
-			end++
-		case c == '.' && !seenDot && end+1 < len(str) && str[end+1] >= '0' && str[end+1] <= '9':
-			seenDot, end = true, end+1
-		default:
-			break loop
+	switch {
+	case isASCIIDigit(r0):
+		// Leading ASCII digit run with one interior decimal point — byte scan, no allocation.
+		end, seenDot := start, false
+	loop:
+		for end < len(str) {
+			switch c := str[end]; {
+			case c >= '0' && c <= '9':
+				end++
+			case c == '.' && !seenDot && end+1 < len(str) && str[end+1] >= '0' && str[end+1] <= '9':
+				seenDot, end = true, end+1
+			default:
+				break loop
+			}
 		}
-	}
 
-	return str[:start] + g.n.NumberWords(str[start:end]) + " " + str[end:]
+		return str[:start] + g.n.NumberWords(str[start:end]) + " " + str[end:]
+
+	case isNonASCIIDigit(r0):
+		// Leading non-ASCII decimal digits (folding off): convert the run to ASCII, then verbalize.
+		var digits []byte
+		end, seenDot := start, false
+		for end < len(str) {
+			r, size := utf8.DecodeRuneInString(str[end:])
+			if d, ok := asciiDigit(r); ok {
+				digits = append(digits, d)
+				end += size
+
+				continue
+			}
+			if r == '.' && !seenDot {
+				digits = append(digits, '.')
+				seenDot, end = true, end+size
+
+				continue
+			}
+
+			break
+		}
+
+		return str[:start] + g.n.NumberWords(string(digits)) + " " + str[end:]
+
+	default:
+		if _, ok := numbers.RuneNumber(r0); ok {
+			// A leading numeral *rune* (½, Ⅶ, ①) with folding off: verbalize it in place so the ident starts
+			// with a letter (folding on already spelled it out upstream, in expandRuneNames).
+			w := start + utf8.RuneLen(r0)
+
+			return str[:start] + g.n.NumberWords(str[start:w]) + " " + str[w:]
+		}
+
+		return str // first token is not a number
+	}
 }
 
 func isASCIIDigit(r rune) bool { return r >= '0' && r <= '9' }
+
+// isNonASCIIDigit reports whether r is a decimal digit (Nd) outside the ASCII range.
+func isNonASCIIDigit(r rune) bool {
+	if r < utf8.RuneSelf {
+		return false
+	}
+	_, ok := asciiDigit(r)
+
+	return ok
+}
 
 // formatNumeral renders a Unicode numeral's value as a plain ASCII number.
 //

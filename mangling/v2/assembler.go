@@ -67,6 +67,9 @@ func (m Mangler) assemble(t *Tokens, target TargetTransform) string {
 
 		switch t.Kind(i) {
 		case KindWord:
+			if override == "" && isAllCombiningMarks(runes) {
+				continue // renders to nothing (marks are stripped) — don't emit a separator or consume the first-word slot
+			}
 			writeSep(false)
 			writeCased(&b, runes, override, nextCasing())
 		case KindInitialism:
@@ -117,27 +120,31 @@ func writeCased(b *strings.Builder, runes []rune, override string, c wordCasing)
 		return
 	}
 
-	switch c {
-	case casingLower:
-		for _, r := range runes {
-			b.WriteRune(unicode.ToLower(r))
+	// Combining marks (Mn/Mc/Me) are never valid identifier characters, so strip them here regardless of
+	// ASCII folding — the fold stage strips them too, but it only runs when folding is on. `first` tracks
+	// the first *surviving* rune so title-casing lands on it after any leading mark is dropped.
+	first := true
+	for _, r := range runes {
+		if isCombiningMark(r) {
+			continue
 		}
-	case casingUpper:
-		for _, r := range runes {
-			b.WriteRune(unicode.ToUpper(r))
-		}
-	case casingTitle:
-		for i, r := range runes {
-			if i == 0 {
-				b.WriteRune(unicode.ToTitle(r))
+
+		switch c {
+		case casingLower:
+			r = unicode.ToLower(r)
+		case casingUpper:
+			r = unicode.ToUpper(r)
+		case casingTitle:
+			if first {
+				r = unicode.ToTitle(r)
 			} else {
-				b.WriteRune(unicode.ToLower(r))
+				r = unicode.ToLower(r)
 			}
+		default: // casingAsIs
 		}
-	default: // casingAsIs
-		for _, r := range runes {
-			b.WriteRune(r)
-		}
+
+		b.WriteRune(r)
+		first = false
 	}
 }
 

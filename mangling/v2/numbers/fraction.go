@@ -115,7 +115,15 @@ func writeSpellDecimal(b *buf, s string, o numberOptions) {
 			return
 		}
 
-		_, _ = b.WriteString(s) // not a plain integer (overflow, junk): leave as-is
+		// Integer too large for int64: spell it out one word per digit so it is still fully verbalized —
+		// never left as raw digits, which would make an identifier start with a digit.
+		body := s
+		if rest, ok := strings.CutPrefix(body, "-"); ok {
+			_, _ = b.WriteString("minus ")
+			body = rest
+		}
+		body = strings.TrimPrefix(body, "+")
+		writeDigitWords(b, body)
 
 		return
 	}

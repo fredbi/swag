@@ -47,13 +47,13 @@ func TestNumeralAsciify(t *testing.T) {
 		assert.Equal(t, "", UnicodeName('Ⅶ'))
 	})
 
-	// A numeral rune must asciify exactly like its plain-number ASCII form in the general path.
-	t.Run("numeral is consistent with its ASCII plain form", func(t *testing.T) {
+	// In the name-mangling paths (Camelize/Ident*), a numeral rune is spelled out as words — a name reads
+	// better as OneHalfCup than 0Dot5Cup. (ToASCII keeps the plain number; see the subtest above.)
+	t.Run("name manglers spell numeral runes as words", func(t *testing.T) {
 		t.Parallel()
-		g := MakeGoMangler()
-		for _, p := range [][2]string{{"½ cup", "0.5 cup"}, {"²", "2"}} {
-			assert.Equalf(t, g.Camelize(p[1]), g.Camelize(p[0]),
-				"Camelize(%q) should equal Camelize(%q)", p[0], p[1])
-		}
+		m := MakeMangler(WithASCIIFolding(true))
+		assert.EqualT(t, "oneHalfCup", m.Camelize("½ cup"))
+		assert.EqualT(t, "Two", m.Pascalize("²"))
+		assert.EqualT(t, "AnotherOneHalfPlace", MakeGoMangler().IdentExported("another ½ place"))
 	})
 }

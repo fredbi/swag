@@ -30,7 +30,8 @@ type (
 	goOptions struct {
 		options
 
-		initialisms      []string
+		initialisms      []string // base list; nil → DefaultInitialisms(). Replaced by UseGoInitialisms.
+		extraInitialisms []string // appended on top of the base list by WithGoInitialisms
 		keywords         map[string]struct{}
 		builtins         map[string]struct{}
 		fileSuffixes     map[string]struct{}
@@ -75,6 +76,13 @@ func buildGoOptions(o goOptions, opts []GoOption) goOptions {
 	if o.initialisms == nil {
 		o.initialisms = DefaultInitialisms()
 	}
+	if len(o.extraInitialisms) > 0 {
+		// combine into a fresh slice so we never mutate DefaultInitialisms' or the caller's backing array
+		combined := make([]string, 0, len(o.initialisms)+len(o.extraInitialisms))
+		combined = append(combined, o.initialisms...)
+		combined = append(combined, o.extraInitialisms...)
+		o.initialisms = combined
+	}
 	if o.keywords == nil {
 		o.keywords = goKeywordsSet
 	}
@@ -115,8 +123,23 @@ func WithTokenSeparator(separator func(rune) bool) TokenOption {
 	}
 }
 
-func WithSeparators(...rune) TokenOption {
-	return nil
+// WithSeparators makes exactly the given runes the token separators — a convenience over
+// [WithTokenSeparator] for the common case of a fixed set. It replaces the default separator set.
+func WithSeparators(seps ...rune) TokenOption {
+	set := make(map[rune]struct{}, len(seps))
+	for _, r := range seps {
+		set[r] = struct{}{}
+	}
+
+	return func(o tokenOptions) tokenOptions {
+		o.separator = func(r rune) bool {
+			_, ok := set[r]
+
+			return ok
+		}
+
+		return o
+	}
 }
 
 func WithTokenOptions(opts ...TokenOption) Option {
@@ -174,18 +197,26 @@ func WithGoIdentFallback(word string) GoOption {
 	}
 }
 
-// WithGoInitialisms adds entries to the default list of initialisms.
-// TODO: wire
-func WithGoInitialisms(...string) GoOption {
+// WithGoInitialisms adds entries on top of the initialism list (the defaults, or the list set by
+// [UseGoInitialisms]). Each string is the canonical casing to emit — e.g. "OAI", "gRPC"; matching is
+// case-insensitive. Repeated calls accumulate.
+func WithGoInitialisms(extra ...string) GoOption {
 	return func(o goOptions) goOptions {
+		o.extraInitialisms = append(o.extraInitialisms, extra...)
+
 		return o
 	}
 }
 
-// UseGoInitialisms replaces all default initialisms by a specific list.
-// TODO: wire
-func UseGoInitialisms(...string) GoOption {
+// UseGoInitialisms replaces the default initialisms with the given list ([WithGoInitialisms] entries are
+// still appended on top). Each string is the canonical casing to emit; matching is case-insensitive.
+// Called with no arguments it is a no-op (the defaults stay).
+func UseGoInitialisms(list ...string) GoOption {
 	return func(o goOptions) goOptions {
+		if len(list) > 0 {
+			o.initialisms = list
+		}
+
 		return o
 	}
 }

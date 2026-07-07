@@ -1,9 +1,10 @@
 # Mangling v2 — design
 
-> Status: **core implemented, iterating** (started 2026-06-05, branch `exp/mangling-v2`; status refreshed 2026-07-06).
-> The pipeline, the Go ruleset (idents / package / module / file / const), the initialism overlay, ASCII folding and
-> the `numbers` subpackage are built and tested. Remaining work is scoped in **§11 Implementation status** — chiefly
-> Unicode rune-naming and the inflection engine.
+> Status: **core complete, hardening** (started 2026-06-05, branch `exp/mangling-v2`; status refreshed 2026-07-07).
+> The pipeline, the Go ruleset (idents / package / module / file / const), the initialism overlay, ASCII folding,
+> Unicode rune-naming + numeral routing, and the `numbers` subpackage are built, tested and **lint-clean**
+> (`golangci-lint`, both modules 0 issues). UCD codegen is productized into a versioned `ucd` module. Remaining work is
+> scoped in **§11 Implementation status** / **§12 backlog** — chiefly the inflection engine plus test & doc hardening.
 > This document is exploratory. v2 is expected to graduate into its own repository as a core,
 > reusable codegen primitive shared across the go-openapi / go-swagger ecosystem. v1 (`go-openapi/swag/mangling`)
 > remains maintained and frozen for a long time. There are **no backward-compatibility constraints** on the v2 API.
@@ -539,9 +540,20 @@ Resolved in the 2026-07-05 review (→ §10):
     is always elided. **Graphemes + extended-Unicode tables** (flags→ISO-3166, ZWJ emoji, generator à la
     `go-runewidth`) are a **forthcoming enhancement**; for now single-codepoint emoji only.
 
-## 11. Implementation status — 2026-07-06
+## 11. Implementation status — 2026-07-07
 
 Snapshot of the branch against this design. Legend: ✅ done & tested · 🚧 stub / partial · 📋 planned · ❌ dropped.
+
+**Progress since 2026-07-06** (what moved from 🚧/📋 to ✅):
+
+- **Unicode rune-naming** shipped and wired as a neutral asciify capability (`runewords` table, `ToASCII`/`ASCII`/`UnicodeName`).
+- **Rune-table compaction** (interval keys + 18-bit sidecar offsets): 286 → 173 KiB, still pure static `.rodata` (§12).
+- **Numeral routing** (`No`/`Nl` → `numbers`): `RuneNumber` + rune-aware scanner; three treatments (spell / plain-number / elide); `fractionBases` extended to 1/6·1/7·1/9 (§4.7.2, §12).
+- **Empty-result contract**: Go idents/const/file never return `""` — per-target-cased fallback (`WithGoIdentFallback`, default `"empty"`); base `Mangler` exempt.
+- **`numbers` alloc budget**: streaming byte-scanner + `AppendWords` (0-alloc when pooled); `ConstName` 5 → 1 alloc/op.
+- **Codegen productized**: generators moved into a dependency-free `ucd` module with **versioned data** (`ucd/v15/`), `//go:generate` directives, and a git-root `locate` helper. Consuming packages ship only generated, dependency-free tables.
+- **Lint-clean**: `golangci-lint` (`default: all`) green on both modules; the greenfield "no-linter" phase is over.
+- **Code layout** consolidated for clarity (topical files); `ToAscii`→`ToASCII`, `Ascii`→`ASCII` (Go initialism convention).
 
 ### Built and tested ✅
 
@@ -556,15 +568,18 @@ Snapshot of the branch against this design. Legend: ✅ done & tested · 🚧 st
 | ASCII folding | `foldASCII` stage, `foldToASCII` (diacritic map, digraphs), combining-mark strip; `WithAsciiFolding` | §4.7.1 tiers 1&3, §6 |
 | GoMangler | `IdentExported`, `IdentUnexported`, `Package`/`PackageWithParts`, `Module`, `File`, `ConstName` | §4.5, §4.6.1, §5 |
 | Go repairs | reserved-word (unexported only → `typeVar`), file-suffix (`_test`/GOOS/GOARCH → `swagger`), package/module short-name (`main`→`mainpkg`, `/v2`→`version2`) | §4.5, §4.6 |
-| Go options | `WithGoDefaults`, `WithGoInitialisms`/`UseGoInitialisms`, `WithGoInitialismPlurals`, `WithManglerOptions`, `WithGoNumberOptions` | §5, §4.8 |
+| Go options | `WithGoDefaults`, `WithManglerOptions`, `WithGoNumberOptions`, `WithGoIdentFallback` (the initialism-customizing options are stubbed — see §12) | §5, §4.8 |
 | numbers pkg | own subpackage: `NumberWords` (cardinals, fractions incl. 1/6·1/7·1/9, digit-group reconstruction, special numbers, `StripOne`/`StripAnd`/precision), `NumberRoman`; **Unicode numeral runes** (`No`/`Nl`: `½`,`Ⅶ`,`②`) via `RuneNumber` + rune-aware scanner; wired into `ConstName` | §4.7.2, §5, §10.6 |
 | Leading-digit repair | `verbalizeLeadingNumber` verbalizes a leading numeral, keeps interior digits (`12 men`→`Twelve…`, `var 12`→`Var12`) | §4.7.2 |
+| Rune-naming / asciify | `runewords` table (interval keys + 18-bit offsets, ~173 KiB); `ToASCII`/`ASCII`/`UnicodeName`; `expandRuneNames` pre-segmentation pass shared by both manglers | §4.7.1, §12 |
+| Empty-result guard | Go idents/const/file never return `""` — a reduced-to-nothing input yields a per-target-cased fallback (`WithGoIdentFallback`, default `"empty"`); Package/Module stay empty-allowed; base `Mangler` exempt | §12 |
+| UCD codegen | dependency-free `ucd` module: versioned data (`ucd/v15/`), `cmd/gen_runewords` + `cmd/gen_numerals`, `internal/locate`; `//go:generate` in each consuming package; regen is idempotent | §12 |
 
 ### Stub / partial 🚧 — the remaining work
 
 | Item | Current state | Design ref |
 |---|---|---|
-| **Unicode rune-naming** | ✅ **Done.** `v2/runewords/` generator + table (below); `ToAscii`/`UnicodeName`/`Ascii` implemented and wired into the asciify tier + `ConstName` (`expandRuneNames`, §4.7.1 tier 4). | §4.7.1 tiers 2&4, §4.7 layer 3 |
+| **Unicode rune-naming** | ✅ **Done.** `runewords` table (below); `ToASCII`/`UnicodeName`/`ASCII` implemented and wired into the asciify tier + `ConstName` (`expandRuneNames`, §4.7.1 tier 4). | §4.7.1 tiers 2&4, §4.7 layer 3 |
 | **Inflection engine** | `Pluralize`/`Singularize` `return ""`; `Conjugate` commented out. The `go-openapi/inflect` absorb has not started; initialism plurals currently carry their own precompute rather than sharing an engine. | §6, §4.4 |
 | **Value-policy knobs** | `ConstName` accepts `...ValueOption` but ignores them (`_ = opts`). `OnSymbol`/`OnNumber`/`OnUnknownRune`/`WithValuePrefix` unbuilt; symbol policy (`@id`→drop) not implemented. | §4.7 layer 1, §5 |
 | `Tokens.Split`/`Merge` | present but `TODO(#3)` — not needed by any built stage yet. | §4.3 |
@@ -573,9 +588,9 @@ Snapshot of the branch against this design. Legend: ✅ done & tested · 🚧 st
 ### Rune-naming prototype — `v2/runewords/` (2026-07-06)
 
 Own subpackage (like `numbers`) for dependency isolation — the table **always links** (asciification is a core
-feature; decided 2026-07-07, §12), it is not opt-in. `gen.go` (`//go:build ignore`) builds a compact `rune → word`
-table from `ucd/DerivedName.txt`; `lookup.go` exposes `Word(rune) (string, bool)`.
-Pipeline, in the sequence agreed with Fred:
+feature; decided 2026-07-07, §12), it is not opt-in. The generator lives in the `ucd` module
+(`ucd/cmd/gen_runewords`) and emits `tables.go` from the versioned UCD data; `lookup.go` exposes
+`Word(rune) (string, bool)`. Pipeline, in the sequence agreed with Fred:
 
 1. **Exclude what other layers already handle or elide** — ASCII, Latin+diacritics (fold map), digits (`Nd`),
    combining marks, controls/format, separators/spacing-modifiers.
@@ -643,27 +658,59 @@ Reassessment pause after the alloc-reduction and rune-naming work. Groups the re
 | Item | Kind | Notes |
 |---|---|---|
 | **Inflection engine** | feature (orthogonal) | `Pluralize`/`Singularize`/`Conjugate`; absorb `go-openapi/inflect`; share with initialism plurals (§6, §4.4). |
-| ~~asciify: route number-class runes through `numbers`~~ | ✅ **done (2026-07-07)** | `No`/`Nl` (`½`, `Ⅶ`, `②`) now route to `numbers`. Table `numbers/numerals.go` (`map[rune]float64`, 1,151 runes from `DerivedNumericValues.txt`, `Nd`/`Lo` excluded) via `numbers.RuneNumber`. **Three treatments:** the `numbers` engine spells the value (`ConstName("½")`→`OneHalf`), the asciify tier renders a plain number (`ToAscii("½")`→`"0.5"`, 3-decimal cap), `UnicodeName` elides. `No`/`Nl` pruned from the `runewords` Word table (178→173 KiB). `fractionBases` gained 1/6, 1/7, 1/9 so every standard vulgar fraction spells cleanly. |
+| ~~asciify: route number-class runes through `numbers`~~ | ✅ **done (2026-07-07)** | `No`/`Nl` (`½`, `Ⅶ`, `②`) now route to `numbers`. Table `numbers/numerals.go` (`map[rune]float64`, 1,151 runes from `DerivedNumericValues.txt`, `Nd`/`Lo` excluded) via `numbers.RuneNumber`. **Three treatments:** the `numbers` engine spells the value (`ConstName("½")`→`OneHalf`), the asciify tier renders a plain number (`ToASCII("½")`→`"0.5"`, 3-decimal cap), `UnicodeName` elides. `No`/`Nl` pruned from the `runewords` Word table (178→173 KiB). `fractionBases` gained 1/6, 1/7, 1/9 so every standard vulgar fraction spells cleanly. |
 | **asciify: grapheme support** | enhancement | Flags (→ISO-3166), ZWJ emoji sequences — the parked §4.7.1 work; currently single-codepoint only. Needs additional UCD data (emoji-sequences / region-indicator). |
-| **Fuzz tests** | test | Add targets; name the invariants explicitly: differential parity (have it for `AppendWords`≡`NumberWords`) **plus idempotency** `f(f(x)) == f(x)` for every identifier producer (`ToGoName`/`ConstName`/`VarName`/`FileName`). |
-| **Coverage → 85%+** | test | A few uncovered paths remain; close them. |
-| **Concurrency test** | test | Explicit `-race` test hammering `Transform`/`ConstName` from N goroutines — closes the §10.4 "concurrency-safe" claim. |
-| **`GoIdent*` empty-result edge case** | | ✅ **done** | Input that fully reduces to separators/elided runes yields an incorrect empty string. **Decide the contract once and apply it uniformly** across `ToGoName`/`ConstName`/`VarName`/`FileName` (empty vs. `_` sentinel vs. error) — not a per-function patch. |
+| **Segmentation: script-change boundary** | small / decide | §4.2 signal #4 is only half-wired: letter↔symbol/digit splits, but letter↔letter *across scripts* (Latin↔Han/Cyrillic) does **not** (`café日本`→one token). Near-moot when `asciify` is on (CJK elided pre-segmentation). Either implement Latin↔Han splitting for the folding-off base `Mangler`, or soften the `tokenizer.go` note to "intentionally deferred". |
+| ~~Fuzz tests~~ | ✅ **done (2026-07-07)** | `FuzzGoIdent` asserts the load-bearing contract — for **any** input, `IdentExported`/`IdentUnexported`/`ConstName` produce a valid Go identifier (`go/token.IsIdentifier`) with correct export visibility, in **both** folding modes. Converged clean over **1.4M execs**. Idempotency was tried and **rejected** as unsound — casing is lossy (`"A A"`→`"AA"`, re-mangles to `"Aa"`). The fuzz surfaced **7 real contract bugs**, all fixed (see §12 note below). Differential parity (`AppendWords`≡`NumberWords`) already exists. |
+| ~~Coverage → 85%+~~ | ✅ **done (2026-07-07)** | Per-package self-coverage: `mangling/v2` 95.8%, `numbers` 97.6%, `runewords` 100%. Added tests for the untested public API (`New*` constructors, `MakeTargetTransform`/`WithSeparator`, `WithTokenSeparator`/`WithTokenOptions`, `WithNumberDetectPrecision`, the wired initialism options) and reachable edges (int64-overflow numbers, non-version `v…` names, base-`Mangler` numeral path, early-iteration break, orphan leading mark). Remainder is stubs (`Pluralize`/`Singularize`, `Tokens.Split`/`Merge`), `default: panic` assertions, and branches unreachable by the current API (symbol `Keep`/`Drop` policy — awaits value-policy knobs; `repairFileSuffix("")` — now dead behind `orFallback`). |
+| **Dead-or-future `Tokens` methods** | cleanup / decide | `Tokens.Casing` / `Tokens.All` / `Tokens.SetKind` are 0% covered — no built code calls them. Either they're intended for injected/custom transforms (keep + test) or dead (remove). Decide alongside the `Tokens.Split`/`Merge` `TODO(#3)` question. |
+| ~~Concurrency test~~ | ✅ **done (2026-07-07)** | `TestManglerConcurrency`: one shared instance (value + pointer `GoMangler`, base `Mangler`) hammered by 64 goroutines × 300 iterations across all 13 output methods; every result checked against a single-threaded golden value. Passes under `-race` — guards both the shared read-only dictionaries and the package-level token `sync.Pool`. Closes the §10.4 concurrency-safe claim (`NumberMangler` is exercised transitively via `ConstName`). |
+| ~~`GoIdent*` empty-result edge case~~ | ✅ **done (2026-07-07)** | Contract: `IdentExported`/`IdentUnexported`/`ConstName`/`File` never return `""`; a reduced-to-nothing input yields a fallback word cased per target (`Empty`/`empty`/snake), configurable via `WithGoIdentFallback` (default `"empty"`, itself sanitized through the mangler with an `"empty"` guard). Not `_` (fails the exported contract). Package/Module stay empty-allowed; base `Mangler` exempt. (`TestGoIdentFallback`.) |
 | **README + docstrings** | documentation | Beef up README (started); **explicit v1 differences** (case-alternance boundary — [go-openapi/swag#123](https://github.com/go-openapi/swag/issues/123)); comprehensive docstrings; better-documented options. |
-| **Productize the UCD codegen** | documentation / tooling | See "provenance" below. |
-| **asciify toggle granularity** | open design decision | Single `asciify` flag vs. separate fold-diacritics / name-runes toggles. Shapes public API — resolve **before** graduation. (Was §9 open. Purely an API-shape call now: the runewords table always links regardless — decided 2026-07-07.) |
+| ~~Productize the UCD codegen~~ | ✅ **done (2026-07-07)** | Dependency-free `ucd` module: versioned data under `ucd/v15/`, generators `cmd/gen_runewords` + `cmd/gen_numerals` (take `[package [outfile [ucd-dir]]]`), `internal/locate` resolves data via the git root, `//go:generate` directives in `runewords`/`numbers`. `go generate ./...` round-trips byte-identical. Provenance follow-ups below. |
+| ~~asciify toggle granularity~~ | ✅ **decided (2026-07-07)** | **No separate toggles** — the single `asciify` flag stays. Folding + rune-naming + numeral routing behave well together as one switch ("it just works"); splitting them would add API surface for no real use case. |
+| ~~Wire the initialism-customizing options~~ | ✅ **done (2026-07-07)** | `WithGoInitialisms(...)` appends to the list (kept in a separate `extraInitialisms` field so add-vs-replace composes cleanly around the apply-then-default ordering); `UseGoInitialisms(...)` replaces the base (no-arg = keep defaults); both feed `buildInitialismTrie`. `WithSeparators(...rune)` built as a set-membership convenience over `WithTokenSeparator` (was a `return nil` panic hazard). (`TestWithGoInitialisms`/`TestUseGoInitialisms`/`TestWithSeparators`.) |
 | ~**v1→v2 comparative benchmark**~ | perf / doc | Not just standalone benches — a v1-vs-v2 table feeds the "explicit v1 differences" doc and the migration story. We'll just mention a 30% improvement in perf ~ 1 microsec per operation|
-| scalability benchmark | perf / doc | benchmark GoUnexportedIdent with strings of various tokens length |
+| ~~scalability benchmark~~ | ✅ **done (2026-07-07)** | `BenchmarkGoIdentUnexportedScaling` sweeps 1→1024 tokens, reports a `ns/token` metric. Result: **linear** — ~380 ns/token flat across the whole range (n=1 higher only from unamortized fixed per-call overhead), and **constant 1 alloc/op** regardless of token count (zero-copy pooled tokens + single output materialization). `B/op` grows linearly (~6.8 B/token = the output string). |
  | add unicode v17 files | enhancement |verify the generator for those (prepare for go1.27 support next month).|
  | v1->v2 comparitive is functional not perf | doc | user's guide about how strings are now handled vs how they used to be |
- | code layout / test layout refact | quality | |
+ | code layout / test layout refact | quality | code layout consolidated into topical files ✅ (2026-07-07); test-file layout + a final consolidation pass still to do |
  | final review of the API & options | quality | before landing |
+ | lint posture | quality | ✅ both modules pass `golangci-lint` (`default: all`, 0 issues); greenfield "no-linter" phase over. Revisit the `ucd` generator `mnd` exclusion when v2 graduates |
+
+### Fuzz-found contract fixes + full `Nd` support (2026-07-07)
+
+`FuzzGoIdent` (the valid-identifier invariant, both folding modes) surfaced **7 real contract violations**, each
+fixed and kept as a regression seed:
+
+1. **Leading numeral runes** (`½`, `Ⅶ`, `①`) → invalid leading digit. Fix: asciify before the leading-number pass;
+   `verbalizeLeadingNumber` detects numeral runes.
+2. **Combining marks not stripped with folding off** (`áb` NFD → `Áb`). Fix: strip marks **unconditionally** in
+   `writeCased` (was folding-gated).
+3. **Elision exposes a leading digit** (`\x8f0` → `0`). Fix: post-mangle guard in `goIdent` re-verbalizes.
+4. **Leading symbol-word mis-cased** (`֮!` → `Bang` for unexported). Fix: skip all-marks tokens so they don't consume
+   the first-word casing slot.
+5. **Non-ASCII `Nd` digits** (`٧`, `०`, `๗`, `７`) — the **§4.7.1 digit-offset tier, previously unimplemented**. Now
+   done **table-free**: `asciiDigit(r)` derives the value from `unicode.Nd`'s own 10-wide block ranges (verified
+   64 clean blocks). Folding on → `٧`→`7` (behaves like ASCII digits); folding off → leading verbalized (`٧`→`Seven`),
+   interior kept (valid non-leading unicode digit). (`Nl`/`No` still need the `numerals.go` map — irregular values.)
+6. **int64-overflow leading number** (`10000000000000000000`) → raw digits. Fix: `NumberWords` spells over-int64
+   integers **digit by digit** ("one" + per-digit words) instead of leaving them raw.
+
+Result: the fuzz **converged clean over 1.4M execs** across both modes. Also settled a behavior refinement (with Fred):
+**name-manglers spell numeral runes as words** (`Camelize("½ cup")`→`OneHalfCup`, leading & interior when folding on;
+folding off drops interior, verbalizes leading), while **`ToASCII` keeps the plain number** (`"0.5"`).
 
 ### UCD codegen provenance (part of "productize")
 
-`gen.go` records **no Unicode version** and no source checksums. For a table meant to be a stable failsafe, emit into
-the `tables.go` header: the UCD version, a `//go:generate` line, and source-file checksums — so regeneration is
-reproducible and data drift is detectable. This is the load-bearing part of productizing the codegen.
+**Done:** data is versioned (`ucd/v15/`, selected by `defaultUCDVersion` in `internal/locate`), each generated file
+carries a `// Code generated …` header naming its source extract, and `//go:generate` directives make regen a
+one-liner.
+
+**Remaining:** the generated headers still record **no Unicode version** and no source-file checksums. Emit both
+(version + extract checksums) so data drift is detectable and a regen is reproducible from the header alone. Small,
+belongs with the v17 bump. `internal/locate` also has a `// TODO: temporary location` — the data path is hardcoded
+relative to the swag git root and will need adjusting when v2 graduates to its own repo.
 
 ### Rune-name table: compaction — LOCKED plan (2026-07-07 spike)
 

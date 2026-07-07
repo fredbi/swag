@@ -118,10 +118,12 @@ func expandRuneNames(str string) string {
 		default:
 			if _, ok := asciiFold[r]; ok {
 				b.WriteRune(r) // foldable diacritic: left for the fold stage
+			} else if d, ok := asciiDigit(r); ok {
+				b.WriteByte(d) // non-ASCII decimal digit (Nd) → its ASCII digit ('٧' → '7'), then handled as a digit
 			} else if v, ok := numbers.RuneNumber(r); ok {
 				b.WriteByte(' ')
-				b.WriteString(formatNumeral(v)) // numeral rune → plain number ("½" → "0.5")
-				b.WriteByte(' ')
+				b.WriteString(numbers.NumberWords(v)) // numeral rune → words ("½" → "one half"); a name reads
+				b.WriteByte(' ')                      // better spelled out (ToASCII keeps the plain number)
 			} else if w, ok := runewords.Word(r); ok {
 				b.WriteByte(' ')
 				b.WriteString(w)
