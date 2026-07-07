@@ -2,8 +2,8 @@ package mangling
 
 import "unicode"
 
-// defaultTokenSeparator reports whether a rune is a token separator — a rune that is *elided*
-// (dropped, never emitted) and marks a boundary between tokens.
+// defaultTokenSeparator reports whether a rune is a token separator — a rune that is *elided* (dropped, never
+// emitted) and marks a boundary between tokens.
 //
 // It implements bucket 3 of the segmentation classification (see also [defaultSymbolWords]):
 //

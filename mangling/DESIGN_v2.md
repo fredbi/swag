@@ -557,7 +557,7 @@ Snapshot of the branch against this design. Legend: ✅ done & tested · 🚧 st
 | GoMangler | `IdentExported`, `IdentUnexported`, `Package`/`PackageWithParts`, `Module`, `File`, `ConstName` | §4.5, §4.6.1, §5 |
 | Go repairs | reserved-word (unexported only → `typeVar`), file-suffix (`_test`/GOOS/GOARCH → `swagger`), package/module short-name (`main`→`mainpkg`, `/v2`→`version2`) | §4.5, §4.6 |
 | Go options | `WithGoDefaults`, `WithGoInitialisms`/`UseGoInitialisms`, `WithGoInitialismPlurals`, `WithManglerOptions`, `WithGoNumberOptions` | §5, §4.8 |
-| numbers pkg | own subpackage: `NumberWords` (cardinals, fractions, digit-group reconstruction, special numbers, `StripOne`/`StripAnd`/precision), `NumberRoman`; wired into `ConstName` | §4.7.2, §5, §10.6 |
+| numbers pkg | own subpackage: `NumberWords` (cardinals, fractions incl. 1/6·1/7·1/9, digit-group reconstruction, special numbers, `StripOne`/`StripAnd`/precision), `NumberRoman`; **Unicode numeral runes** (`No`/`Nl`: `½`,`Ⅶ`,`②`) via `RuneNumber` + rune-aware scanner; wired into `ConstName` | §4.7.2, §5, §10.6 |
 | Leading-digit repair | `verbalizeLeadingNumber` verbalizes a leading numeral, keeps interior digits (`12 men`→`Twelve…`, `var 12`→`Var12`) | §4.7.2 |
 
 ### Stub / partial 🚧 — the remaining work
@@ -595,11 +595,12 @@ Pipeline, in the sequence agreed with Fred:
    scan; offsets are **18-bit** (`wordOffLo` uint16 + `wordOffHi` 2-bit sidecar); `nameWordID` maps rune position → word
    id. The flat `nameRunes []rune` and `wordOffsets []uint32` are gone.
 
-Real numbers (Unicode 15.0, 44,115 named codepoints): **24,235 kept (55%)**; after the §12 compaction the table is
-**~178 KiB** (was ~286 KiB before interval keys + 18-bit offsets), still **~7× smaller** than x/text/runenames' 1.3 MB
-for full names (blob 103 KiB, vocabulary 11,098 words). The aggressive collapse eliminated the verbose tail entirely
-(every kept remainder is now ≤2 words). Sample idents: `α`→`Alpha`, `ж`→`Zhe`, `😀`→`GrinningFace`, `👍`→`ThumbsUp`,
-`❤`→`Heart`, `۩`→`Sajdah`, `€`→`Euro`; box-drawing/braille/geometric/non-emoji decoration elided.
+Real numbers (Unicode 15.0, 44,115 named codepoints): **23,191 kept (53%)**; the table is **~173 KiB**
+(286 KiB → 178 via the §12 compaction → 173 after pruning the 1,151 `No`/`Nl` numerals, now routed to the `numbers`
+engine), still **~7× smaller** than x/text/runenames' 1.3 MB for full names (blob 101 KiB, vocabulary ~11,000 words).
+The aggressive collapse eliminated the verbose tail entirely (every kept remainder is now ≤2 words). Sample idents:
+`α`→`Alpha`, `ж`→`Zhe`, `😀`→`GrinningFace`, `👍`→`ThumbsUp`, `❤`→`Heart`, `۩`→`Sajdah`, `€`→`Euro`;
+box-drawing/braille/geometric/non-emoji decoration elided; `½`/`Ⅶ`/`②` routed to `numbers` (§4.7.2).
 
 **Wired into the mangler (2026-07-06):** rune-naming is a **neutral `Mangler` capability**, not Go-specific. The
 string-level `expandRuneNames` pass runs via `Mangler.asciifyInput` *before* segmentation — shared by
@@ -611,8 +612,8 @@ drop to a separator. Gated by the same `asciify` option as diacritic folding. `C
 `δ plus ε`→`DeltaPlusEpsilon`, `日本 value`→`Value`. (`TestGoManglerRuneNames`, `TestAsciiUtilities`, harness CJK case.)
 
 **Remaining tuning (not blockers):** the qualifier stoplist size. Compaction is **done** (§12: 286 → 178 KiB) and the
-table is **always linked** (not opt-in). Number-class routing and grapheme sequences (flags, ZWJ emoji) remain tracked
-in the **§12 backlog**.
+table is **always linked** (not opt-in). Number-class routing is **done** (No/Nl → `numbers`, §4.7.2); grapheme
+sequences (flags, ZWJ emoji) remain tracked in the **§12 backlog**.
 
 ### Dropped / superseded ❌
 
@@ -642,7 +643,7 @@ Reassessment pause after the alloc-reduction and rune-naming work. Groups the re
 | Item | Kind | Notes |
 |---|---|---|
 | **Inflection engine** | feature (orthogonal) | `Pluralize`/`Singularize`/`Conjugate`; absorb `go-openapi/inflect`; share with initialism plurals (§6, §4.4). |
-| **asciify: route number-class runes through `numbers`** | enhancement | `No`/`Nl` (`½`, `Ⅶ`) should verbalize via `numbers`, not name-lookup — saves a word of description in the table. Needs the extra UCD file for numeric values. |
+| ~~asciify: route number-class runes through `numbers`~~ | ✅ **done (2026-07-07)** | `No`/`Nl` (`½`, `Ⅶ`, `②`) now route to `numbers`. Table `numbers/numerals.go` (`map[rune]float64`, 1,151 runes from `DerivedNumericValues.txt`, `Nd`/`Lo` excluded) via `numbers.RuneNumber`. **Three treatments:** the `numbers` engine spells the value (`ConstName("½")`→`OneHalf`), the asciify tier renders a plain number (`ToAscii("½")`→`"0.5"`, 3-decimal cap), `UnicodeName` elides. `No`/`Nl` pruned from the `runewords` Word table (178→173 KiB). `fractionBases` gained 1/6, 1/7, 1/9 so every standard vulgar fraction spells cleanly. |
 | **asciify: grapheme support** | enhancement | Flags (→ISO-3166), ZWJ emoji sequences — the parked §4.7.1 work; currently single-codepoint only. Needs additional UCD data (emoji-sequences / region-indicator). |
 | **Fuzz tests** | test | Add targets; name the invariants explicitly: differential parity (have it for `AppendWords`≡`NumberWords`) **plus idempotency** `f(f(x)) == f(x)` for every identifier producer (`ToGoName`/`ConstName`/`VarName`/`FileName`). |
 | **Coverage → 85%+** | test | A few uncovered paths remain; close them. |
@@ -652,6 +653,8 @@ Reassessment pause after the alloc-reduction and rune-naming work. Groups the re
 | **Productize the UCD codegen** | documentation / tooling | See "provenance" below. |
 | **asciify toggle granularity** | open design decision | Single `asciify` flag vs. separate fold-diacritics / name-runes toggles. Shapes public API — resolve **before** graduation. (Was §9 open. Purely an API-shape call now: the runewords table always links regardless — decided 2026-07-07.) |
 | **v1→v2 comparative benchmark** | perf / doc | Not just standalone benches — a v1-vs-v2 table feeds the "explicit v1 differences" doc and the migration story. |
+
++ add unicode v17 files and verify the generator for those (prepare for go1.27 support next month).
 
 ### UCD codegen provenance (part of "productize")
 

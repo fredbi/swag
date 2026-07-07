@@ -2,8 +2,8 @@ package mangling
 
 // Kind classifies a token produced by segmentation.
 //
-// The tokenizer emits [KindWord], [KindNumber] and [KindSymbol]; [KindInitialism] is set later by
-// the initialism overlay (§4.4), never by the tokenizer.
+// The tokenizer emits [KindWord], [KindNumber] and [KindSymbol]; [KindInitialism] is set later by the initialism
+// overlay (§4.4), never by the tokenizer.
 type Kind uint8
 
 const (
@@ -23,11 +23,11 @@ const (
 	CasingMixed               // anything else ("hTtP"), or content with no case
 )
 
-// token is a zero-copy view into the shared []rune of a [Tokens] value: a half-open span plus the
-// classification computed by the scanner.
+// token is a zero-copy view into the shared []rune of a [Tokens] value: a half-open span plus the classification
+// computed by the scanner.
 //
-// It is internal; transforms reach token data only through [Tokens]' index-based methods, so the
-// struct can evolve (e.g. the override vs. side-arena question, §9) without touching the public API.
+// It is internal; transforms reach token data only through [Tokens]' index-based methods, so the struct can evolve
+// (e.g. the override vs. side-arena question, §9) without touching the public API.
 type token struct {
 	start, end int    // half-open span [start,end) into Tokens.runes
 	kind       Kind   // word | number | symbol | initialism

@@ -1,15 +1,19 @@
 package mangling
 
-// asciiFold maps a Latin letter bearing a diacritic (or a distinct Latin letter such as æ, ß, þ)
-// to its plain ASCII equivalent, preserving case. It is the data behind [Ascii] / [ToAscii].
+// asciiFold maps a Latin letter bearing a diacritic (or a distinct Latin letter such as æ, ß, þ) to its plain ASCII
+// equivalent, preserving case.
 //
-// Scope: European Latin scripts (Latin-1 Supplement, Latin Extended-A, a few Extended-B). This is
-// diacritic *folding* — strip the accent, keep the base letter (ü→u, not the German ü→ue
-// transliteration). Distinct letters that have no single-rune ASCII base fold to their conventional
-// digraph (æ→ae, œ→oe, ß→ss, þ→th, ð→d).
+// It is the data behind [Ascii] / [ToAscii].
 //
-// NOT covered here (by design): symbols and punctuation — see [defaultSymbolWords]; and non-Latin
-// scripts (Greek, Cyrillic, CJK, …), which fall back to the phonetic rune name (see [UnicodeName]).
+// Scope: European Latin scripts (Latin-1 Supplement, Latin Extended-A, a few Extended-B).
+// This is diacritic *folding* — strip the accent, keep the base letter (ü→u, not the German ü→ue
+// transliteration).
+//
+// Distinct letters that have no single-rune ASCII base fold to their conventional digraph (æ→ae, œ→oe, ß→ss,
+// þ→th, ð→d).
+//
+// NOT covered here (by design): symbols and punctuation — see [defaultSymbolWords]; and non-Latin scripts (Greek,
+// Cyrillic, CJK, …), which fall back to the phonetic rune name (see [UnicodeName]).
 //
 // NOTE: prepared as data only; not yet wired into the pipeline.
 var asciiFold = map[rune]string{
@@ -33,7 +37,8 @@ var asciiFold = map[rune]string{
 	// H
 	'ĥ': "h", 'ħ': "h",
 	'Ĥ': "H", 'Ħ': "H",
-	// I (incl. Turkish ı dotless and İ dotted)
+	// I (incl.
+	// Turkish ı dotless and İ dotted)
 	'ì': "i", 'í': "i", 'î': "i", 'ï': "i", 'ĩ': "i", 'ī': "i", 'ĭ': "i", 'į': "i", 'ı': "i",
 	'Ì': "I", 'Í': "I", 'Î': "I", 'Ï': "I", 'Ĩ': "I", 'Ī': "I", 'Ĭ': "I", 'Į': "I", 'İ': "I",
 	// J

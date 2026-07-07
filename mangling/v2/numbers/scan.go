@@ -12,6 +12,10 @@ import (
 // followed by digits with an optional single interior decimal point. Numeric runs are ASCII, so the
 // scan works on bytes — no []rune copy of the input — and each run is a direct substring of in (no
 // allocation, and no per-call closure). Thousands separators are stripped per run before spelling.
+//
+// A single non-ASCII Unicode numeral rune ('½', 'Ⅶ', '②') verbalizes like an ASCII number; every other
+// rune is copied verbatim. The non-ASCII branch is reached only after the ASCII fast path, so pure-ASCII
+// input never pays for rune decoding.
 func scanInto(w *buf, in string, o numberOptions) {
 	for i := 0; i < len(in); {
 		if end, ok := numberRunAt(in, i); ok {
@@ -21,11 +25,52 @@ func scanInto(w *buf, in string, o numberOptions) {
 			continue
 		}
 
-		// Copy one byte of non-number text. A number run only starts on '-'/'+'/digit (all ASCII), which are
-		// never UTF-8 continuation bytes, so copying byte-by-byte preserves multi-byte runes intact.
-		_ = w.WriteByte(in[i])
-		i++
+		c := in[i]
+		if c < utf8.RuneSelf {
+			// One byte of ASCII non-number text. A number run only starts on '-'/'+'/digit, so this byte
+			// is safe to copy directly.
+			_ = w.WriteByte(c)
+			i++
+
+			continue
+		}
+
+		// Non-ASCII rune: a Unicode numeral verbalizes in place (like an ASCII number run — no padding,
+		// so "½"->"one half"); anything else is copied verbatim.
+		r, size := utf8.DecodeRuneInString(in[i:])
+		if v, ok := RuneNumber(r); ok {
+			writeNumberValue(w, v, o)
+		} else {
+			_, _ = w.WriteString(in[i : i+size])
+		}
+		i += size
 	}
+}
+
+// mayHaveNumber reports whether s contains anything the verbalizer would rewrite: an ASCII digit or a
+// Unicode numeral rune. It lets [NumberMangler.NumberWords] / [NumberMangler.AppendWords] return the
+// input untouched (no allocation) for plain text — including accented text with no numerals. The ASCII
+// bytes are scanned directly; only non-ASCII runes are decoded and looked up.
+func mayHaveNumber(s string) bool {
+	for i := 0; i < len(s); {
+		c := s[i]
+		if c < utf8.RuneSelf {
+			if c >= '0' && c <= '9' {
+				return true
+			}
+			i++
+
+			continue
+		}
+
+		r, size := utf8.DecodeRuneInString(s[i:])
+		if _, ok := RuneNumber(r); ok {
+			return true
+		}
+		i += size
+	}
+
+	return false
 }
 
 // numberRunAt returns the byte index just past a numeric run starting at byte i in s, or ok=false.

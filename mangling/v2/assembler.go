@@ -17,8 +17,8 @@ const (
 
 // symbolPolicy decides what assembly does with a symbol token (§4.7).
 //
-// The zero value is symbolVerbalize: the neutral presets replace a known symbol with its word
-// (e.g. "@" => "at"). Value/Go targets may override to drop leading markers, etc.
+// The zero value is symbolVerbalize: the neutral presets replace a known symbol with its word (e.g. "@" => "at").
+// Value/Go targets may override to drop leading markers, etc.
 type symbolPolicy uint8
 
 const (
@@ -27,12 +27,12 @@ const (
 	symbolKeep                          // emit the symbol rune verbatim
 )
 
-// assemble renders the token stream into a string per the target recipe: casing × separator ×
-// symbol policy.
+// assemble renders the token stream into a string per the target recipe: casing × separator × symbol policy.
 //
-// The "first word" casing (which lets camelCase lowercase word 0) tracks the first *emitted word*,
-// so a dropped leading symbol or a leading number doesn't consume it. Initialism casing, when
-// present, is preserved from the token rather than re-cased.
+// The "first word" casing (which lets camelCase lowercase word 0) tracks the first *emitted word*, so a dropped leading
+// symbol or a leading number doesn't consume it.
+//
+// Initialism casing, when present, is preserved from the token rather than re-cased.
 func (m Mangler) assemble(t *Tokens, target TargetTransform) string {
 	var b strings.Builder
 	b.Grow(t.runeLen()) // one buffer alloc; ~exact for ASCII output
@@ -40,8 +40,8 @@ func (m Mangler) assemble(t *Tokens, target TargetTransform) string {
 	firstWord := true
 	wrote := false
 
-	// writeSep emits the separator before a non-glued, non-first token. Number tokens glue to the
-	// preceding token (no separator), so "simple 1" => "simple1", while a following word still
+	// writeSep emits the separator before a non-glued, non-first token.
+	// Number tokens glue to the preceding token (no separator), so "simple 1" => "simple1", while a following word still
 	// separates ("simple1_text2") and a leading number is separated by the word after it.
 	writeSep := func(glue bool) {
 		if wrote && !glue && target.separator != "" {
@@ -50,8 +50,7 @@ func (m Mangler) assemble(t *Tokens, target TargetTransform) string {
 		wrote = true
 	}
 
-	// nextCasing returns the casing for the next word and advances the first-word slot (camelCase
-	// lowercases word 0).
+	// nextCasing returns the casing for the next word and advances the first-word slot (camelCase lowercases word 0).
 	nextCasing := func() wordCasing {
 		if firstWord {
 			firstWord = false
@@ -71,8 +70,18 @@ func (m Mangler) assemble(t *Tokens, target TargetTransform) string {
 			writeCased(&b, runes, override, nextCasing())
 		case KindInitialism:
 			writeSep(false)
-			writeCased(&b, runes, override, casingAsIs) // canonical casing preserved
+			// An initialism follows the target's casing *intent*, except title-casing preserves its canonical form: lower →
+			// lowercase (snake, and leading in unexported → "httpGet"), upper → uppercase, title/as-is → canonical
+			// ("getHTTP", not "getHttp").
+			c := target.restCasing
+			if firstWord {
+				c = target.firstCasing
+			}
 			firstWord = false
+			if c == casingTitle {
+				c = casingAsIs
+			}
+			writeCased(&b, runes, override, c)
 		case KindNumber:
 			writeSep(true) // glue to the preceding token
 			writeCased(&b, runes, override, casingAsIs)
@@ -95,8 +104,8 @@ func (m Mangler) assemble(t *Tokens, target TargetTransform) string {
 	return b.String()
 }
 
-// writeCased writes a token's content (its rune span, or its override string) to b, applying the
-// casing per rune — no per-token string is materialized.
+// writeCased writes a token's content (its rune span, or its override string) to b, applying the casing per rune — no
+// per-token string is materialized.
 func writeCased(b *strings.Builder, runes []rune, override string, c wordCasing) {
 	if override != "" {
 		writeStringCased(b, override, c)

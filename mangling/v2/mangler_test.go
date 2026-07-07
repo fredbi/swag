@@ -6,6 +6,7 @@ import (
 	"slices"
 	"testing"
 
+	"github.com/go-openapi/swag/mangling/v2/numbers"
 	"github.com/go-openapi/testify/v2/assert"
 )
 
@@ -21,11 +22,219 @@ func TestMangler(t *testing.T) {
 			t.Run(tc.name, testMangler(m, testModeDefaultMangler, tc))
 		}
 	})
+
+	t.Run("with ASCII folding", func(t *testing.T) {
+		t.Parallel()
+
+		m := MakeMangler(WithAsciiFolding(true))
+
+		for tc := range manglerTestCases() {
+			t.Run(tc.name, testMangler(m, testModeASCIIMangler, tc))
+		}
+	})
+}
+
+func TestGoMangler(t *testing.T) {
+	t.Parallel()
+
+	// The GoMangler reuses the same harness: it satisfies the [mangler] interface through its embedded Mangler, with ASCII
+	// folding on by default. (Initialisms and the Go ident targets come later — the go-specific casings are not
+	// exercised yet.)
+	m := MakeGoMangler()
+
+	for tc := range manglerTestCases() {
+		t.Run(tc.name, testMangler(m, testModeDefaultGoMangler, tc))
+	}
+}
+
+func TestGoManglerFile(t *testing.T) {
+	t.Parallel()
+
+	g := MakeGoMangler()
+	cases := []struct {
+		in, out string
+	}{
+		{"MyModel", "my_model"},
+		{"my model", "my_model"},
+		{"test.go", "test_swagger.go"},           // reserved: test
+		{"config_linux", "config_linux_swagger"}, // reserved: GOOS
+		{"arm64.tmpl", "arm64_swagger.tmpl"},     // reserved: GOARCH, extension preserved
+		{"windows", "windows_swagger"},           // whole stem is a GOOS
+		{"handler_test", "handler_test_swagger"},
+		{"user_id", "user_id"},                            // "id" is an initialism but snake lowercases it; not a file suffix
+		{"some/dir/MyModel", "some/dir/my_model"},         // directory prefix reconducted verbatim
+		{`win\dir\MyModel.json`, `win\dir\my_model.json`}, // backslash dir + extension reconducted verbatim
+		{"IPv4Config.json", "ipv4_config.json"},           // break-crossing initialism merged
+		{"HTTPServer", "http_server"},                     // initialism lowercased in snake
+		{"café résumé", "cafe_resume"},                    // ASCII folded
+	}
+
+	for _, tc := range cases {
+		t.Run(tc.in, func(t *testing.T) {
+			assert.EqualTf(t, tc.out, g.File(tc.in), "File(%q)", tc.in)
+		})
+	}
+}
+
+func TestGoManglerPackage(t *testing.T) {
+	t.Parallel()
+
+	g := MakeGoMangler()
+	cases := []struct {
+		in, short, pkg string
+		parts          []string
+	}{
+		{"MyPackage", "package", "my-package", []string{"my", "package"}},
+		{"github.com/go-redis/redis", "redis", "github.com/go-redis/redis", []string{"redis"}},
+		{"github.com/toktok/@alpha-beta", "beta", "github.com/toktok/at-alpha-beta", []string{"at", "alpha", "beta"}},
+		{"github.com/user/GoThing/", "thing", "github.com/user/go-thing", []string{"go", "thing"}}, // trailing "/" trimmed
+		{"SomeHTTPClient", "client", "some-http-client", []string{"some", "http", "client"}},       // initialism lowercased
+		{"path/to/IPv4Utils", "utils", "path/to/ipv4-utils", []string{"ipv4", "utils"}},            // break-crossing initialism merged
+		{"café", "cafe", "cafe", []string{"cafe"}},                                                 // ASCII folded
+
+		// go-toolchain short-name repairs
+		{"main", "mainpkg", "mainpkg", []string{"mainpkg"}},                                                 // reserved package name
+		{"github.com/user/internal", "internalpkg", "github.com/user/internalpkg", []string{"internalpkg"}}, // reserved dir
+		{"pkg/vendor", "vendorpkg", "pkg/vendorpkg", []string{"vendorpkg"}},
+		{"testdata", "testdatapkg", "testdatapkg", []string{"testdatapkg"}},
+		{"xxxx/v2", "version2", "xxxx/version2", []string{"version2"}}, // major-version element
+		{"foo/V10", "version10", "foo/version10", []string{"version10"}},
+	}
+
+	for _, tc := range cases {
+		t.Run(tc.in, func(t *testing.T) {
+			short, pkg, parts := g.PackageWithParts(tc.in)
+			assert.EqualTf(t, tc.short, short, "short for %q", tc.in)
+			assert.EqualTf(t, tc.pkg, pkg, "pkg for %q", tc.in)
+			assert.Truef(t, slices.Equal(tc.parts, parts), "parts for %q: got %v, want %v", tc.in, parts, tc.parts)
+
+			short2, pkg2 := g.Package(tc.in) // Package returns the same short/pkg
+			assert.EqualTf(t, short, short2, "Package short for %q", tc.in)
+			assert.EqualTf(t, pkg, pkg2, "Package pkg for %q", tc.in)
+		})
+	}
+}
+
+func TestGoManglerModule(t *testing.T) {
+	t.Parallel()
+
+	g := MakeGoMangler()
+	cases := []struct {
+		in, out string
+	}{
+		{"MyModule", "my-module"},
+		{"github.com/user/MyRepo", "github.com/user/my-repo"},        // dir kept verbatim
+		{"github.com/user/repo/v2", "github.com/user/repo/version2"}, // load-bearing version neuterized (caller re-adds /vN)
+		{"example.com/main", "example.com/mainpkg"},                  // a "main" module isn't go-gettable
+		{"example.com/internal", "example.com/internalpkg"},          // reserved dir
+		{"example.com/testdata", "example.com/testdatapkg"},          // reserved dir
+		{"example.com/con", "example.com/conpkg"},                    // Windows device name
+		{"host.tld/COM1", "host.tld/com1pkg"},                        // case-insensitive
+		{"example.com/my-con", "example.com/my-con"},                 // whole element is legal → not touched
+		{"example.com/my-v2", "example.com/my-v2"},                   // not a bare version element
+		{"café", "cafe"}, // ASCII folded
+	}
+
+	for _, tc := range cases {
+		t.Run(tc.in, func(t *testing.T) {
+			assert.EqualTf(t, tc.out, g.Module(tc.in), "Module(%q)", tc.in)
+		})
+	}
+}
+
+func TestGoManglerConstName(t *testing.T) {
+	t.Parallel()
+
+	g := MakeGoMangler()
+	cases := []struct {
+		in, out string
+	}{
+		{"read only", "ReadOnly"},
+		{"1", "One"},
+		{"300", "ThreeHundred"},
+		{"0.25", "OneQuarter"},             // fraction
+		{"0.1", "OneTenth"},                // fraction
+		{"-5", "MinusFive"},                // sign
+		{"3.14", "ThreeDotOneFour"},        // non-fraction decimal
+		{"status 200", "StatusTwoHundred"}, // every number verbalized
+	}
+
+	for _, tc := range cases {
+		t.Run(tc.in, func(t *testing.T) {
+			assert.EqualTf(t, tc.out, g.ConstName(tc.in), "ConstName(%q)", tc.in)
+		})
+	}
+}
+
+func TestGoManglerConstNameNumberOptions(t *testing.T) {
+	t.Parallel()
+
+	// number options flow into ConstName via WithGoNumberOptions
+	g := MakeGoMangler(WithGoNumberOptions(
+		numbers.WithSpecialNumbers(map[string]string{"3.1415": "pi", "2.718": "e"}),
+	))
+
+	assert.EqualT(t, "Pi", g.ConstName("3.1415"))
+	assert.EqualT(t, "E", g.ConstName("2.718"))
+	assert.EqualT(t, "OneQuarter", g.ConstName("0.25"))                             // non-special still works
+	assert.EqualT(t, "ThreeDotOneFourOneFive", MakeGoMangler().ConstName("3.1415")) // default: no specials
+}
+
+func TestGoManglerRuneNames(t *testing.T) {
+	t.Parallel()
+
+	g := MakeGoMangler()
+	cases := []struct {
+		in, out string
+	}{
+		{"café", "Cafe"},                       // diacritic fold
+		{"naïve", "Naive"},                     // diaeresis fold
+		{"π", "Pi"},                            // non-Latin letter -> phonetic name
+		{"σ field", "SigmaField"},              // named rune re-segments and re-cases as a word
+		{"δ plus ε", "DeltaPlusEpsilon"},       // multiple named runes
+		{"grinning 😀", "GrinningGrinningFace"}, // single-codepoint emoji named
+		{"Ω max", "OmegaMax"},                  // uppercase Greek
+		{"日本 value", "Value"},                  // CJK ideographs elided -> clean ASCII
+	}
+	for _, tc := range cases {
+		t.Run(tc.in, func(t *testing.T) {
+			assert.EqualTf(t, tc.out, g.ConstName(tc.in), "ConstName(%q)", tc.in)
+		})
+	}
+
+	// asciify off preserves the original runes (no folding, no naming).
+	raw := MakeGoMangler(WithManglerOptions(WithAsciiFolding(false)))
+	assert.EqualT(t, "Café", raw.IdentExported("café"))
+}
+
+func TestAsciiUtilities(t *testing.T) {
+	t.Parallel()
+
+	// ToAscii: fold diacritics, name the rest, drop the unnameable.
+	assert.EqualT(t, "cafe", ToAscii("café"))
+	assert.EqualT(t, "naive", ToAscii("naïve"))
+	assert.EqualT(t, "pi", ToAscii("π"))
+	assert.EqualT(t, "grinning face", ToAscii("😀"))
+	assert.EqualT(t, "", ToAscii("日")) // CJK dropped
+	assert.EqualT(t, "plain ascii", ToAscii("plain ascii"))
+
+	// Ascii: single-rune diacritic fold only.
+	assert.EqualT(t, "e", Ascii('é'))
+	assert.EqualT(t, "n", Ascii('ñ'))
+	assert.EqualT(t, "A", Ascii('A'))
+	assert.EqualT(t, "", Ascii('π')) // no diacritic folding -> empty (use UnicodeName)
+
+	// UnicodeName: phonetic word for non-foldable runes.
+	assert.EqualT(t, "pi", UnicodeName('π'))
+	assert.EqualT(t, "zhe", UnicodeName('ж'))
+	assert.EqualT(t, "grinning face", UnicodeName('😀'))
+	assert.EqualT(t, "A", UnicodeName('A')) // ASCII as-is
+	assert.EqualT(t, "", UnicodeName('中'))  // elided
 }
 
 func testMangler(m mangler, mode testMode, tc manglerTestCase) func(*testing.T) {
 	return func(t *testing.T) {
-		for _, casing := range []testedCasing{
+		casings := []testedCasing{
 			testedPascal,
 			testedCamel,
 			testedSnake,
@@ -33,15 +242,16 @@ func testMangler(m mangler, mode testMode, tc manglerTestCase) func(*testing.T) 
 			testedHuman,
 			testedTitle,
 			testedAllCaps,
-		} {
-			var expected string
-			expectator := tc.expected(mode)
-			expected = expectator[casing]
+		}
+		if mode == testModeDefaultGoMangler {
+			casings = append(casings, testedGoExported, testedGoUnexported)
+		}
 
+		expectator := tc.expected(mode)
+		for _, casing := range casings {
+			expected := expectator[casing]
 			if expected == "" {
-				t.Skipf("skipped %v", casing)
-
-				continue
+				continue // no expectation for this casing in this mode
 			}
 
 			asserted := casing.MethodFor(m)
@@ -127,6 +337,20 @@ type manglerTestCase struct {
 	expected func(testMode) map[testedCasing]string
 }
 
+// goIdents builds an expectation that asserts only the go-ident casings, and only in GoMangler mode.
+func goIdents(exported, unexported string) func(testMode) map[testedCasing]string {
+	return func(mode testMode) map[testedCasing]string {
+		if mode != testModeDefaultGoMangler {
+			return nil
+		}
+
+		return map[testedCasing]string{
+			testedGoExported:   exported,
+			testedGoUnexported: unexported,
+		}
+	}
+}
+
 func manglerTestCases() iter.Seq[manglerTestCase] {
 	return slices.Values([]manglerTestCase{
 		{
@@ -205,36 +429,162 @@ func manglerTestCases() iter.Seq[manglerTestCase] {
 			},
 		},
 
-		// TODO: token split w/ unicode
-		// unicode latin (w/ combining diacritics)
+		{
+			name:  "with diacritics",
+			input: "café crème",
+			expected: func(mode testMode) map[testedCasing]string {
+				if mode == testModeDefaultMangler {
+					// base Mangler: folding off, diacritics preserved
+					return map[testedCasing]string{
+						testedPascal:  "CaféCrème",
+						testedCamel:   "caféCrème",
+						testedSnake:   "café_crème",
+						testedKebab:   "café-crème",
+						testedHuman:   "Café crème",
+						testedTitle:   "Café Crème",
+						testedAllCaps: "CAFÉ_CRÈME",
+					}
+				}
 
-		// TODO: mangler with ASCII mode
-		// unicode digit (e.g. indian-arabic)
-		// unicode letter-number (e.g. roman number)
-		// unicode latin (w/ diacritics)
-		// unicode latin (w/ upper-case with diacritics)
-		// unicode latin (ASCII-fy w/ combining diacritics)
+				// ASCII folding on (ASCII mode and GoMangler default)
+				return map[testedCasing]string{
+					testedPascal:  "CafeCreme",
+					testedCamel:   "cafeCreme",
+					testedSnake:   "cafe_creme",
+					testedKebab:   "cafe-creme",
+					testedHuman:   "Cafe creme",
+					testedTitle:   "Cafe Creme",
+					testedAllCaps: "CAFE_CREME",
+				}
+			},
+		},
+		{
+			name:  "with combining diacritics",
+			input: "cafe\u0301 cre\u0300me", // NFD (decomposed) form of cafe/creme
+			expected: func(mode testMode) map[testedCasing]string {
+				if mode == testModeDefaultMangler {
+					return nil // base preserves the marks; asserted only for the folding modes
+				}
 
-		// TODO: unicode verbalisation
-		// unicode arabic (w/ extended arabic signs - expected to be elided)
-		// unicode chinese
-		// unicode japanese
-		// unicode japanese CJK
-		// unicode devanagari (no upper case concept)
-		// unicode edge-cases: non printable rune, invalid rune, ASCII control char, ...
+				// ASCII folding strips the combining marks
+				return map[testedCasing]string{
+					testedPascal:  "CafeCreme",
+					testedCamel:   "cafeCreme",
+					testedSnake:   "cafe_creme",
+					testedKebab:   "cafe-creme",
+					testedHuman:   "Cafe creme",
+					testedTitle:   "Cafe Creme",
+					testedAllCaps: "CAFE_CREME",
+				}
+			},
+		},
+		{
+			name:  "with CJK",
+			input: "日本語 text",
+			expected: func(mode testMode) map[testedCasing]string {
+				if mode == testModeDefaultMangler {
+					// base Mangler: folding off, non-Latin scripts preserved
+					return map[testedCasing]string{
+						testedPascal:  "日本語Text",
+						testedCamel:   "日本語Text",
+						testedSnake:   "日本語_text",
+						testedKebab:   "日本語-text",
+						testedHuman:   "日本語 text",
+						testedTitle:   "日本語 Text",
+						testedAllCaps: "日本語_TEXT",
+					}
+				}
 
-		// TODO: gomangler mode (default: ASCII on)
-		// simple initialism (ID, HTTP)
-		// token-breaking initialism (IPv4, IPv6)
-		// pluralized initialism (IDs)
-		// pluralized initialism (ambiguous: TTLs)
-		// leading separators => elided
-		// leading unicode non-letters => verbalized
+				// folding on: CJK ideographs have no phonetic name -> elided by the rune-name stage
+				return map[testedCasing]string{
+					testedPascal:  "Text",
+					testedCamel:   "text",
+					testedSnake:   "text",
+					testedKebab:   "text",
+					testedHuman:   "Text",
+					testedTitle:   "Text",
+					testedAllCaps: "TEXT",
+				}
+			},
+		},
 
-		// TODO: not supported yet
-		// leading digits => TODO: require NumberMangler
-		// special casing rules (e.g. greek lower-case sigma)
-		// unicode emojis
-		// unicode graphemes (e.g. flags)
+		// TODO: mangler with ASCII mode unicode digit (e.g. indian-arabic) unicode letter-number (e.g. roman number)
+
+		// TODO: unicode verbalisation unicode arabic (w/ extended arabic signs - expected to be elided) unicode chinese
+		// unicode japanese unicode japanese CJK unicode devanagari (no upper case concept) unicode edge-cases: non printable
+		// rune, invalid rune, ASCII control char, ...
+
+		// GoMangler initialisms (only the go-ident casings assert; neutral casings do not recognize initialisms and are left
+		// unset here).
+		{
+			name:     "simple initialisms",
+			input:    "get http response id",
+			expected: goIdents("GetHTTPResponseID", "getHTTPResponseID"),
+		},
+		{
+			name:     "leading initialism (unexported lowercases)",
+			input:    "http get",
+			expected: goIdents("HTTPGet", "httpGet"),
+		},
+		{
+			name:     "token-breaking initialism (IPv4)",
+			input:    "ipv4 address",
+			expected: goIdents("IPv4Address", "ipv4Address"),
+		},
+		{
+			name:     "pluralized initialism (IDs)",
+			input:    "userIDs",
+			expected: goIdents("UserIDs", "userIDs"),
+		},
+		{
+			name:     "pluralized ambiguous (IDS is not plural)",
+			input:    "IDS",
+			expected: goIdents("Ids", "ids"),
+		},
+		{
+			name:     "invariant initialism (DNS)",
+			input:    "dns lookup",
+			expected: goIdents("DNSLookup", "dnsLookup"),
+		},
+		{
+			name:     "reserved keyword repair (unexported only)",
+			input:    "type",
+			expected: goIdents("Type", "typeVar"),
+		},
+		{
+			name:     "reserved builtin repair (unexported only)",
+			input:    "append",
+			expected: goIdents("Append", "appendVar"),
+		},
+		{
+			name:     "leading digit verbalized",
+			input:    "12 angry men",
+			expected: goIdents("TwelveAngryMen", "twelveAngryMen"),
+		},
+		{
+			name:     "interior digit kept",
+			input:    "variable 12",
+			expected: goIdents("Variable12", "variable12"),
+		},
+		{
+			name:     "leading fraction verbalized",
+			input:    "0.1 index",
+			expected: goIdents("OneTenthIndex", "oneTenthIndex"),
+		},
+		{
+			name:     "interior decimal keeps digits, dot verbalized",
+			input:    "index 0.1",
+			expected: goIdents("Index0Dot1", "index0Dot1"),
+		},
+		{
+			name:     "interior symbol verbalized",
+			input:    "how many? 12",
+			expected: goIdents("HowManyQuestion12", "howManyQuestion12"),
+		},
+
+		// TODO: gomangler mode leading separators => elided leading unicode non-letters => verbalized.
+
+		// TODO: not supported yet leading digits => TODO: require NumberMangler special casing rules (e.g. greek lower-case
+		// sigma) unicode emojis unicode graphemes (e.g. flags)
 	})
 }

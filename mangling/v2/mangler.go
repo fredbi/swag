@@ -45,13 +45,15 @@ func NewMangler(opts ...Option) *Mangler {
 	return &m
 }
 
-// TargetTransform is a compiled, immutable recipe describing how to render a segmented token
-// stream: casing × separator × affix × stages × repair. All fields are unexported; build custom
-// targets with [MakeTargetTransform]. The mangler supplies the data (dictionaries) that stages
-// bind to at run time, so a target degrades gracefully across manglers.
+// TargetTransform is a compiled, immutable recipe describing how to render a segmented token stream: casing ×
+// separator × affix × stages × repair.
 //
-// Fields are unexported; the assembly recipe is casing × separator × symbol-policy (affix, stages
-// and repair land later — §4.5, §10).
+// All fields are unexported; build custom targets with [MakeTargetTransform].
+// The mangler supplies the data (dictionaries) that stages bind to at run time, so a target degrades gracefully across
+// manglers.
+//
+// Fields are unexported; the assembly recipe is casing × separator × symbol-policy (affix, stages and repair land
+// later — §4.5, §10).
 type TargetTransform struct {
 	firstCasing  wordCasing   // casing of the first emitted word (camelCase lowercases it)
 	restCasing   wordCasing   // casing of subsequent words
@@ -81,8 +83,11 @@ func WithSeparator(sep string) TargetOption {
 	}
 }
 
-// Preset targets. These return a fresh immutable value (they are functions, not variables, so a
-// caller can never corrupt a shared preset). Named after the form they produce.
+// Preset targets.
+//
+// These return a fresh immutable value (they are functions, not variables, so a caller can never corrupt a shared
+// preset).
+// Named after the form they produce.
 func TargetTitle() TargetTransform {
 	return TargetTransform{firstCasing: casingTitle, restCasing: casingTitle, separator: " "}
 }
@@ -111,15 +116,34 @@ func TargetAllCaps() TargetTransform {
 	return TargetTransform{firstCasing: casingUpper, restCasing: casingUpper, separator: "_"}
 }
 
-// Transform renders str through the target recipe: segment → assemble (casing × separator ×
-// symbol policy). Stages (verbalization, folding, initialisms) will run between the two.
+// Transform renders str through the target recipe: segment → assemble (casing × separator × symbol policy).
+//
+// Stages (verbalization, folding, initialisms) will run between the two.
 func (m Mangler) Transform(target TargetTransform, str string) string {
+	str = m.asciifyInput(str)
+
 	t := borrowTokens(str)
 	defer t.redeem()
 
 	m.segment(&t)
 
+	if m.asciify {
+		m.foldASCII(&t)
+	}
+
 	return m.assemble(&t, target)
+}
+
+// asciifyInput is the string-level half of ASCII-fication, applied before segmentation when folding
+// is enabled: it expands non-foldable runes to their phonetic name (§4.7.1 tier 4) so multi-word names
+// re-segment. Diacritics and combining marks are left for the token-level foldASCII stage. This is a
+// neutral Mangler capability — shared by every preset and by GoMangler's ident pipeline.
+func (m Mangler) asciifyInput(str string) string {
+	if !m.asciify {
+		return str
+	}
+
+	return expandRuneNames(str)
 }
 
 // Titleize transforms all words in titled case.
@@ -185,17 +209,14 @@ func (m Mangler) AllCaps(str string) string {
 
 // Pluralize a word (a sentence?) (english)
 //
-// wolf -> wolves
-// wolves -> (unchanged)
-// chopper -> choppers
+// wolf -> wolves wolves -> (unchanged) chopper -> choppers.
 func (m Mangler) Pluralize(string) string {
 	return ""
 }
 
 // Singularize a word (english), the inverse of [Mangler.Pluralize].
 //
-// wolves -> wolf
-// wolf -> (unchanged)
+// wolves -> wolf wolf -> (unchanged)
 func (m Mangler) Singularize(string) string {
 	return ""
 }

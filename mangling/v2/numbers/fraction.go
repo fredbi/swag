@@ -18,7 +18,10 @@ var fractionBases = []struct {
 	{1.0 / 3.0, "third", "thirds"},
 	{0.25, "quarter", "quarters"},
 	{0.2, "fifth", "fifths"},
+	{1.0 / 6.0, "sixth", "sixths"},
+	{1.0 / 7.0, "seventh", "sevenths"},
 	{0.125, "eighth", "eighths"},
+	{1.0 / 9.0, "ninth", "ninths"},
 	{0.1, "tenth", "tenths"},
 }
 
@@ -155,6 +158,18 @@ func numberWords(x float64, o numberOptions) string {
 	}
 
 	return spellDecimal(strconv.FormatFloat(x, 'f', -1, 64), o)
+}
+
+// writeNumberValue streams the english wording of a numeric value into b — the streaming form of
+// [numberWords], used to verbalize a Unicode numeral rune ('½' → "one half", 'Ⅶ' → "seven").
+func writeNumberValue(b *buf, x float64, o numberOptions) {
+	if x == math.Trunc(x) {
+		writeCardinal(b, int64(x), o)
+
+		return
+	}
+
+	writeSpellDecimal(b, strconv.FormatFloat(x, 'f', -1, 64), o)
 }
 
 // writeDigitWords spells a run of digits one by one into b: "31456" → "three one four five six".

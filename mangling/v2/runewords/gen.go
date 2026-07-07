@@ -92,6 +92,7 @@ type stats struct {
 	separator   int
 	digit       int
 	latin       int
+	numeral     int
 	han         int
 	hangul      int
 	block       int
@@ -163,6 +164,9 @@ func run() error {
 		case "digit":
 			st.digit++
 			continue
+		case "numeral":
+			st.numeral++
+			continue
 		case "latin":
 			st.latin++
 			continue
@@ -233,6 +237,8 @@ func classify(r rune) string {
 		return "separator" // elided as separators / spacing modifiers
 	case unicode.Is(unicode.Nd, r):
 		return "digit" // handled by numbers digit-offset
+	case unicode.In(r, unicode.No, unicode.Nl):
+		return "numeral" // Unicode numerals (½, Ⅶ, ②) routed to the numbers engine (numbers.RuneNumber)
 	case unicode.Is(unicode.Latin, r):
 		return "latin" // handled by the ASCII fold map
 	case unicode.Is(unicode.Han, r):
@@ -498,6 +504,7 @@ func report(st *stats, entries []kept, order []string, blobLen int, offsets []in
 	e("excluded — separator/mod:    %6d\n", st.separator)
 	e("excluded — digit (Nd):       %6d\n", st.digit)
 	e("excluded — latin (fold):     %6d\n", st.latin)
+	e("excluded — numeral (No/Nl):  %6d\n", st.numeral)
 	e("excluded — han (CJK):        %6d\n", st.han)
 	e("excluded — hangul:           %6d\n", st.hangul)
 	e("excluded — block (decor):    %6d\n", st.block)

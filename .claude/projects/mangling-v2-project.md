@@ -10,6 +10,14 @@ Work started 2026-06-05 on branch `exp/mangling-v2`.
 
 Clean-slate redesign of name mangling, future core codegen package, design-doc-first
 
+## Status (2026-07-06)
+Core is built and tested — see `mangling/DESIGN_v2.md` §11 (implementation status table) for the authoritative
+snapshot. Done: pipeline (tokenizer/Tokens/assembler), `Mangler.Transform` + presets (incl. `Pascal`), initialism
+overlay, ASCII folding, full `GoMangler` scope (idents/Package/Module/File/ConstName) with repairs, and the `numbers`
+subpackage wired into `ConstName`. Remaining stubs: **Unicode rune-naming** (`ToAscii`/`UnicodeName`/`Ascii` return "")
+— the headline TODO; **inflection** (`Pluralize`/`Singularize` return "", `Conjugate` commented out); **value-policy
+knobs** on `ConstName` (`OnSymbol`/`OnNumber`/… ignored). `ValueMangler` was dropped (folded into `ConstName`).
+
 Key framing decided with the user:
 - This is **temporary exploratory work**. v2 will most likely **move to its own repo** and be elevated to a
   **core reusable package** shared across all go-openapi/go-swagger codegen modules — no longer "a submodule of swag".

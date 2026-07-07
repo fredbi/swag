@@ -50,8 +50,8 @@ func NewNumberMangler(opts ...NumberOption) *NumberMangler {
 // Rendering honors the mangler's options: [WithNumberStripOne] ("one hundred" => "hundred", "one tenth" => "tenth"),
 // [WithNumberStripAnd] (drops the "and"), and [WithNumberDetectPrecision] (fraction and special-number tolerance).
 func (m NumberMangler) NumberWords(in string) string {
-	if !hasDigit(in) {
-		return in // no numeric run possible: nothing to rewrite, no allocation
+	if !mayHaveNumber(in) {
+		return in // no ASCII digit and no numeral rune: nothing to rewrite, no allocation
 	}
 
 	var w buf
@@ -60,6 +60,16 @@ func (m NumberMangler) NumberWords(in string) string {
 	scanInto(&w, in, m.numberOptions)
 
 	return unsafeStr(w.b)
+}
+
+// RuneNumber returns the numeric value of a Unicode numeral rune (categories No and Nl — e.g. '½' → 0.5,
+// 'Ⅶ' → 7, '②' → 2) and whether r is such a numeral. Decimal digits (Nd) and CJK ideographic numbers
+// (Lo) are deliberately excluded. It lets a numeral rune verbalize through this engine ('½' → "one half")
+// and lets the asciify tier render it as a plain number ('½' → "0.5"). Table in numerals.go.
+func RuneNumber(r rune) (float64, bool) {
+	v, ok := runeNumericValue[r]
+
+	return v, ok
 }
 
 // AppendWords appends the english-words form of in (numbers verbalized, surrounding text verbatim) to
@@ -75,7 +85,7 @@ func (m NumberMangler) NumberWords(in string) string {
 //		use(scratch) // valid until the next AppendWords into scratch
 //	}
 func (m NumberMangler) AppendWords(dst []byte, in string) []byte {
-	if !hasDigit(in) {
+	if !mayHaveNumber(in) {
 		return append(dst, in...)
 	}
 

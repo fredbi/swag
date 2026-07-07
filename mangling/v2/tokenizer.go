@@ -21,9 +21,9 @@ import (
 //   - lower→Upper, e.g. "fooBar" => [foo, Bar];
 //   - an Upper-run→lower, with one-rune lookback, e.g. "HTTPServer" => [HTTP, Server].
 //
-// Combining marks (Mn/Mc/Me) never start a boundary: they attach to the current token (and are
-// stripped later, in the fold stage). Script/Unicode-category change (§4.2 signal #4) is not yet
-// implemented.
+// Combining marks (Mn/Mc/Me) never start a boundary: they attach to the current token (and are stripped later, in the
+// fold stage).
+// Script/Unicode-category change (§4.2 signal #4) is not yet implemented.
 //
 // Separators may be customized by injecting a predicate with option [WithTokenSeparator].
 type Tokenizer struct {
@@ -32,8 +32,8 @@ type Tokenizer struct {
 
 // Tokenize splits a string into its tokens, materialized as strings.
 //
-// This is a convenience surface (it allocates a string per token). The mangling pipeline works on
-// the zero-copy [Tokens] model directly.
+// This is a convenience surface (it allocates a string per token).
+// The mangling pipeline works on the zero-copy [Tokens] model directly.
 func (m Tokenizer) Tokenize(in string) iter.Seq[string] {
 	return func(yield func(string) bool) {
 		t := borrowTokens(in)
@@ -86,8 +86,7 @@ func (m Tokenizer) segment(t *Tokens) {
 
 		case classMark:
 			if runStart < 0 {
-				// orphan/leading mark: keep it in a word run so nothing is silently lost
-				// (the fold stage will strip it).
+				// orphan/leading mark: keep it in a word run so nothing is silently lost (the fold stage will strip it).
 				runStart, runKind = i, KindWord
 			}
 			// otherwise it attaches to the current run (extends on flush)
@@ -199,7 +198,9 @@ func classifyCasing(runes []rune) Casing {
 	}
 }
 
-// Transform is a pipeline stage: it mutates the token model in place. It replaces the retired
-// string-based transformer tier — stages see position, kind and casing, and may split/merge tokens.
+// Transform is a pipeline stage: it mutates the token model in place.
+//
+// It replaces the retired string-based transformer tier — stages see position, kind and casing, and may split/merge
+// tokens.
 // See [Tokens] (token.go / tokens.go).
 type Transform func(*Tokens)

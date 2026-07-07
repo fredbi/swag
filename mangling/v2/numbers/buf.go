@@ -36,16 +36,3 @@ func unsafeStr(b []byte) string {
 
 	return unsafe.String(&b[0], len(b))
 }
-
-// hasDigit reports whether s contains an ASCII digit.
-//
-// This is a cheap precondition for a numeric run.
-func hasDigit(s string) bool {
-	for i := 0; i < len(s); i++ {
-		if s[i] >= '0' && s[i] <= '9' {
-			return true
-		}
-	}
-
-	return false
-}

@@ -1,5 +1,7 @@
 package mangling
 
+import "github.com/go-openapi/swag/mangling/v2/numbers"
+
 type (
 	// TokenOption customizes the behavior of the [Tokenizer].
 	TokenOption func(tokenOptions) tokenOptions
@@ -10,7 +12,7 @@ type (
 	// GoOption customizes the behavior of the [GoMangler].
 	GoOption func(goOptions) goOptions
 
-	// ValueOption customizes the behavior of the [ValueMangler].
+	// ValueOption customizes value verbalization (e.g. [GoMangler.ConstName]).
 	ValueOption func(valueOptions) valueOptions
 )
 
@@ -22,15 +24,19 @@ type (
 
 	options struct {
 		tokenOptions
+		asciify bool // fold Latin diacritics to ASCII (off in base Mangler, on in GoMangler)
 	}
 
 	goOptions struct {
 		options
 
-		initialisms  []string
-		keywords     map[string]struct{}
-		builtins     map[string]struct{}
-		fileSuffixes map[string]struct{}
+		initialisms      []string
+		keywords         map[string]struct{}
+		builtins         map[string]struct{}
+		fileSuffixes     map[string]struct{}
+		reservedSuffix   string                 // appended to an ident colliding with a reserved word (default "Var")
+		fileRepairSuffix string                 // appended to a file stem ending in a GOOS/GOARCH/test suffix (default "swagger")
+		numberOpts       []numbers.NumberOption // configure the NumberMangler used by ConstName / leading-digit verbalization
 	}
 
 	valueOptions struct{}
@@ -58,6 +64,8 @@ func buildOptions(o options, opts []Option) options {
 }
 
 func buildGoOptions(o goOptions, opts []GoOption) goOptions {
+	o.options.asciify = true // GoMangler default: fold to ASCII (gosmopolitan-clean); opts may override
+
 	for _, apply := range opts {
 		o = apply(o)
 	}
@@ -74,6 +82,12 @@ func buildGoOptions(o goOptions, opts []GoOption) goOptions {
 	}
 	if o.fileSuffixes == nil {
 		o.fileSuffixes = goFileSuffixesSet
+	}
+	if o.reservedSuffix == "" {
+		o.reservedSuffix = "Var" // go-swagger's convention: "type" -> "typeVar"
+	}
+	if o.fileRepairSuffix == "" {
+		o.fileRepairSuffix = "swagger" // "test.go" -> "test_swagger.go"
 	}
 
 	return o
@@ -109,9 +123,31 @@ func WithTokenOptions(opts ...TokenOption) Option {
 	}
 }
 
+// WithAsciiFolding toggles folding of Latin diacritics to ASCII (é→e, ñ→n, ß→ss, combining marks stripped).
+//
+// It is off by default in the base [Mangler] and on by default in the [GoMangler] (gosmopolitan-clean output).
+// Non-Latin scripts (CJK, …) are left as-is — a future rune-name concern.
+func WithAsciiFolding(enabled bool) Option {
+	return func(o options) options {
+		o.asciify = enabled
+
+		return o
+	}
+}
+
 func WithManglerOptions(opts ...Option) GoOption {
 	return func(o goOptions) goOptions {
 		o.options = buildOptions(o.options, opts)
+
+		return o
+	}
+}
+
+// WithGoNumberOptions configures the [numbers.NumberMangler] the [GoMangler] uses to verbalize numbers in
+// [GoMangler.ConstName] and leading-digit identifiers — e.g. registering special numbers or eliding "and"/"one".
+func WithGoNumberOptions(opts ...numbers.NumberOption) GoOption {
+	return func(o goOptions) goOptions {
+		o.numberOpts = append(o.numberOpts, opts...)
 
 		return o
 	}
@@ -141,26 +177,6 @@ func WithGoInitialismPlurals(...string) GoOption {
 		return o
 	}
 }
-
-func WithGoPrefixNonLeadingLetterRules(...NonLeadingLetterRule) GoOption {
-	return func(o goOptions) goOptions {
-		return o
-	}
-}
-
-// NonLeadingLetterRule is used to determined how the [GoMangler] will handle a leading non-letter rune.
-type NonLeadingLetterRule uint8
-
-const (
-	// NonLeadingLetterRulePrefix specifies a simple prefix replacement when the first rune is not a letter.
-	NonLeadingLetterRulePrefix NonLeadingLetterRule = iota
-
-	// NonLeadingLetterRuleRuneName will use the unicode rune name.
-	NonLeadingLetterRuleRuneName
-
-	// NonLeadingLetterRuleStrip will merely strip all non-letter initial runes.
-	NonLeadingLetterRuleStrip
-)
 
 var goReservedWords = []string{
 	"break",
