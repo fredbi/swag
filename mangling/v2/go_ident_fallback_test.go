@@ -6,9 +6,11 @@ import (
 	"github.com/go-openapi/testify/v2/assert"
 )
 
-// TestGoIdentFallback covers the contract that Go identifier producers never emit an empty identifier:
-// input that reduces to nothing (empty, all-separators, or all-elided runes) yields a fallback word,
-// cased per target. Package/Module are exempt (they carry a dir prefix), and the base Mangler is not.
+// TestGoIdentFallback covers the contract that Go identifier producers never emit an empty identifier.
+//
+// Input that reduces to nothing (empty, all-separators, or all-elided runes) yields a fallback word, cased per target.
+//
+// Package/Module are exempt (they carry a dir prefix), and the base Mangler is not.
 func TestGoIdentFallback(t *testing.T) {
 	t.Parallel()
 
@@ -71,6 +73,6 @@ func TestGoIdentFallback(t *testing.T) {
 		t.Parallel()
 		m := MakeMangler(WithASCIIFolding(true))
 		assert.EqualT(t, "", m.Camelize("___"))
-		assert.EqualT(t, "", m.Pascalize("日本"))
+		assert.EqualT(t, "", m.Pascalize("日本")) // elided CJK runes
 	})
 }

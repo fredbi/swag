@@ -7,11 +7,15 @@ import (
 	"github.com/go-openapi/testify/v2/assert"
 )
 
-// TestManglerConcurrency asserts both Mangler and GoMangler are fully reentrant: a single constructed
-// instance (value and pointer forms) is shared across many goroutines, each hammering every output
-// method. It guards two things at once — data races on the shared read-only dictionaries and the
-// package-level token sync.Pool (run with -race), and output corruption (every concurrent result must
-// equal the golden value computed single-threaded beforehand).
+// TestManglerConcurrency asserts that both Mangler and GoMangler are fully reentrant.
+//
+// A single constructed instance (value and pointer forms) is shared across many goroutines,
+// each hammering every output method.
+//
+// It guards two things at once:
+//
+//   - data races on the shared read-only dictionaries and the package-level token sync.Pool (run with -race),
+//   - output corruption (every concurrent result must equal the golden value computed single-threaded beforehand).
 func TestManglerConcurrency(t *testing.T) {
 	t.Parallel()
 

@@ -87,8 +87,9 @@ func TestWithTokenSeparatorPredicate(t *testing.T) {
 	assert.EqualT(t, "aB", m.Camelize("a.b"))
 }
 
-// TestBaseManglerNamesNumeralRune exercises expandRuneNames' numeral branch on the base Mangler path:
-// a numeral rune is spelled out as words (unlike literal ASCII digits, which Camelize leaves alone).
+// TestBaseManglerNamesNumeralRune exercises expandRuneNames' numeral branch on the base Mangler path.
+//
+// A numeral rune is spelled out as words (unlike literal ASCII digits, which Camelize leaves alone).
 func TestBaseManglerNamesNumeralRune(t *testing.T) {
 	t.Parallel()
 
@@ -96,8 +97,9 @@ func TestBaseManglerNamesNumeralRune(t *testing.T) {
 	assert.EqualT(t, "oneHalfCup", m.Camelize("½ cup"))
 }
 
-// TestModuleNonVersionSuffix hits majorVersionDigits' non-digit exit: "vbeta" looks like a version but
-// isn't, so it is not rewritten to "version…".
+// TestModuleNonVersionSuffix hits majorVersionDigits' non-digit exit.
+//
+// "vbeta" looks like a version but isn't, so it is not rewritten to "version…".
 func TestModuleNonVersionSuffix(t *testing.T) {
 	t.Parallel()
 
@@ -120,8 +122,8 @@ func TestTokenizeEarlyBreak(t *testing.T) {
 	assert.EqualT(t, 1, n)
 }
 
-// TestTokenizeOrphanLeadingMark covers the orphan/leading combining-mark branch in segment (the mark
-// is kept in a word run rather than silently lost).
+// TestTokenizeOrphanLeadingMark covers the orphan/leading combining-mark branch in segment
+// (the mark is kept in a word run rather than silently lost).
 func TestTokenizeOrphanLeadingMark(t *testing.T) {
 	t.Parallel()
 

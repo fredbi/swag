@@ -8,9 +8,10 @@ import (
 	"github.com/go-openapi/testify/v2/require"
 )
 
-// codePoint converts a table codepoint (stored as uint32) to a rune, asserting it is in range. The
-// generator only emits valid codepoints, so this never truncates — the check also catches a corrupt
-// table and keeps the uint32→rune conversion honest (gosec G115).
+// codePoint converts a table codepoint (stored as uint32) to a rune, asserting it is in range.
+//
+// The generator only emits valid codepoints, so this never truncates — the check also catches a corrupt table and
+// keeps the uint32→rune conversion honest (gosec G115).
 func codePoint(t *testing.T, cp uint32) rune {
 	t.Helper()
 	require.LessOrEqualf(t, cp, uint32(utf8.MaxRune), "table codepoint U+%X out of range", cp)
@@ -83,8 +84,8 @@ func TestTableInvariants(t *testing.T) {
 	}
 }
 
-// TestCoverageRoundTrip walks every covered rune through the interval encoding and confirms
-// Word() reconstructs the same word the raw arrays hold, and that inter-run gap runes miss.
+// TestCoverageRoundTrip walks every covered rune through the interval encoding and confirms Word() reconstructs the
+// same word the raw arrays hold, and that inter-run gap runes miss.
 func TestCoverageRoundTrip(t *testing.T) {
 	t.Parallel()
 
@@ -101,8 +102,8 @@ func TestCoverageRoundTrip(t *testing.T) {
 			require.Equalf(t, want, got, "Word(U+%04X)", r)
 		}
 
-		// The codepoint just past this run's end (before the next run starts) must not be covered,
-		// unless it is the next run's start.
+		// The codepoint just past this run's end (before the next run starts) must not be covered, unless it is the next
+		// run's start.
 		gap := base + count
 		if i+1 < len(runStart) && gap < runStart[i+1] {
 			_, ok := Word(codePoint(t, gap))

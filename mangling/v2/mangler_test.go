@@ -38,9 +38,10 @@ func TestMangler(t *testing.T) {
 func TestGoMangler(t *testing.T) {
 	t.Parallel()
 
-	// The GoMangler reuses the same harness: it satisfies the [mangler] interface through its embedded Mangler, with ASCII
-	// folding on by default. (Initialisms and the Go ident targets come later — the go-specific casings are not
-	// exercised yet.)
+	// The GoMangler reuses the same harness.
+	//
+	// It satisfies the [mangler] interface through its embedded Mangler, with ASCII folding on by default.
+	// (Initialisms and the Go ident targets come later — the go-specific casings are not exercised yet.)
 	m := MakeGoMangler()
 
 	for tc := range manglerTestCases() {
@@ -172,8 +173,8 @@ func TestGoManglerConstName(t *testing.T) {
 		})
 	}
 
-	// regression: an integer too large for int64 is spelled digit by digit, so the const name stays a
-	// valid (non-digit-leading) identifier rather than raw digits.
+	// regression: an integer too large for int64 is spelled digit by digit, so the const name stays a valid
+	// (non-digit-leading) identifier rather than raw digits.
 	assert.EqualT(t, strings.Repeat("Nine", 19), g.ConstName("9999999999999999999"))
 }
 
@@ -474,8 +475,8 @@ func manglerTestCases() iter.Seq[manglerTestCase] {
 			name:  "with combining diacritics",
 			input: "cafe\u0301 cre\u0300me", // NFD (decomposed) form of cafe/creme
 			expected: func(_ testMode) map[testedCasing]string {
-				// Combining marks are never valid identifier runes, so they are stripped in EVERY mode
-				// (not only when ASCII folding is on) \u2014 the decomposed diacritics vanish regardless.
+				// Combining marks are never valid identifier runes, so they are stripped in EVERY mode (not only when ASCII folding
+				// is on) \u2014 the decomposed diacritics vanish regardless.
 				return map[testedCasing]string{
 					testedPascal:  "CafeCreme",
 					testedCamel:   "cafeCreme",
@@ -577,9 +578,8 @@ func manglerTestCases() iter.Seq[manglerTestCase] {
 			expected: goIdents("SevenLives", "sevenLives"),
 		},
 		{
-			// an orphan combining mark (dropped) then a symbol: the symbol word must be lower-cased for the
-			// unexported ident — regression, it used to come out "Bang" because the empty mark token consumed
-			// the first-word casing slot.
+			// an orphan combining mark (dropped) then a symbol: the symbol word must be lower-cased for the unexported ident —
+			// regression, it used to come out "Bang" because the empty mark token consumed the first-word casing slot.
 			name:  "with orphan combining mark and symbol",
 			input: "֮!", // Hebrew accent (Mn) + '!'
 			expected: func(mode testMode) map[testedCasing]string {
@@ -659,10 +659,10 @@ func manglerTestCases() iter.Seq[manglerTestCase] {
 			input:    "how many? 12",
 			expected: goIdents("HowManyQuestion12", "howManyQuestion12"),
 		},
-
-		// TODO: gomangler mode leading separators => elided leading unicode non-letters => verbalized.
-
-		// TODO: not supported yet leading digits => TODO: require NumberMangler special casing rules (e.g. greek lower-case
-		// sigma) unicode emojis unicode graphemes (e.g. flags)
+		{
+			name:     "leading combining mark",
+			input:    "́abc",
+			expected: goIdents("Abc", "abc"),
+		},
 	})
 }

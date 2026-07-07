@@ -1,10 +1,10 @@
-// Package ucd hosts the Unicode Character Database (UCD) source extracts and the code generators
-// that turn them into the static lookup tables the mangling packages rely on.
+// Package ucd hosts the Unicode Character Database (UCD) source extracts and the code generators that turn them into
+// the static lookup tables the mangling packages rely on.
 //
-// It is a separate module (github.com/go-openapi/swag/mangling/v2/ucd) on purpose: the generator
-// tooling and its data live here, so nothing this module depends on leaks into the mangling module.
-// The generated tables (runewords/tables.go, numbers/numerals.go) are plain, dependency-free Go
-// source — the mangling module never imports this one.
+// It is a separate module (github.com/go-openapi/swag/mangling/v2/ucd) on purpose: the generator tooling and its data
+// live here, so nothing this module depends on leaks into the mangling module.
+// The generated tables (runewords/tables.go, numbers/numerals.go) are plain, dependency-free Go source — the mangling
+// module never imports this one.
 //
 // # Layout
 //
@@ -20,8 +20,8 @@
 //
 // # Regenerating
 //
-// Each consuming package carries a go:generate directive pointing at the matching command. Regenerate
-// everything from the module root:
+// Each consuming package carries a go:generate directive pointing at the matching command.
+// Regenerate everything from the module root:
 //
 //	go generate ./...
 //
@@ -29,12 +29,13 @@
 //
 //	go generate
 //
-// The generators are idempotent: with unchanged data and unchanged generator code they emit
-// byte-identical tables, so a clean tree after go generate is the expected state.
+// The generators are idempotent: with unchanged data and unchanged generator code they emit byte-identical tables, so a
+// clean tree after go generate is the expected state.
 //
 // # Bumping the Unicode version
 //
-// Drop the new extracts under a fresh versioned directory (e.g. ucd/v17/), point defaultUCDVersion in
-// internal/locate at it, and re-run go generate. Keeping versions side by side makes a bump reviewable
-// as a data diff plus a regenerated-table diff, rather than an in-place overwrite.
+// Drop the new extracts under a fresh versioned directory (e.g. ucd/v17/), point defaultUCDVersion in internal/locate
+// at it, and re-run go generate.
+// Keeping versions side by side makes a bump reviewable as a data diff plus a regenerated-table diff, rather than an
+// in-place overwrite.
 package ucd

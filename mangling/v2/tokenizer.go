@@ -32,10 +32,11 @@ var (
 //   - lower→Upper, e.g. "fooBar" => [foo, Bar];
 //   - an Upper-run→lower, with one-rune lookback, e.g. "HTTPServer" => [HTTP, Server].
 //
-// Combining marks (Mn/Mc/Me) never start a boundary: they attach to the current token
-// (and are stripped later, in the fold stage).
+// Combining marks (Mn/Mc/Me) never start a boundary: they attach to the current token (and are stripped later, in the
+// fold stage).
 //
-// Script/Unicode-category change (§4.2 signal #4) is not yet implemented.
+// A script change between letters (e.g. Latin↔Cyrillic) is intentionally not a boundary yet: with ASCII folding on,
+// non-Latin runes are romanized or elided before this point, so it rarely matters.
 //
 // Separators may be customized by injecting a predicate with option [WithTokenSeparator].
 type tokenizer struct {
@@ -141,6 +142,7 @@ func (m tokenizer) segment(t *tokens) {
 }
 
 // token is a zero-copy view into the shared []rune of a [tokens] value.
+//
 // A half-open span plus the classification computed by the scanner.
 //
 // It is internal: transforms reach token data only through [tokens]' index-based methods, so the struct can evolve
@@ -211,11 +213,13 @@ func runeCase(r rune) int {
 // tokens is the mutable, pooled token model: a slice of [token] spans over one shared []rune (the only full copy of the
 // input).
 //
-// Pipeline stages mutate it in place; strings are materialized only at assembly. It is borrowed from a pool for the
-// duration of one mangling and released with [tokens.redeem]; it must not be retained afterwards.
+// Pipeline stages mutate it in place; strings are materialized only at assembly.
+// It is borrowed from a pool for the duration of one mangling and released with [tokens.redeem]; it must not be
+// retained afterwards.
 //
-// The internal surface is index-based (the [token] struct stays private): a stage reads with Len/Text/tokenKind and edits
-// with Rewrite. (An exported Transform-injection API and the token model itself are deferred to post-1.0 — DESIGN §13.)
+// The internal surface is index-based (the [token] struct stays private): a stage reads with Len/Text/kindOf and edits
+// with Rewrite.
+// A public stage-injection API may expose a version of this later; for now the model is unexported.
 type tokens struct {
 	runes *pools.Slice[rune]
 	toks  *pools.Slice[token]
@@ -265,20 +269,20 @@ func (t *tokens) Text(i int) string {
 	return string(t.runes.Slice()[tk.start:tk.end])
 }
 
-// Deferred tokens capabilities — no current caller, kept commented as a capability memo rather than
-// shipped as dead public API (DESIGN_v2.md §13, P0 API freeze). Uncomment + test when a transform needs one.
+// Deferred token capabilities — no current caller, kept commented as a memo rather than carried as dead code.
+// Uncomment and test when a stage actually needs one.
 //
-//	// All ranges over the tokens' rendered text by index (read-only).
-//	func (t *tokens) All() iter.Seq2[int, string] { ... }
+// 	// All ranges over the tokens' rendered text by index (read-only).
+// 	func (t *tokens) All() iter.Seq2[int, string] { ... }
 //
-//	// SetKind retags token i — e.g. the initialism overlay marks a token kindInitialism.
-//	func (t *tokens) SetKind(i int, kind tokenKind) { t.toks.Slice()[i].kind = kind }
+// 	// SetKind retags token i — e.g. the initialism overlay marks a token kindInitialism.
+// 	func (t *tokens) SetKind(i int, kind tokenKind) { t.toks.Slice()[i].kind = kind }
 //
-//	// Split divides token i at offset at into two adjacent tokens (sub-token initialism, IDS → ID + S).
-//	func (t *tokens) Split(i, at int) { ... }
+// 	// Split divides token i at offset at into two adjacent tokens (sub-token initialism, IDS → ID + S).
+// 	func (t *tokens) Split(i, at int) { ... }
 //
-//	// Merge folds tokens [i, j] into one (multi-token initialism merge, IPv4/UTF8).
-//	func (t *tokens) Merge(i, j int) { ... }
+// 	// Merge folds tokens [i, j] into one (multi-token initialism merge, IPv4/UTF8).
+// 	func (t *tokens) Merge(i, j int) { ... }
 
 // --- write API (mutating an element in place is safe; growing goes through the pool wrapper) ---.
 

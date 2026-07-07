@@ -135,13 +135,12 @@ func (m Mangler) AllCaps(str string) string {
 	return m.Transform(TargetAllCaps(), str)
 }
 
-// Pluralization (Pluralize/Singularize) is deliberately NOT part of the mangler API: it is orthogonal to
-// tokenization (it inflects a single word), so it will ship as a standalone `plurals` subpackage
-// (English rules + irregular/uncountable tables) — see DESIGN_v2.md §13 (P2). The former empty stubs were
-// removed to avoid shipping silent-empty methods on the public surface.
+// Pluralization (Pluralize/Singularize) is deliberately NOT part of the mangler API: it is orthogonal to tokenization
+// — it inflects a single word — so it belongs in a standalone helper (English rules plus an irregular/uncountable
+// table), not on the mangler.
 
-// asciifyInput is the string-level half of ASCII-fication, applied before segmentation when folding
-// is enabled: it expands non-foldable runes to their phonetic name so multi-word names re-segment.
+// asciifyInput is the string-level half of ASCII-fication, applied before segmentation when folding is enabled: it
+// expands non-foldable runes to their phonetic name so multi-word names re-segment.
 //
 // Diacritics and combining marks are left for the token-level foldASCII stage.
 //

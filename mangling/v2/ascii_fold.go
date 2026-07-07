@@ -9,10 +9,13 @@ import (
 	"github.com/go-openapi/swag/mangling/v2/runewords"
 )
 
-// ToASCII transforms a string to plain ASCII: Latin diacritics are folded (café → cafe), combining
-// marks stripped, and any remaining non-ASCII rune is replaced by its phonetic Unicode-name word
-// (π → pi, 😀 → grinning face), space-separated so it reads as words. Runes with no known word (CJK
-// ideographs, decorative symbols) are dropped.
+// ToASCII transforms a string to plain ASCII.
+//
+// Latin diacritics are folded (café → cafe), combining marks stripped,
+// and any remaining non-ASCII rune is replaced by its phonetic Unicode-name word (π → pi, 😀 → grinning face),
+// space-separated so it reads as words.
+//
+// Runes with no known word (CJK ideographs, decorative symbols) are dropped.
 //
 // This works best for European languages; it falls back to [RuneShortName] for other scripts and emoji.
 func ToASCII[T ~string | ~[]byte](s T) string {
@@ -47,10 +50,11 @@ func ToASCII[T ~string | ~[]byte](s T) string {
 	return strings.Join(strings.Fields(b.String()), " ")
 }
 
-// RuneToASCII returns the plain-ASCII equivalent of a single rune bearing a diacritic (é → "e", ñ → "n"),
-// the rune itself if already ASCII, or "" if it has no ASCII folding (non-Latin letters, symbols, emoji).
+// RuneToASCII returns the plain-ASCII equivalent of a single rune bearing a diacritic (é → "e", ñ → "n"), the
+// rune itself if already ASCII, or "" if it has no ASCII folding (non-Latin letters, symbols, emoji).
 //
-// Use [RuneShortName] for those. Combining marks fold to "".
+// Use [RuneShortName] for those.
+// Combining marks fold to "".
 func RuneToASCII[T ~rune | ~byte](r T) string {
 	c := rune(r)
 	if c < utf8.RuneSelf {
@@ -83,13 +87,13 @@ func RuneShortName[T ~rune | ~byte](r T) string {
 
 // foldASCII is the ASCII-folding stage.
 //
-// It rewrites each token that contains foldable non-ASCII runes into its ASCII form
-// (Latin diacritics folded via [asciiFold], combining marks stripped).
+// It rewrites each token that contains foldable non-ASCII runes into its ASCII form (Latin diacritics folded via
+// [asciiFold], combining marks stripped).
 //
 // It runs between segmentation and assembly when folding is enabled (off in the base [Mangler], on in the [GoMangler]).
 //
-// Pure-ASCII tokens, and tokens whose non-ASCII runes are non-foldable (e.g. CJK — a future rune-name concern),
-// are left untouched, so nothing allocates for them.
+// Pure-ASCII tokens, and tokens whose non-ASCII runes are non-foldable (e.g. CJK — a future rune-name concern), are
+// left untouched, so nothing allocates for them.
 func (m Mangler) foldASCII(t *tokens) {
 	for i := range t.Len() {
 		runes, override := t.span(i)
@@ -153,12 +157,12 @@ func isCombiningMark(r rune) bool {
 	return unicode.In(r, unicode.Mn, unicode.Mc, unicode.Me)
 }
 
-// asciiDigit maps a decimal-digit rune (category Nd, any script: ASCII, Arabic-Indic ٧, Devanagari ०,
-// Thai ๗, fullwidth ７, …) to its ASCII digit byte '0'–'9', and reports whether r is a decimal digit.
+// asciiDigit maps a decimal-digit rune (category Nd, any script: ASCII, Arabic-Indic ٧, Devanagari ०, Thai ๗,
+// fullwidth ７, …) to its ASCII digit byte '0'–'9', and reports whether r is a decimal digit.
 //
-// No table is needed: Unicode lays out every script's digits as 10 consecutive codepoints (a hard
-// invariant of Nd), so the value is r minus its unicode.Nd block start. Only the ~64 Nd blocks are
-// scanned, and only for non-ASCII runes (a cold path).
+// No table is needed: Unicode lays out every script's digits as 10 consecutive codepoints (a hard invariant of Nd), so
+// the value is r minus its unicode.Nd block start.
+// Only the ~64 Nd blocks are scanned, and only for non-ASCII runes (a cold path).
 func asciiDigit(r rune) (byte, bool) {
 	if r >= '0' && r <= '9' {
 		return byte(r), true
@@ -179,8 +183,10 @@ func asciiDigit(r rune) (byte, bool) {
 	return 0, false
 }
 
-// isAllCombiningMarks reports whether every rune is a combining mark (so the token renders to nothing
-// once marks are stripped). An empty slice counts as all-marks (also renders to nothing).
+// isAllCombiningMarks reports whether every rune is a combining mark (so the token renders to nothing once marks are
+// stripped).
+//
+// An empty slice counts as all-marks (also renders to nothing).
 func isAllCombiningMarks(runes []rune) bool {
 	for _, r := range runes {
 		if !isCombiningMark(r) {
@@ -191,14 +197,15 @@ func isAllCombiningMarks(runes []rune) bool {
 	return true
 }
 
-// asciiFold maps a Latin letter bearing a diacritic (or a distinct Latin letter such as æ, ß, þ)
-// to its plain ASCII equivalent, preserving case.
+// asciiFold maps a Latin letter bearing a diacritic (or a distinct Latin letter such as æ, ß, þ) to its plain ASCII
+// equivalent, preserving case.
 //
 // It is the data that supports [Ascii] / [ToASCII].
 //
 // Scope: European Latin scripts (Latin-1 Supplement, Latin Extended-A, a few Extended-B).
 //
-// This is diacritic *folding* — strip the accent, keep the base letter (ü→u, not the German ü→ue transliteration).
+// This is diacritic *folding* — strip the accent, keep the base letter (ü→u, not the German ü→ue
+// transliteration).
 //
 // Distinct letters that have no single-rune ASCII base fold to their conventional digraph (æ→ae, œ→oe, ß→ss,
 // þ→th, ð→d).
@@ -273,8 +280,8 @@ var asciiFold = map[rune]string{
 
 // defaultSymbolWords maps a symbol rune to the word it verbalizes to (e.g. "@" => "at", "!" => "bang").
 //
-// This is the default data for the symbol verbalization policy: when a target chooses to *verbalize* a
-// symbol rather than drop it, this table supplies the word.
+// This is the default data for the symbol verbalization policy: when a target chooses to *verbalize* a symbol rather
+// than drop it, this table supplies the word.
 // It is deliberately narrow — only symbols that read meaningfully as a word.
 //
 // Explicitly NOT included (handled elsewhere, not by verbalization):

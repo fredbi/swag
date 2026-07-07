@@ -6,8 +6,8 @@ import "sort"
 //
 // e.g. 'α' -> "alpha", '😀' -> "grinning face", and whether r is covered.
 //
-// Covered runes exclude everything the mangler already handles (ASCII, Latin+diacritics, digits)
-// or elides (combining marks, controls, separators, CJK, Hangul).
+// Covered runes exclude everything the mangler already handles (ASCII, Latin+diacritics, digits) or elides (combining
+// marks, controls, separators, CJK, Hangul).
 //
 // Callers re-segment the result (following case breaks).
 //
@@ -35,8 +35,8 @@ func Word(r rune) (string, bool) {
 	return wordBlob[offset18(id):offset18(id+1)], true
 }
 
-// offset18 reconstructs the 18-bit blob offset for word id from the uint16 low array and the
-// 2-bit high sidecar (packed 4 entries per byte).
+// offset18 reconstructs the 18-bit blob offset for word id from the uint16 low array and the 2-bit high sidecar (packed
+// 4 entries per byte).
 func offset18(id uint16) uint32 {
 	const (
 		sidecarMask = 3

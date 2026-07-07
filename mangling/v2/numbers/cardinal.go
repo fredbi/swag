@@ -22,9 +22,11 @@ var (
 	cardinalScales = []string{"", "thousand", "million", "billion", "trillion", "quadrillion", "quintillion"}
 )
 
-// wordList streams space-separated words into a [strings.Builder]: the first word is written flush, each
-// subsequent word is preceded by a single space. This replaces the old "collect []string then strings.Join"
-// pattern (which allocated a slice per number and again per 3-digit group) with a single shared buffer.
+// wordList streams space-separated words into a [strings.Builder]: the first word is written flush, each subsequent
+// word is preceded by a single space.
+//
+// This replaces the old "collect []string then strings.Join" pattern (which allocated a slice per number and again per
+// 3-digit group) with a single shared buffer.
 type wordList struct {
 	b       *buf
 	written bool
@@ -112,9 +114,8 @@ func writeCardinal(b *buf, n int64, o numberOptions) {
 
 // writeHybridCardinal renders n > maxFullCardinal compactly, streamed into b.
 //
-// The most-significant group is spelled out (so the result never starts with a digit and stays short),
-// while lower groups are kept as digits with a plural scale word,
-// e.g. 1234567 -> "one million 234 thousands and 567".
+// The most-significant group is spelled out (so the result never starts with a digit and stays short), while lower
+// groups are kept as digits with a plural scale word, e.g. 1234567 -> "one million 234 thousands and 567".
 func writeHybridCardinal(b *buf, n int64, o numberOptions) {
 	var buf [maxGroups]int64
 	groups := groupsOf1000Into(buf[:0], n)
@@ -150,8 +151,10 @@ func writeHybridCardinal(b *buf, n int64, o numberOptions) {
 // maxGroups is the number of 3-digit groups spanning the int64 range (19 digits -> 7 groups).
 const maxGroups = 7
 
-// groupsOf1000Into fills dst (backed by a caller stack array of cap >= maxGroups) with the 3-digit groups
-// of a positive integer, most significant first, and returns the filled slice. No heap allocation.
+// groupsOf1000Into fills dst (backed by a caller stack array of cap >= maxGroups) with the 3-digit groups of a positive
+// integer, most significant first, and returns the filled slice.
+//
+// No heap allocation.
 func groupsOf1000Into(dst []int64, n int64) []int64 {
 	const thousandBase = 1000
 	start := len(dst)

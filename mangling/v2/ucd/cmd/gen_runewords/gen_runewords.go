@@ -1,21 +1,21 @@
-// Command gen_runewords builds the compact rune -> word table (default tables.go) from the UCD
-// DerivedName.txt and emoji-data.txt extracts.
+// Command gen_runewords builds the compact rune -> word table (default tables.go) from the UCD DerivedName.txt and
+// emoji-data.txt extracts.
 //
-// Pipeline (see DESIGN_v2.md §4.7.1):
+// Pipeline:
 //  1. exclude runes already handled elsewhere (ASCII, Latin+diacritics, digits) or elided
 //     (combining marks, controls/format, separators/modifiers);
 //  2. exclude runes we drop during asciify (CJK Han, Hangul syllables — algorithmic, no useful word);
 //  3. extract a lowercase "distinctive remainder" from the formal name (strip taxonomy);
-//  4. emit an interned word blob + interval-encoded rune keys (maximal runs) + 18-bit
-//     split offsets (uint16 low + 2-bit high sidecar). See DESIGN_v2.md §12.
+//  4. emit an interned word blob + interval-encoded rune keys (maximal runs of consecutive codepoints) +
+//     18-bit split offsets (uint16 low array + a 2-bit high sidecar).
 //
 // Usage:
 //
 //	go run github.com/go-openapi/swag/mangling/v2/ucd/cmd/gen_runewords [package [outfile [ucd-dir]]]
 //
-// package and outfile default to "runewords" and "tables.go"; ucd-dir defaults to the versioned UCD data
-// directory resolved from the repo git root (see ucd/internal/locate). Normally invoked via go generate
-// from the runewords package:
+// package and outfile default to "runewords" and "tables.go"; ucd-dir defaults to the versioned UCD data directory
+// resolved from the repo git root (see ucd/internal/locate).
+// Normally invoked via go generate from the runewords package:
 //
 //	//go:generate go run ../ucd/cmd/gen_runewords runewords tables.go
 package main
@@ -45,8 +45,9 @@ const (
 
 type rrange struct{ lo, hi rune }
 
-// pictRanges holds the Extended_Pictographic runes (loaded from emoji-data.txt). They are
-// protected from block elision so real emoji survive even inside mixed decorative blocks.
+// pictRanges holds the Extended_Pictographic runes (loaded from emoji-data.txt).
+//
+// They are protected from block elision so real emoji survive even inside mixed decorative blocks.
 var pictRanges []rrange
 
 func main() {
@@ -243,7 +244,8 @@ type stats struct {
 	unsummExamp []string
 }
 
-// ─── classification ────────────────────────────────────────────────────────
+// ─── classification
+// ────────────────────────────────────────────────────────.
 
 func classify(r rune) string {
 	switch {
@@ -273,11 +275,13 @@ func classify(r rune) string {
 	return ""
 }
 
-// elideBlocks are decorative or technical symbol ranges whose names ("BOX DRAWINGS LIGHT
-// HORIZONTAL", "BRAILLE PATTERN DOTS-…") are noise as identifiers. Kept explicit and tunable.
-// Real emoji inside these ranges are protected by the Extended_Pictographic gate (classify), so
-// mixed blocks (Misc Technical/Symbols, Dingbats) can be listed here: only their non-emoji members
-// are elided (❤ ✈ ⌚ ☀ ☯ survive; ✓ ⌂ ☈ ─ ⠁ do not).
+// elideBlocks are decorative or technical symbol ranges whose names ("BOX DRAWINGS LIGHT HORIZONTAL", "BRAILLE PATTERN
+// DOTS-…") are noise as identifiers.
+//
+// Kept explicit and tunable.
+// Real emoji inside these ranges are protected by the Extended_Pictographic gate (classify), so mixed blocks (Misc
+// Technical/Symbols, Dingbats) can be listed here: only their non-emoji members are elided (❤ ✈ ⌚ ☀ ☯
+// survive; ✓ ⌂ ☈ ─ ⠁ do not).
 var elideBlocks = []struct{ lo, hi rune }{
 	{0x2300, 0x23FF},   // Miscellaneous Technical (⌚⌛⏰ kept via gate)
 	{0x2400, 0x243F},   // Control Pictures
@@ -320,11 +324,10 @@ var (
 )
 
 // summarize returns the lowercase distinctive remainder and whether a taxonomy rule matched.
-// The remainder keeps internal spaces/hyphens — the mangler re-segments and re-cases it.
-// skipwords are dropped when collapsing a 3+ word phrase to its distinctive token:
-// grammatical glue plus the common Unicode symbol-name qualifiers (colors, weights,
-// orientations) that precede the real noun — so HEAVY BLACK HEART reduces to "heart",
-// not "heavy".
+//
+// The remainder keeps internal spaces/hyphens — the mangler re-segments and re-cases it. skipwords are dropped when
+// collapsing a 3+ word phrase to its distinctive token: grammatical glue plus the common Unicode symbol-name qualifiers
+// (colors, weights, orientations) that precede the real noun — so HEAVY BLACK HEART reduces to "heart", not "heavy".
 var skipwords = map[string]struct{}{
 	// grammatical
 	"of": {}, "the": {}, "and": {}, "for": {}, "with": {}, "in": {}, "to": {},
@@ -340,10 +343,9 @@ var skipwords = map[string]struct{}{
 	"open": {}, "closed": {}, "solid": {}, "circled": {}, "squared": {}, "negative": {},
 }
 
-// collapse enforces "one readable word is enough": remainders of <=2 words are kept whole
-// (GrinningFace, ThumbsUp, KoKai), but 3+ word phrases reduce to their single most-distinctive
-// token — the longest word that is neither glue nor a qualifier (heavy black heart -> heart;
-// place of sajdah -> sajdah; fehu feoh fe f -> fehu).
+// collapse enforces "one readable word is enough": remainders of <=2 words are kept whole (GrinningFace, ThumbsUp,
+// KoKai), but 3+ word phrases reduce to their single most-distinctive token — the longest word that is neither glue
+// nor a qualifier (heavy black heart -> heart; place of sajdah -> sajdah; fehu feoh fe f -> fehu).
 func collapse(s string) string {
 	f := strings.Fields(s)
 	if len(f) <= 2 {
@@ -378,16 +380,16 @@ func summarize(name string) (string, bool) {
 	if m := reSign.FindStringSubmatch(name); m != nil {
 		return norm(m[1]), true
 	}
-	// no taxonomy rule matched: strip a leading run of script tokens ("ARABIC PLACE OF
-	// SAJDAH" -> "place of sajdah"), then keep the remainder as a failsafe.
+	// no taxonomy rule matched: strip a leading run of script tokens ("ARABIC PLACE OF SAJDAH" -> "place of sajdah"), then
+	// keep the remainder as a failsafe.
 	if stripped, ok := stripScriptPrefix(name); ok {
 		return norm(stripped), true
 	}
 	return norm(name), false
 }
 
-// scriptTokens is the set of uppercase, single-word script-name fragments derived from
-// unicode.Scripts (e.g. "Old_Persian" -> {OLD, PERSIAN}) — used to peel taxonomy prefixes.
+// scriptTokens is the set of uppercase, single-word script-name fragments derived from unicode.Scripts (e.g.
+// "Old_Persian" -> {OLD, PERSIAN}) — used to peel taxonomy prefixes.
 var scriptTokens = buildScriptTokens()
 
 func buildScriptTokens() map[string]struct{} {
@@ -419,11 +421,14 @@ func stripScriptPrefix(name string) (string, bool) {
 	return strings.Join(words[i:], " "), true
 }
 
-// ─── emit ────────────────────────────────────────────────────────────────────
+// ─── emit
+// ────────────────────────────────────────────────────────────────────.
 
-// offsetBits is the width of a blob offset. 17 bits suffice for the current blob (~103 KiB);
-// 18 gives Unicode-17 / Go-1.27 headroom (256 KiB ceiling) and, crucially, addresses the whole
-// blob so no banking is needed. Stored as uint16 low + 2-bit high sidecar.
+// offsetBits is the width of a blob offset.
+//
+// 17 bits suffice for the current blob (~103 KiB); 18 gives Unicode-17 / Go-1.27 headroom (256 KiB ceiling) and,
+// crucially, addresses the whole blob so no banking is needed.
+// Stored as uint16 low + 2-bit high sidecar.
 const offsetBits = 18
 
 func emit(source, packageName, outFile string, entries []kept, idOf map[string]int, order []string, blob string, offsets []int) error {
@@ -449,8 +454,8 @@ func emit(source, packageName, outFile string, entries []kept, idOf map[string]i
 	fmt.Fprintf(&b, "// wordBlob concatenates every distinct word (%d of them).\n", len(order))
 	fmt.Fprintf(&b, "const wordBlob = %q\n\n", blob)
 
-	// Offsets: 18-bit, split into a uint16 low array + a 2-bit high sidecar (4 entries per byte).
-	// off(id) = uint32(wordOffHi[id>>2]>>(2*(id&3))&3)<<16 | uint32(wordOffLo[id]).
+	// Offsets: 18-bit, split into a uint16 low array + a 2-bit high sidecar (4 entries per byte). off(id) =
+	// uint32(wordOffHi[id>>2]>>(2*(id&3))&3)<<16 | uint32(wordOffLo[id]).
 	fmt.Fprint(&b, "// wordOffLo[id]:wordOffLo[id+1] (with high bits from wordOffHi) slices wordBlob for word id.\n")
 	fmt.Fprint(&b, "var wordOffLo = []uint16{")
 	for i, off := range offsets {

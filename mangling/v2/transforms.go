@@ -8,19 +8,21 @@ import (
 	"github.com/go-openapi/swag/mangling/v2/runewords"
 )
 
-// numeralVerbalizer spells a numeral rune to words in the asciify pass (½ → "one half"). A default,
-// immutable NumberMangler is enough — the rune-aware scanner turns string(r) into its value's words.
+// numeralVerbalizer spells a numeral rune to words in the asciify pass (½ → "one half").
+//
+// A default, immutable NumberMangler is enough — the rune-aware scanner turns string(r) into its value's words.
 var numeralVerbalizer = numbers.MakeNumberMangler()
 
-// TargetTransform is a compiled, immutable recipe describing how to render a segmented token stream:
-// casing × separator × affix × stages × repair.
+// TargetTransform is a compiled, immutable recipe describing how to render a segmented token stream: casing ×
+// separator × affix × stages × repair.
 //
 // All fields are unexported; build custom targets with [MakeTargetTransform].
 //
 // The mangler supplies the data (dictionaries) that stages bind to at run time, so a target degrades gracefully across
 // manglers.
 //
-// Fields are unexported; the assembly recipe is casing × separator × symbol-policy (affix, stages and repair land later).
+// Fields are unexported; the assembly recipe is casing × separator × symbol-policy (affix, stages and repair land
+// later).
 type TargetTransform struct {
 	firstCasing  wordCasing   // casing of the first emitted word (camelCase lowercases it)
 	restCasing   wordCasing   // casing of subsequent words
@@ -52,8 +54,8 @@ func WithSeparator(sep string) TargetOption {
 
 // Preset targets.
 //
-// These return a fresh immutable value.
-// (they are functions, not variables, so a caller can never corrupt a shared preset).
+// These return a fresh immutable value. (they are functions, not variables, so a caller can never corrupt a shared
+// preset).
 // Named after the form they produce.
 
 // TargetTitle...
@@ -87,9 +89,9 @@ func TargetAllCaps() TargetTransform {
 
 // expandRuneNames is the rune-name tier of asciification.
 //
-// Every non-ASCII rune that diacritic folding won't handle (non-Latin letters, symbols, single-codepoint emoji)
-// is replaced by its space-delimited phonetic name (π → " pi ", 😀 → " grinning face ")
-// so it re-segments into words and re-cases per word (GrinningFace, not "Grinning face").
+// Every non-ASCII rune that diacritic folding won't handle (non-Latin letters, symbols, single-codepoint emoji) is
+// replaced by its space-delimited phonetic name (π → " pi ", 😀 → " grinning face ") so it re-segments into
+// words and re-cases per word (GrinningFace, not "Grinning face").
 //
 // Runes the table elides (CJK ideographs, decorative symbols) are dropped.
 // Foldable diacritics and combining marks pass through untouched for the token-level fold stage.
@@ -109,8 +111,8 @@ func expandRuneNames(str string) string {
 		return str // pure ASCII, or only diacritics/combining marks the fold stage handles
 	}
 
-	// runes that expand to a word or number make the result longer than the input; a small margin
-	// avoids the first reallocation for the common case of a few substitutions.
+	// runes that expand to a word or number make the result longer than the input; a small margin avoids the first
+	// reallocation for the common case of a few substitutions.
 	const expansionMargin = 16
 
 	var b strings.Builder

@@ -156,15 +156,18 @@ func WithGoNumberOptions(opts ...numbers.NumberOption) GoOption {
 	}
 }
 
-// WithGoIdentFallback sets the word substituted when an identifier reduces to nothing — i.e. the input is
-// empty or made up entirely of separators / elided runes (e.g. "___", "@#$" with symbols dropped, or CJK
-// under ASCII folding). Without it the Go identifier producers would emit an (invalid) empty string.
+// WithGoIdentFallback sets the word substituted when an identifier reduces to nothing — i.e. the input is empty or
+// made up entirely of separators / elided runes (e.g. "___", "@#$" with symbols dropped, or CJK under ASCII folding).
 //
-// The word is itself run through the mangler at the producing target, so any input is made valid and cased
-// correctly: [GoMangler.IdentExported]/[GoMangler.ConstName] → "Empty", [GoMangler.IdentUnexported] → "empty",
-// [GoMangler.File] → "empty". If the provided word *also* reduces to nothing, the built-in default "empty" is
-// used, so a valid identifier is always produced. Applies to the [GoMangler] only; the base [Mangler] may
-// still return "".
+// Without it the Go identifier producers would emit an (invalid) empty string.
+//
+// The word is itself run through the mangler at the producing target, so any input is made valid and cased correctly:
+// [GoMangler.IdentExported]/[GoMangler.ConstName] → "Empty", [GoMangler.IdentUnexported] → "empty",
+// [GoMangler.File] → "empty".
+//
+// If the provided word *also* reduces to nothing, the built-in default "empty" is used, so a valid identifier is always
+// produced.
+// Applies to the [GoMangler] only; the base [Mangler] may still return "".
 func WithGoIdentFallback(word string) GoOption {
 	return func(o goOptions) goOptions {
 		o.identFallback = word
@@ -173,9 +176,10 @@ func WithGoIdentFallback(word string) GoOption {
 	}
 }
 
-// WithGoReservedSuffix sets the suffix appended to an unexported identifier that collides with a Go keyword
-// or builtin (default "Var": "type" → "typeVar", "append" → "appendVar"). A house-style knob for generators
-// that prefer a different convention.
+// WithGoReservedSuffix sets the suffix appended to an unexported identifier that collides with a Go keyword or builtin
+// (default "Var": "type" → "typeVar", "append" → "appendVar").
+//
+// A house-style knob for generators that prefer a different convention.
 func WithGoReservedSuffix(suffix string) GoOption {
 	return func(o goOptions) goOptions {
 		o.reservedSuffix = suffix
@@ -184,9 +188,10 @@ func WithGoReservedSuffix(suffix string) GoOption {
 	}
 }
 
-// WithGoFileRepairSuffix sets the suffix appended to a file stem that would otherwise be build-constrained by
-// a GOOS/GOARCH/`_test` suffix (default "swagger": "config_linux" → "config_linux_swagger"). The go-swagger
-// default is not appropriate for every generator, so it is configurable.
+// WithGoFileRepairSuffix sets the suffix appended to a file stem that would otherwise be build-constrained by a
+// GOOS/GOARCH/`_test` suffix (default "swagger": "config_linux" → "config_linux_swagger").
+//
+// The go-swagger default is not appropriate for every generator, so it is configurable.
 func WithGoFileRepairSuffix(suffix string) GoOption {
 	return func(o goOptions) goOptions {
 		o.fileRepairSuffix = suffix
@@ -195,9 +200,10 @@ func WithGoFileRepairSuffix(suffix string) GoOption {
 	}
 }
 
-// WithGoInitialisms adds entries on top of the initialism list (the defaults, or the list set by
-// [UseGoInitialisms]). Each string is the canonical casing to emit — e.g. "OAI", "gRPC"; matching is
-// case-insensitive. Repeated calls accumulate.
+// WithGoInitialisms adds entries on top of the initialism list (the defaults, or the list set by [UseGoInitialisms]).
+//
+// Each string is the canonical casing to emit — e.g. "OAI", "gRPC"; matching is case-insensitive.
+// Repeated calls accumulate.
 func WithGoInitialisms(extra ...string) GoOption {
 	return func(o goOptions) goOptions {
 		o.extraInitialisms = append(o.extraInitialisms, extra...)
@@ -206,8 +212,10 @@ func WithGoInitialisms(extra ...string) GoOption {
 	}
 }
 
-// UseGoInitialisms replaces the default initialisms with the given list ([WithGoInitialisms] entries are
-// still appended on top). Each string is the canonical casing to emit; matching is case-insensitive.
+// UseGoInitialisms replaces the default initialisms with the given list ([WithGoInitialisms] entries are still appended
+// on top).
+//
+// Each string is the canonical casing to emit; matching is case-insensitive.
 // Called with no arguments it is a no-op (the defaults stay).
 func UseGoInitialisms(list ...string) GoOption {
 	return func(o goOptions) goOptions {

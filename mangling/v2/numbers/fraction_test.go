@@ -29,7 +29,7 @@ func TestSpellDecimal(t *testing.T) {
 func TestNumberWords(t *testing.T) {
 	t.Parallel()
 
-	// numberWords is the internal value verbalizer (the exported generic was removed for 1.0, §13)
+	// numberWords is the internal value verbalizer (there is no exported value helper)
 	assert.EqualT(t, "twelve", numberWords(12, numberOptions{}))
 	assert.EqualT(t, "three hundred", numberWords(300, numberOptions{}))
 	assert.EqualT(t, "one quarter", numberWords(0.25, numberOptions{}))

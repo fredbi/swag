@@ -7,8 +7,8 @@ import (
 	"github.com/go-openapi/testify/v2/assert"
 )
 
-// TestNumberWordsOverflow covers the writeSpellDecimal fallback: an integer too large for int64 is
-// spelled digit by digit (so it is still verbalized and never leaves a leading digit).
+// TestNumberWordsOverflow covers the writeSpellDecimal fallback: an integer too large for int64 is spelled digit by
+// digit (so it is still verbalized and never leaves a leading digit).
 func TestNumberWordsOverflow(t *testing.T) {
 	t.Parallel()
 
@@ -22,8 +22,8 @@ func TestNumberWordsOverflow(t *testing.T) {
 	assert.EqualT(t, "minus one"+strings.Repeat(" zero", 19), neg)
 }
 
-// TestWithNumberDetectPrecision covers the tolerance knob: a tighter precision stops a loose decimal
-// from matching a simple fraction.
+// TestWithNumberDetectPrecision covers the tolerance knob: a tighter precision stops a loose decimal from matching a
+// simple fraction.
 func TestWithNumberDetectPrecision(t *testing.T) {
 	t.Parallel()
 

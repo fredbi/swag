@@ -39,9 +39,12 @@ func benchmarkMangle(fn func(string) string, samples []string) func(*testing.B) 
 	}
 }
 
-// benchmarkSamples is a representative mix of codegen inputs: overwhelmingly ASCII (the common case),
-// with a single CJK entry to still exercise the rune-name elision path without letting the slow path
-// dominate the numbers. The ASCII core mirrors the v1 BenchmarkToXXXName inputs for comparability.
+// benchmarkSamples is a representative mix of codegen inputs.
+//
+// Overwhelmingly ASCII (the common case), with a single CJK entry to still exercise the rune-name elision path
+// without letting the slow path dominate the numbers.
+//
+// The ASCII core mirrors the v1 BenchmarkToXXXName inputs for comparability.
 var benchmarkSamples = []string{
 	"sample text",
 	"sample-text",
@@ -57,8 +60,8 @@ var benchmarkSamples = []string{
 	"日本語findThingById", // one non-Latin entry: exercises the rune-name path (CJK elided)
 }
 
-// constNameSamples are value-like inputs (enum members): numbers, fractions, signs, decimals, a
-// path-ish literal and a diacritic — exercising ConstName's number-verbalization and folding paths.
+// constNameSamples are value-like inputs (enum members): numbers, fractions, signs, decimals, a path-ish literal and a
+// diacritic — exercising ConstName's number-verbalization and folding paths.
 var constNameSamples = []string{
 	"active",
 	"read only",

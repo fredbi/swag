@@ -9,7 +9,7 @@ import (
 	"github.com/go-openapi/swag/mangling/v2/numbers"
 )
 
-// GoMangler is a name mangler specialized in producing strings that abide by naming conventions used by go.
+// GoMangler turns strings into identifiers that abide by go naming conventions.
 type GoMangler struct {
 	Mangler
 	goOptions
@@ -42,9 +42,10 @@ func NewGoMangler(opts ...GoOption) *GoMangler {
 	return &g
 }
 
-// defaultIdentFallback is the built-in word used when an identifier reduces to nothing and the
-// configured [WithGoIdentFallback] word (if any) also reduces to nothing. It must be a clean word that
-// always survives mangling.
+// defaultIdentFallback is the built-in word used when an identifier reduces to nothing and the configured
+// [WithGoIdentFallback] word (if any) also reduces to nothing.
+//
+// It must be a clean word that always survives mangling.
 const defaultIdentFallback = "empty"
 
 // IdentUnexported produces a valid unexported go variable identifier from a string, possibly containing multiple words.
@@ -152,8 +153,8 @@ func (g GoMangler) File(input string) string {
 //
 //	ConstName("0.25") == "OneQuarter"   ConstName("300") == "ThreeHundred"   ConstName("read only") == "ReadOnly"
 func (g GoMangler) ConstName(value string) string {
-	// Value-policy options (symbol / keep-digits / rune-name) are deferred to post-1.0; a variadic can be
-	// added back without breaking callers (DESIGN_v2.md §13).
+	// Value-policy options (symbol / keep-digits / rune-name) are deferred; a variadic can be added back later without
+	// breaking callers.
 	return g.IdentExported(g.n.NumberWords(value))
 }
 
@@ -169,12 +170,12 @@ func (g GoMangler) repairReserved(id string) string {
 	return id
 }
 
-// orFallback guarantees a non-empty identifier: it returns id when non-empty, otherwise the configured
-// fallback word mangled at the same target (so it is valid and cased to match — "Empty"/"empty"/snake),
-// and finally the built-in [defaultIdentFallback] if even the configured word reduces to nothing.
+// orFallback guarantees a non-empty identifier: it returns id when non-empty, otherwise the configured fallback word
+// mangled at the same target (so it is valid and cased to match — "Empty"/"empty"/snake), and finally the built-in
+// [defaultIdentFallback] if even the configured word reduces to nothing.
 //
-// It is applied by the Go identifier producers (idents, const, file), never inside [GoMangler.identifier]
-// itself — Package/Module intentionally allow an empty (dir-only) result.
+// It is applied by the Go identifier producers (idents, const, file), never inside [GoMangler.identifier] itself —
+// Package/Module intentionally allow an empty (dir-only) result.
 func (g GoMangler) orFallback(id string, target TargetTransform) string {
 	if id != "" {
 		return id
@@ -186,8 +187,8 @@ func (g GoMangler) orFallback(id string, target TargetTransform) string {
 	return g.identifier(defaultIdentFallback, target)
 }
 
-// identifier runs the Go ident pipeline: rune-name expansion → segment → ASCII fold → initialism
-// overlay → assemble.
+// identifier runs the Go ident pipeline: rune-name expansion → segment → ASCII fold → initialism overlay →
+// assemble.
 func (g GoMangler) identifier(str string, target TargetTransform) string {
 	str = g.asciifyInput(str)
 
@@ -313,7 +314,8 @@ func (g GoMangler) goIdent(str string, target TargetTransform) string {
 // numbers are left as-is ("variable 12" is unchanged, becoming "Variable12").
 //
 // It recognizes every kind of leading number: ASCII digit runs, non-ASCII decimal digits (Nd — Arabic-Indic ٧,
-// Devanagari, …), and No/Nl numeral runes (½, Ⅶ). Non-ASCII digits are converted to ASCII before verbalizing.
+// Devanagari, …), and No/Nl numeral runes (½, Ⅶ).
+// Non-ASCII digits are converted to ASCII before verbalizing.
 //
 // Used by the Ident* methods (ConstName verbalizes every number).
 func (g GoMangler) verbalizeLeadingNumber(str string) string {
@@ -376,8 +378,8 @@ func (g GoMangler) verbalizeLeadingNumber(str string) string {
 
 	default:
 		if _, ok := numbers.RuneNumber(r0); ok {
-			// A leading numeral *rune* (½, Ⅶ, ①) with folding off: verbalize it in place so the ident starts
-			// with a letter (folding on already spelled it out upstream, in expandRuneNames).
+			// A leading numeral *rune* (½, Ⅶ, ①) with folding off: verbalize it in place so the ident starts with a letter
+			// (folding on already spelled it out upstream, in expandRuneNames).
 			w := start + utf8.RuneLen(r0)
 
 			return str[:start] + g.n.NumberWords(str[start:w]) + " " + str[w:]
@@ -407,8 +409,8 @@ func isNonASCIIDigit(r rune) bool {
 //   - 7 → "7",
 //   - 1/7 (0.142857…) → "0.143"
 //
-// Used by the asciify tier, which renders numerals plainly ("½" → "0.5"),
-// unlike the numbers engine which spells them ("½" → "one half").
+// Used by the asciify tier, which renders numerals plainly ("½" → "0.5"), unlike the numbers engine which spells
+// them ("½" → "one half").
 func formatNumeral(v float64) string {
 	const decimals = 3
 	s := strconv.FormatFloat(v, 'f', decimals, 64)
@@ -431,8 +433,8 @@ func isASCII(s string) bool {
 	return true
 }
 
-// reservedPackageNames are names the go toolchain treats specially (the main package,
-// and the vendor/internal/testdata directories).
+// reservedPackageNames are names the go toolchain treats specially (the main package, and the vendor/internal/testdata
+// directories).
 //
 // A package short name that matches one gets "pkg" appended.
 var reservedPackageNames = map[string]struct{}{
@@ -442,8 +444,8 @@ var reservedPackageNames = map[string]struct{}{
 	"testdata": {},
 }
 
-// reservedWindowsNames are device names Windows forbids as a file/directory name (case-insensitively),
-// which would break a module that maps to a directory on a Windows filesystem.
+// reservedWindowsNames are device names Windows forbids as a file/directory name (case-insensitively), which would
+// break a module that maps to a directory on a Windows filesystem.
 //
 // Checked lowercased (the kebab is already lower-case).
 // Additional to the package repairs, for modules only.

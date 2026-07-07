@@ -2,9 +2,9 @@ package numbers
 
 // NumberMangler produces written numerals (cardinals, ordinals, roman) and digit-group aware number reconstruction.
 //
-// It is a standalone engine: unlike the name-oriented manglers it does its own number-aware scanning
-// (it must see decimal points and digit-group separators that the general tokenizer elides),
-// so it does not depend on a separate tokenizer.
+// It is a standalone engine: unlike the name-oriented manglers it does its own number-aware scanning (it must see
+// decimal points and digit-group separators that the general tokenizer elides), so it does not depend on a separate
+// tokenizer.
 type NumberMangler struct {
 	numberOptions
 }
@@ -26,8 +26,8 @@ func NewNumberMangler(opts ...NumberOption) *NumberMangler {
 
 // NumberWords rewrites every number found in a string as english words.
 //
-// It leaves the surrounding text untouched,
-// e.g. "10 11" => "ten eleven", "level 0.25 here" => "level one quarter here".
+// It leaves the surrounding text untouched, e.g. "10 11" => "ten eleven", "level 0.25 here" => "level one quarter
+// here".
 //
 // Multiple numbers are handled independently.
 //
@@ -41,8 +41,8 @@ func NewNumberMangler(opts ...NumberOption) *NumberMangler {
 //   - negatives are prefixed with "minus".
 //
 // Thousands separators are reconstructed: within a number, a space, comma or underscore followed by exactly three
-// digits joins the group, so "1 234", "1,234" and "1_234" all become "one thousand two hundred and thirty four",
-// while "1 2" stays two numbers ("one two") and "1;234" is not joined (";" is not a separator).
+// digits joins the group, so "1 234", "1,234" and "1_234" all become "one thousand two hundred and thirty four", while
+// "1 2" stays two numbers ("one two") and "1;234" is not joined (";" is not a separator).
 //
 // Registered special numbers ([WithSpecialNumbers]) are matched (within tolerance) ahead of everything else, so
 // "3.1415" => "pi".
@@ -62,18 +62,21 @@ func (m NumberMangler) NumberWords(in string) string {
 	return unsafeStr(w.b)
 }
 
-// RuneNumber returns the numeric value of a Unicode numeral rune (categories No and Nl — e.g. '½' → 0.5,
-// 'Ⅶ' → 7, '②' → 2) and whether r is such a numeral. Decimal digits (Nd) and CJK ideographic numbers
-// (Lo) are deliberately excluded. It lets a numeral rune verbalize through this engine ('½' → "one half")
-// and lets the asciify tier render it as a plain number ('½' → "0.5"). Table in numerals.go.
+// RuneNumber returns the numeric value of a Unicode numeral rune (categories No and Nl — e.g. '½' → 0.5, 'Ⅶ' →
+// 7, '②' → 2) and whether r is such a numeral.
+//
+// Decimal digits (Nd) and CJK ideographic numbers (Lo) are deliberately excluded.
+// It lets a numeral rune verbalize through this engine ('½' → "one half") and lets the asciify tier render it as a
+// plain number ('½' → "0.5").
+// Table in numerals.go.
 func RuneNumber(r rune) (float64, bool) {
 	v, ok := runeNumericValue[r]
 
 	return v, ok
 }
 
-// AppendWords appends the english-words form of in (numbers verbalized, surrounding text verbatim) to
-// dst and returns the extended slice.
+// AppendWords appends the english-words form of in (numbers verbalized, surrounding text verbatim) to dst and returns
+// the extended slice.
 //
 // This is the string-free sibling of [NumberMangler.NumberWords].
 //
@@ -95,7 +98,7 @@ func (m NumberMangler) AppendWords(dst []byte, in string) []byte {
 	return w.b
 }
 
-// Note: the standalone value verbalizers NumberWords[T Numerical] / NumberRoman[T Integer] and their
-// numeric constraints were removed from the public API for 1.0 (DESIGN_v2.md §13). The engine is reached
-// through NumberMangler (text) and RuneNumber (numeral runes); the internal numberWords/roman remain.
-// Re-add typed value helpers when a consumer needs them — adding exported functions is non-breaking.
+// The engine is reached through NumberMangler (which verbalizes numbers found in text) and RuneNumber (which resolves a
+// numeral rune to its value).
+// The internal numberWords/roman helpers verbalize a single value; typed public value helpers can be added later if a
+// consumer needs them, without breaking callers.

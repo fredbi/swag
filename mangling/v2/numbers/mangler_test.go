@@ -53,8 +53,8 @@ func TestNumberManglerNumberWords(t *testing.T) {
 	})
 }
 
-// Not parallel: the allocation-free subtest uses testing.AllocsPerRun, which reads process-wide
-// memory stats and would be perturbed by concurrent tests.
+// Not parallel: the allocation-free subtest uses testing.AllocsPerRun, which reads process-wide memory stats and would
+// be perturbed by concurrent tests.
 func TestNumberManglerAppendWords(t *testing.T) {
 	m := MakeNumberMangler()
 

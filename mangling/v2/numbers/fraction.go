@@ -6,8 +6,8 @@ import (
 	"strings"
 )
 
-// fractionBases are the recognized simple fractions,
-// in descending value so the largest base (the simplest fraction) is matched first:
+// fractionBases are the recognized simple fractions, in descending value so the largest base (the simplest fraction) is
+// matched first:
 //
 // 0.5 → "one half" rather than "two quarters".
 var fractionBases = []struct {
@@ -37,8 +37,8 @@ func (o numberOptions) tolerance() float64 {
 	return math.Pow(powBase, -float64(p))
 }
 
-// fraction recognizes x ∈ (-1, 1) as one of the [fractionBases]:
-// if x ≈ n·baseᵢ within tolerance, it renders "{cardinal n} {base name}" (pluralized when n > 1).
+// fraction recognizes x ∈ (-1, 1) as one of the [fractionBases]: if x ≈ n·baseᵢ within tolerance, it renders
+// "{cardinal n} {base name}" (pluralized when n > 1).
 //
 // Returns ("", false) if none matches.
 //
@@ -89,8 +89,8 @@ func writeFraction(b *buf, x float64, o numberOptions) bool {
 
 // spellDecimal renders a numeric string as words.
 //
-// A value in (-1, 1) that matches a simple fraction is spelled as that fraction;
-// otherwise a decimal is spelled digit-by-digit after "dot" ("0.31456" → "zero dot three one four five six").
+// A value in (-1, 1) that matches a simple fraction is spelled as that fraction; otherwise a decimal is spelled
+// digit-by-digit after "dot" ("0.31456" → "zero dot three one four five six").
 //
 // Integers go straight to [cardinal].
 func spellDecimal(s string, o numberOptions) string {
@@ -115,8 +115,8 @@ func writeSpellDecimal(b *buf, s string, o numberOptions) {
 			return
 		}
 
-		// Integer too large for int64: spell it out one word per digit so it is still fully verbalized —
-		// never left as raw digits, which would make an identifier start with a digit.
+		// Integer too large for int64: spell it out one word per digit so it is still fully verbalized — never left as raw
+		// digits, which would make an identifier start with a digit.
 		body := s
 		if rest, ok := strings.CutPrefix(body, "-"); ok {
 			_, _ = b.WriteString("minus ")
@@ -158,8 +158,8 @@ func writeSpellDecimal(b *buf, s string, o numberOptions) {
 	writeDigitWords(b, fracPart)
 }
 
-// numberWords renders a numeric value as words: cardinal for integral values,
-// fraction/decimal otherwise (the value is formatted to its shortest exact decimal string first).
+// numberWords renders a numeric value as words: cardinal for integral values, fraction/decimal otherwise (the value is
+// formatted to its shortest exact decimal string first).
 func numberWords(x float64, o numberOptions) string {
 	if x == math.Trunc(x) {
 		return cardinal(int64(x), o)
@@ -168,8 +168,8 @@ func numberWords(x float64, o numberOptions) string {
 	return spellDecimal(strconv.FormatFloat(x, 'f', -1, 64), o)
 }
 
-// writeNumberValue streams the english wording of a numeric value into b — the streaming form of
-// [numberWords], used to verbalize a Unicode numeral rune ('½' → "one half", 'Ⅶ' → "seven").
+// writeNumberValue streams the english wording of a numeric value into b — the streaming form of [numberWords], used
+// to verbalize a Unicode numeral rune ('½' → "one half", 'Ⅶ' → "seven").
 func writeNumberValue(b *buf, x float64, o numberOptions) {
 	if x == math.Trunc(x) {
 		writeCardinal(b, int64(x), o)

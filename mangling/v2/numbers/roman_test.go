@@ -11,7 +11,7 @@ import (
 func TestRoman(t *testing.T) {
 	t.Parallel()
 
-	// roman is the internal verbalizer (the exported NumberRoman generic was removed for 1.0, §13)
+	// roman is the internal verbalizer (there is no exported roman-numeral value helper)
 	for tc := range romanCases() {
 		assert.EqualTf(t, tc.out, roman(int64(tc.n)), "roman(%d)", tc.n)
 	}

@@ -6,17 +6,16 @@
 //   - Nd (decimal digits) — the mangler already handles those via a digit-value offset;
 //   - Lo (CJK ideographic numbers) — Han script, elided during asciification.
 //
-// The emitted map[rune]float64 feeds numbers.RuneNumber, so a Unicode numeral verbalizes through the
-// same engine as an ASCII number (½ -> "one half"), and the asciify tier can render it as a plain
-// number (½ -> "0.5"). See DESIGN_v2.md §4.7.2.
+// The emitted map[rune]float64 feeds numbers.RuneNumber, so a Unicode numeral verbalizes through the same engine as an
+// ASCII number (½ -> "one half"), and the asciify tier can render it as a plain number (½ -> "0.5").
 //
 // Usage:
 //
 //	go run github.com/go-openapi/swag/mangling/v2/ucd/cmd/gen_numerals [package [outfile [ucd-dir]]]
 //
-// package and outfile default to "numbers" and "numerals.go"; ucd-dir defaults to the versioned UCD data
-// directory resolved from the repo git root (see ucd/internal/locate). Normally invoked via go generate
-// from the numbers package:
+// package and outfile default to "numbers" and "numerals.go"; ucd-dir defaults to the versioned UCD data directory
+// resolved from the repo git root (see ucd/internal/locate).
+// Normally invoked via go generate from the numbers package:
 //
 //	//go:generate go run ../ucd/cmd/gen_numerals numbers numerals.go
 package main
@@ -116,8 +115,8 @@ func run(pkg, outFile, ucdLocation string) error {
 	return nil
 }
 
-// parse splits a data line into its ';'-separated fields (before the '#') and the general category
-// (first token of the trailing comment).
+// parse splits a data line into its ';'-separated fields (before the '#') and the general category (first token of the
+// trailing comment).
 func parse(line string) (fields []string, cat string, ok bool) {
 	body, comment, found := strings.Cut(line, "#")
 	if !found {

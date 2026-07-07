@@ -8,14 +8,16 @@ import (
 
 // scanInto writes in to w, verbalizing each numeric run and copying the rest verbatim.
 //
-// A numeric run is an optional leading sign (only at a word boundary, so "a-5" keeps the hyphen)
-// followed by digits with an optional single interior decimal point. Numeric runs are ASCII, so the
-// scan works on bytes — no []rune copy of the input — and each run is a direct substring of in (no
-// allocation, and no per-call closure). Thousands separators are stripped per run before spelling.
+// A numeric run is an optional leading sign (only at a word boundary, so "a-5" keeps the hyphen) followed by digits
+// with an optional single interior decimal point.
+// Numeric runs are ASCII, so the scan works on bytes — no []rune copy of the input — and each run is a direct
+// substring of in (no allocation, and no per-call closure).
 //
-// A single non-ASCII Unicode numeral rune ('½', 'Ⅶ', '②') verbalizes like an ASCII number; every other
-// rune is copied verbatim. The non-ASCII branch is reached only after the ASCII fast path, so pure-ASCII
-// input never pays for rune decoding.
+// Thousands separators are stripped per run before spelling.
+//
+// A single non-ASCII Unicode numeral rune ('½', 'Ⅶ', '②') verbalizes like an ASCII number; every other rune is
+// copied verbatim.
+// The non-ASCII branch is reached only after the ASCII fast path, so pure-ASCII input never pays for rune decoding.
 func scanInto(w *buf, in string, o numberOptions) {
 	for i := 0; i < len(in); {
 		if end, ok := numberRunAt(in, i); ok {
@@ -27,16 +29,16 @@ func scanInto(w *buf, in string, o numberOptions) {
 
 		c := in[i]
 		if c < utf8.RuneSelf {
-			// One byte of ASCII non-number text. A number run only starts on '-'/'+'/digit, so this byte
-			// is safe to copy directly.
+			// One byte of ASCII non-number text.
+			// A number run only starts on '-'/'+'/digit, so this byte is safe to copy directly.
 			_ = w.WriteByte(c)
 			i++
 
 			continue
 		}
 
-		// Non-ASCII rune: a Unicode numeral verbalizes in place (like an ASCII number run — no padding,
-		// so "½"->"one half"); anything else is copied verbatim.
+		// Non-ASCII rune: a Unicode numeral verbalizes in place (like an ASCII number run — no padding, so "½"->"one
+		// half"); anything else is copied verbatim.
 		r, size := utf8.DecodeRuneInString(in[i:])
 		if v, ok := RuneNumber(r); ok {
 			writeNumberValue(w, v, o)
@@ -47,10 +49,12 @@ func scanInto(w *buf, in string, o numberOptions) {
 	}
 }
 
-// mayHaveNumber reports whether s contains anything the verbalizer would rewrite: an ASCII digit or a
-// Unicode numeral rune. It lets [NumberMangler.NumberWords] / [NumberMangler.AppendWords] return the
-// input untouched (no allocation) for plain text — including accented text with no numerals. The ASCII
-// bytes are scanned directly; only non-ASCII runes are decoded and looked up.
+// mayHaveNumber reports whether s contains anything the verbalizer would rewrite: an ASCII digit or a Unicode numeral
+// rune.
+//
+// It lets [NumberMangler.NumberWords] / [NumberMangler.AppendWords] return the input untouched (no allocation) for
+// plain text — including accented text with no numerals.
+// The ASCII bytes are scanned directly; only non-ASCII runes are decoded and looked up.
 func mayHaveNumber(s string) bool {
 	for i := 0; i < len(s); {
 		c := s[i]
@@ -123,8 +127,8 @@ func isASCIIDigit(b byte) bool { return b >= '0' && b <= '9' }
 
 func isThousandsSep(b byte) bool { return b == ' ' || b == ',' || b == '_' }
 
-// isThreeDigitGroup reports whether s[k:] begins with exactly three digits (three digits not immediately followed
-// by a fourth) — a valid thousands group.
+// isThreeDigitGroup reports whether s[k:] begins with exactly three digits (three digits not immediately followed by a
+// fourth) — a valid thousands group.
 func isThreeDigitGroup(s string, k int) bool {
 	if k+3 > len(s) {
 		return false
