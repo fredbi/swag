@@ -818,6 +818,16 @@ constraints" holds only until we ship — after that the surface is a contract, 
 - **Test-quality harmonization** ("Fred's gate" — one common approach across dozens of repos): make the mangling
   tables iterator-driven like the `numbers` tests; factor test cases.
 
+### Known nits — small correctness/doc fixes (found during the 2026-07-07 docs pass)
+
+- **`ToASCII` drops a lone non-ASCII Nd digit.** `ToASCII("٧")` returns `""`, while `ToASCII("Ⅶ")` → `"7"` and the
+  mangler pipeline folds `item٧` → `item7`. The standalone `ToASCII` should fold an Arabic-Indic (and other Nd) digit
+  to its ASCII value like the pipeline does, rather than eliding it. Cheap fix; add a regression case.
+- **`NumberMangler` godoc overstates the surface.** Its doc says it produces "cardinals, ordinals, roman", but only
+  cardinals/fractions are reachable through `NumberWords` — ordinals are not spelled (`1st` → `onest`, not `first`)
+  and roman output is internal-only. Either reword the godoc to match the public surface, or (post-1.0) expose the
+  ordinal/roman renderers.
+
 ### P2 — enhancement releases (study/design now, build later)
 
 - **`plurals` standalone package** — pick the ~200 lines of `go-openapi/inflect` actually used (English rules +
