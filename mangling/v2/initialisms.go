@@ -5,6 +5,11 @@ import (
 	"unicode"
 )
 
+// DefaultInitialisms returns the built-in set of initialisms recognized when Go initialisms are enabled.
+//
+// These are common acronyms (API, HTTP, ID, JSON, ...) that the Go mangler keeps fully upper-cased in
+// exported identifiers, plus a few mixed-case exceptions (IPv4, IPv6). Use it as a starting point to
+// extend or override the set through the initialism options.
 func DefaultInitialisms() []string {
 	return []string{
 		"ACL",

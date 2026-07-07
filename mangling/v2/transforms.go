@@ -58,31 +58,37 @@ func WithSeparator(sep string) TargetOption {
 // preset).
 // Named after the form they produce.
 
-// TargetTitle...
+// TargetTitle produces space-separated tokens, each capitalized ("Title Case").
 func TargetTitle() TargetTransform {
 	return TargetTransform{firstCasing: casingTitle, restCasing: casingTitle, separator: " "}
 }
 
+// TargetSentence produces space-separated tokens, only the first capitalized ("Sentence case").
 func TargetSentence() TargetTransform {
 	return TargetTransform{firstCasing: casingTitle, restCasing: casingLower, separator: " "}
 }
 
+// TargetSnake produces underscore-separated lower-case tokens ("snake_case").
 func TargetSnake() TargetTransform {
 	return TargetTransform{firstCasing: casingLower, restCasing: casingLower, separator: "_"}
 }
 
+// TargetKebab produces hyphen-separated lower-case tokens ("kebab-case").
 func TargetKebab() TargetTransform {
 	return TargetTransform{firstCasing: casingLower, restCasing: casingLower, separator: "-"}
 }
 
+// TargetCamel produces joined tokens with a lower-case first token and the rest capitalized ("camelCase").
 func TargetCamel() TargetTransform {
 	return TargetTransform{firstCasing: casingLower, restCasing: casingTitle}
 }
 
+// TargetPascal produces joined tokens, each capitalized ("PascalCase").
 func TargetPascal() TargetTransform {
 	return TargetTransform{firstCasing: casingTitle, restCasing: casingTitle}
 }
 
+// TargetAllCaps produces underscore-separated upper-case tokens ("ALL_CAPS").
 func TargetAllCaps() TargetTransform {
 	return TargetTransform{firstCasing: casingUpper, restCasing: casingUpper, separator: "_"}
 }

@@ -110,6 +110,10 @@ func toSet(list []string) map[string]struct{} {
 	return set
 }
 
+// WithTokenSeparator sets the predicate that decides which runes split the input into tokens.
+//
+// The predicate reports whether a rune acts as a separator (dropped from the output). It replaces the
+// default separator rule wholesale, so it must recognize every character to break on.
 func WithTokenSeparator(separator func(rune) bool) TokenOption {
 	return func(o tokenOptions) tokenOptions {
 		o.separator = separator
@@ -118,6 +122,9 @@ func WithTokenSeparator(separator func(rune) bool) TokenOption {
 	}
 }
 
+// WithTokenOptions bundles token-level options into a single mangler [Option].
+//
+// Use it to pass tokenizer settings (such as [WithTokenSeparator]) when configuring a [Mangler].
 func WithTokenOptions(opts ...TokenOption) Option {
 	return func(o options) options {
 		o.tokenOptions = buildTokenOptions(o.tokenOptions, opts)
@@ -129,7 +136,7 @@ func WithTokenOptions(opts ...TokenOption) Option {
 // WithASCIIFolding toggles folding of Latin diacritics to ASCII (é→e, ñ→n, ß→ss, combining marks stripped).
 //
 // It is off by default in the base [Mangler] and on by default in the [GoMangler] (gosmopolitan-clean output).
-// Non-Latin scripts (CJK, …) are left as-is — a future rune-name concern.
+// Most non-Latin scripts are romanized (with the notable exception of CJK runes, which are elided).
 func WithASCIIFolding(enabled bool) Option {
 	return func(o options) options {
 		o.asciify = enabled
@@ -138,6 +145,8 @@ func WithASCIIFolding(enabled bool) Option {
 	}
 }
 
+// WithManglerOptions lifts base [Mangler] options into a [GoOption], so a [GoMangler] can be configured
+// with the same settings as the base mangler it embeds (folding, token, initialism options, ...).
 func WithManglerOptions(opts ...Option) GoOption {
 	return func(o goOptions) goOptions {
 		o.options = buildOptions(o.options, opts)

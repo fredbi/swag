@@ -40,6 +40,10 @@ func WithNumberStripAnd(strip bool) NumberOption {
 	}
 }
 
+// WithNumberDetectPrecision sets the number of decimal places used when matching a value against known
+// fractions and special numbers.
+//
+// A higher precision distinguishes closer values (e.g. 0.333 from 1/3) at the cost of fewer fuzzy matches.
 func WithNumberDetectPrecision(precision uint) NumberOption {
 	return func(o numberOptions) numberOptions {
 		o.precision = precision

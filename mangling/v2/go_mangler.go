@@ -10,6 +10,17 @@ import (
 )
 
 // GoMangler turns strings into identifiers that abide by go naming conventions.
+//
+// It embeds a [Mangler] — so every base formatter ([Mangler.Camelize], [Mangler.Snakize], ...) is available — with
+// ASCII folding enabled by default, and adds go-aware producers:
+//
+//   - [GoMangler.IdentExported] / [GoMangler.IdentUnexported]: valid exported / unexported identifiers;
+//   - [GoMangler.ConstName]: an exported identifier with numbers verbalized ("0.25" → "OneQuarter");
+//   - [GoMangler.File]: a snake_case file name, repaired to avoid a build-constrained suffix;
+//   - [GoMangler.Package] / [GoMangler.PackageWithParts] / [GoMangler.Module]: go package and module path elements.
+//
+// The producers honor a configurable list of initialisms (API, HTTP, ...), resolve collisions with go keywords and
+// builtins, and guarantee a valid, non-empty identifier for any input.
 type GoMangler struct {
 	Mangler
 	goOptions

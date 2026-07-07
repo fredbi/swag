@@ -6,7 +6,8 @@ package mangling
 //
 // # Case handling
 //
-// Casing follows unicode rules: upper casing uses unicode "title-case".
+// Casing follows unicode rules: the first letter of a capitalized word is title-cased (via [unicode.ToTitle], which
+// differs from uppercase for a handful of digraphs), while ALL-CAPS uses uppercase and the remainder is lower-cased.
 //
 // Special casing rules (e.g. [unicode.SpecialCase]) are not supported at this moment.
 //
@@ -31,10 +32,11 @@ package mangling
 //
 // ASCII and numerals:
 //
-//  -  ASCII dDigits are left as-is
-//  -  a "." (dot) is verbalized as "dot" (symbol), a "," comma is elided (separator)
-//  - unicode numerals, such as ½, are represented numerically as "0.5" verbalized as "0dot5"
-
+//   - ASCII digits are left as-is
+//   - a "." (dot) is verbalized as "dot" (symbol), a "," comma is elided (separator)
+//   - unicode numerals, such as ½, verbalize as words when ASCII folding is on ("½ cup" → "one half cup"); with
+//     folding off they are dropped, like other non-foldable runes. (The package-level [ToASCII] renders a numeral as
+//     a plain number instead: "½" → "0.5".)
 type Mangler struct {
 	tokenizer
 	options // options for plurals (possibly - future - language)
@@ -94,7 +96,7 @@ func (m Mangler) Humanize(str string) string {
 //
 // Like so:
 //
-//	snake_case.
+//	snake_case
 func (m Mangler) Snakize(str string) string {
 	return m.Transform(TargetSnake(), str)
 }
@@ -103,7 +105,7 @@ func (m Mangler) Snakize(str string) string {
 //
 // Like so:
 //
-//	kebab-case.
+//	kebab-case
 func (m Mangler) Kebabize(str string) string {
 	return m.Transform(TargetKebab(), str)
 }
