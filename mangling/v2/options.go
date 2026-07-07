@@ -36,6 +36,7 @@ type (
 		fileSuffixes     map[string]struct{}
 		reservedSuffix   string                 // appended to an ident colliding with a reserved word (default "Var")
 		fileRepairSuffix string                 // appended to a file stem ending in a GOOS/GOARCH/test suffix (default "swagger")
+		identFallback    string                 // word used when an identifier reduces to nothing (default "empty")
 		numberOpts       []numbers.NumberOption // configure the NumberMangler used by ConstName / leading-digit verbalization
 	}
 
@@ -88,6 +89,9 @@ func buildGoOptions(o goOptions, opts []GoOption) goOptions {
 	}
 	if o.fileRepairSuffix == "" {
 		o.fileRepairSuffix = "swagger" // "test.go" -> "test_swagger.go"
+	}
+	if o.identFallback == "" {
+		o.identFallback = defaultIdentFallback // "___" -> "Empty" / "empty" (cased per target)
 	}
 
 	return o
@@ -148,6 +152,23 @@ func WithManglerOptions(opts ...Option) GoOption {
 func WithGoNumberOptions(opts ...numbers.NumberOption) GoOption {
 	return func(o goOptions) goOptions {
 		o.numberOpts = append(o.numberOpts, opts...)
+
+		return o
+	}
+}
+
+// WithGoIdentFallback sets the word substituted when an identifier reduces to nothing — i.e. the input is
+// empty or made up entirely of separators / elided runes (e.g. "___", "@#$" with symbols dropped, or CJK
+// under ASCII folding). Without it the Go identifier producers would emit an (invalid) empty string.
+//
+// The word is itself run through the mangler at the producing target, so any input is made valid and cased
+// correctly: [GoMangler.IdentExported]/[GoMangler.ConstName] → "Empty", [GoMangler.IdentUnexported] → "empty",
+// [GoMangler.File] → "empty". If the provided word *also* reduces to nothing, the built-in default "empty" is
+// used, so a valid identifier is always produced. Applies to the [GoMangler] only; the base [Mangler] may
+// still return "".
+func WithGoIdentFallback(word string) GoOption {
+	return func(o goOptions) goOptions {
+		o.identFallback = word
 
 		return o
 	}

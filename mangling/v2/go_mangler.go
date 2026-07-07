@@ -48,6 +48,28 @@ func (g GoMangler) repairReserved(id string) string {
 	return id
 }
 
+// defaultIdentFallback is the built-in word used when an identifier reduces to nothing and the
+// configured [WithGoIdentFallback] word (if any) also reduces to nothing. It must be a clean word that
+// always survives mangling.
+const defaultIdentFallback = "empty"
+
+// orFallback guarantees a non-empty identifier: it returns id when non-empty, otherwise the configured
+// fallback word mangled at the same target (so it is valid and cased to match — "Empty"/"empty"/snake),
+// and finally the built-in [defaultIdentFallback] if even the configured word reduces to nothing.
+//
+// It is applied by the Go identifier producers (idents, const, file), never inside [GoMangler.identifier]
+// itself — Package/Module intentionally allow an empty (dir-only) result.
+func (g GoMangler) orFallback(id string, target TargetTransform) string {
+	if id != "" {
+		return id
+	}
+	if fb := g.identifier(g.identFallback, target); fb != "" {
+		return fb
+	}
+
+	return g.identifier(defaultIdentFallback, target)
+}
+
 // identifier runs the Go ident pipeline: rune-name expansion → segment → ASCII fold → initialism
 // overlay → assemble.
 func (g GoMangler) identifier(str string, target TargetTransform) string {
@@ -127,7 +149,7 @@ func NewGoMangler(opts ...GoOption) *GoMangler {
 //
 // An unexported identifier is camelized, with the casing of initialisms respected (e.g. "getHTTP" and not "getHttp").
 func (g GoMangler) IdentUnexported(str string) string {
-	return g.repairReserved(g.identifier(g.verbalizeLeadingNumber(str), TargetCamel()))
+	return g.repairReserved(g.orFallback(g.identifier(g.verbalizeLeadingNumber(str), TargetCamel()), TargetCamel()))
 }
 
 // IdentExported produces a valid exported go variable identifier from a string, possibly containing multiple words.
@@ -138,7 +160,7 @@ func (g GoMangler) IdentUnexported(str string) string {
 //
 // Unlike their unexported counterpart, exported identifiers can't conflict with go reserved keywords or builtins.
 func (g GoMangler) IdentExported(str string) string {
-	return g.identifier(g.verbalizeLeadingNumber(str), TargetPascal())
+	return g.orFallback(g.identifier(g.verbalizeLeadingNumber(str), TargetPascal()), TargetPascal())
 }
 
 // Package produces a legit go package import path and its short (declaration) name.
@@ -304,7 +326,7 @@ func (g GoMangler) File(input string) string {
 	}
 
 	// identifier merges break-crossing initialisms so "IPv4" snakizes to "ipv4", not "i_pv4".
-	return dir + g.repairFileSuffix(g.identifier(stem, TargetSnake())) + ext
+	return dir + g.repairFileSuffix(g.orFallback(g.identifier(stem, TargetSnake()), TargetSnake())) + ext
 }
 
 // repairFileSuffix appends the file repair suffix (default "swagger") when the last snake segment is a reserved

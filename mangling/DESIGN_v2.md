@@ -648,13 +648,16 @@ Reassessment pause after the alloc-reduction and rune-naming work. Groups the re
 | **Fuzz tests** | test | Add targets; name the invariants explicitly: differential parity (have it for `AppendWords`≡`NumberWords`) **plus idempotency** `f(f(x)) == f(x)` for every identifier producer (`ToGoName`/`ConstName`/`VarName`/`FileName`). |
 | **Coverage → 85%+** | test | A few uncovered paths remain; close them. |
 | **Concurrency test** | test | Explicit `-race` test hammering `Transform`/`ConstName` from N goroutines — closes the §10.4 "concurrency-safe" claim. |
-| **`GoIdent*` empty-result edge case** | correctness | Input that fully reduces to separators/elided runes yields an incorrect empty string. **Decide the contract once and apply it uniformly** across `ToGoName`/`ConstName`/`VarName`/`FileName` (empty vs. `_` sentinel vs. error) — not a per-function patch. |
+| **`GoIdent*` empty-result edge case** | | ✅ **done** | Input that fully reduces to separators/elided runes yields an incorrect empty string. **Decide the contract once and apply it uniformly** across `ToGoName`/`ConstName`/`VarName`/`FileName` (empty vs. `_` sentinel vs. error) — not a per-function patch. |
 | **README + docstrings** | documentation | Beef up README (started); **explicit v1 differences** (case-alternance boundary — [go-openapi/swag#123](https://github.com/go-openapi/swag/issues/123)); comprehensive docstrings; better-documented options. |
 | **Productize the UCD codegen** | documentation / tooling | See "provenance" below. |
 | **asciify toggle granularity** | open design decision | Single `asciify` flag vs. separate fold-diacritics / name-runes toggles. Shapes public API — resolve **before** graduation. (Was §9 open. Purely an API-shape call now: the runewords table always links regardless — decided 2026-07-07.) |
-| **v1→v2 comparative benchmark** | perf / doc | Not just standalone benches — a v1-vs-v2 table feeds the "explicit v1 differences" doc and the migration story. |
-
-+ add unicode v17 files and verify the generator for those (prepare for go1.27 support next month).
+| ~**v1→v2 comparative benchmark**~ | perf / doc | Not just standalone benches — a v1-vs-v2 table feeds the "explicit v1 differences" doc and the migration story. We'll just mention a 30% improvement in perf ~ 1 microsec per operation|
+| scalability benchmark | perf / doc | benchmark GoUnexportedIdent with strings of various tokens length |
+ | add unicode v17 files | enhancement |verify the generator for those (prepare for go1.27 support next month).|
+ | v1->v2 comparitive is functional not perf | doc | user's guide about how strings are now handled vs how they used to be |
+ | code layout / test layout refact | quality | |
+ | final review of the API & options | quality | before landing |
 
 ### UCD codegen provenance (part of "productize")
 
