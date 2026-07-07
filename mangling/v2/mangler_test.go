@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"iter"
 	"slices"
+	"strings"
 	"testing"
 
 	"github.com/go-openapi/swag/mangling/v2/numbers"
@@ -157,6 +158,12 @@ func TestGoManglerConstName(t *testing.T) {
 		{"-5", "MinusFive"},                // sign
 		{"3.14", "ThreeDotOneFour"},        // non-fraction decimal
 		{"status 200", "StatusTwoHundred"}, // every number verbalized
+		// regression: numeral runes and non-ASCII digits verbalize into valid const names (FuzzGoIdent)
+		{"½ off", "OneHalfOff"}, // No numeral rune
+		{"٧", "Seven"},          // Nd non-ASCII digit (Arabic-Indic), via digit-offset
+		{"Ⅶ", "Seven"},          // Nl roman numeral
+		{"①", "One"},            // No circled digit
+		{"50%", "FiftyPercent"},
 	}
 
 	for _, tc := range cases {
@@ -164,6 +171,10 @@ func TestGoManglerConstName(t *testing.T) {
 			assert.EqualTf(t, tc.out, g.ConstName(tc.in), "ConstName(%q)", tc.in)
 		})
 	}
+
+	// regression: an integer too large for int64 is spelled digit by digit, so the const name stays a
+	// valid (non-digit-leading) identifier rather than raw digits.
+	assert.EqualT(t, strings.Repeat("Nine", 19), g.ConstName("9999999999999999999"))
 }
 
 func TestGoManglerConstNameNumberOptions(t *testing.T) {
@@ -351,6 +362,7 @@ func goIdents(exported, unexported string) func(testMode) map[testedCasing]strin
 	}
 }
 
+//nolint:maintidx // a flat table of test-case data, not algorithmic complexity
 func manglerTestCases() iter.Seq[manglerTestCase] {
 	return slices.Values([]manglerTestCase{
 		{
@@ -461,12 +473,9 @@ func manglerTestCases() iter.Seq[manglerTestCase] {
 		{
 			name:  "with combining diacritics",
 			input: "cafe\u0301 cre\u0300me", // NFD (decomposed) form of cafe/creme
-			expected: func(mode testMode) map[testedCasing]string {
-				if mode == testModeDefaultMangler {
-					return nil // base preserves the marks; asserted only for the folding modes
-				}
-
-				// ASCII folding strips the combining marks
+			expected: func(_ testMode) map[testedCasing]string {
+				// Combining marks are never valid identifier runes, so they are stripped in EVERY mode
+				// (not only when ASCII folding is on) \u2014 the decomposed diacritics vanish regardless.
 				return map[testedCasing]string{
 					testedPascal:  "CafeCreme",
 					testedCamel:   "cafeCreme",
@@ -508,11 +517,80 @@ func manglerTestCases() iter.Seq[manglerTestCase] {
 			},
 		},
 
-		// TODO: mangler with ASCII mode unicode digit (e.g. indian-arabic) unicode letter-number (e.g. roman number)
+		// Regression cases locking the numeral/digit/mark contract fixes surfaced by FuzzGoIdent.
+		{
+			name:  "with vulgar fraction (No numeral rune)",
+			input: "½ over 200",
+			expected: func(mode testMode) map[testedCasing]string {
+				if mode == testModeDefaultMangler {
+					// base Mangler, folding off: the numeral rune is not a valid ident char and is dropped
+					return map[testedCasing]string{testedPascal: "Over200", testedCamel: "over200", testedSnake: "over200"}
+				}
 
-		// TODO: unicode verbalisation unicode arabic (w/ extended arabic signs - expected to be elided) unicode chinese
-		// unicode japanese unicode japanese CJK unicode devanagari (no upper case concept) unicode edge-cases: non printable
-		// rune, invalid rune, ASCII control char, ...
+				// folding on: a numeral rune is spelled out as words (a name reads better than "0Dot5")
+				m := map[testedCasing]string{testedPascal: "OneHalfOver200", testedCamel: "oneHalfOver200", testedSnake: "one_half_over200"}
+				if mode == testModeDefaultGoMangler {
+					m[testedGoExported], m[testedGoUnexported] = "OneHalfOver200", "oneHalfOver200"
+				}
+
+				return m
+			},
+		},
+		{
+			name:  "with roman numeral (Nl numeral rune)",
+			input: "Ⅶ legions",
+			expected: func(mode testMode) map[testedCasing]string {
+				if mode == testModeDefaultMangler {
+					return map[testedCasing]string{testedPascal: "Legions", testedCamel: "legions", testedSnake: "legions"}
+				}
+
+				m := map[testedCasing]string{testedPascal: "SevenLegions", testedCamel: "sevenLegions", testedSnake: "seven_legions"}
+				if mode == testModeDefaultGoMangler {
+					m[testedGoExported], m[testedGoUnexported] = "SevenLegions", "sevenLegions"
+				}
+
+				return m
+			},
+		},
+		{
+			name:  "with unicode decimal digit (Nd, digit-offset to ASCII)",
+			input: "item ٧ code", // Arabic-Indic digit seven
+			expected: func(mode testMode) map[testedCasing]string {
+				if mode == testModeDefaultMangler {
+					// base Mangler, folding off: a non-ASCII digit is preserved (valid non-leading ident rune)
+					return map[testedCasing]string{testedPascal: "Item٧Code", testedCamel: "item٧Code", testedSnake: "item٧_code"}
+				}
+
+				// folding on: digit-offset converts it to the ASCII digit, so it behaves exactly like '7'
+				m := map[testedCasing]string{testedPascal: "Item7Code", testedCamel: "item7Code", testedSnake: "item7_code"}
+				if mode == testModeDefaultGoMangler {
+					m[testedGoExported], m[testedGoUnexported] = "Item7Code", "item7Code"
+				}
+
+				return m
+			},
+		},
+		{
+			// a leading non-ASCII digit can't start an identifier, so the GoMangler verbalizes it (both modes)
+			name:     "with leading unicode decimal digit (Nd)",
+			input:    "٧ lives",
+			expected: goIdents("SevenLives", "sevenLives"),
+		},
+		{
+			// an orphan combining mark (dropped) then a symbol: the symbol word must be lower-cased for the
+			// unexported ident — regression, it used to come out "Bang" because the empty mark token consumed
+			// the first-word casing slot.
+			name:  "with orphan combining mark and symbol",
+			input: "֮!", // Hebrew accent (Mn) + '!'
+			expected: func(mode testMode) map[testedCasing]string {
+				m := map[testedCasing]string{testedPascal: "Bang", testedCamel: "bang", testedSnake: "bang"}
+				if mode == testModeDefaultGoMangler {
+					m[testedGoExported], m[testedGoUnexported] = "Bang", "bang"
+				}
+
+				return m
+			},
+		},
 
 		// GoMangler initialisms (only the go-ident casings assert; neutral casings do not recognize initialisms and are left
 		// unset here).
