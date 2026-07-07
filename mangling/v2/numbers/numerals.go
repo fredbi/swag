@@ -3,7 +3,7 @@
 package numbers
 
 // runeNumericValue maps a Unicode numeral (categories No and Nl) to its numeric value.
-// Nd digits and Lo (CJK) numbers are excluded. Generated from ucd/DerivedNumericValues.txt.
+// Nd digits and Lo (CJK) numbers are excluded. Generated from v15/DerivedNumericValues.txt.
 var runeNumericValue = map[rune]float64{
 	0x00B2:  2,
 	0x00B3:  3,

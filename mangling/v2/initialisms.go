@@ -5,6 +5,52 @@ import (
 	"unicode"
 )
 
+func DefaultInitialisms() []string {
+	return []string{
+		"ACL",
+		"API",
+		"ASCII",
+		"CPU",
+		"CSS",
+		"DNS",
+		"EOF",
+		"GUID",
+		"HTML",
+		"HTTPS",
+		"HTTP",
+		"ID",
+		"IP",
+		"IPv4", // prefer the mixed case outcome IPv4 over the capitalized IPV4
+		"IPv6", // prefer the mixed case outcome IPv6 over the capitalized IPV6
+		"JSON",
+		"LHS",
+		"OAI",
+		"QPS",
+		"RAM",
+		"RHS",
+		"RPC",
+		"SLA",
+		"SMTP",
+		"SQL",
+		"SSH",
+		"TCP",
+		"TLS",
+		"TTL",
+		"UDP",
+		"UI",
+		"UID",
+		"UUID",
+		"URI",
+		"URL",
+		"UTF8",
+		"VM",
+		"XML",
+		"XMPP",
+		"XSRF",
+		"XSS",
+	}
+}
+
 // initialismTrie indexes the known initialisms (and their pluralized forms) for the overlay.
 //
 // It is keyed on lowercased runes, so matching is case-insensitive; the canonical casing to emit is stored at the

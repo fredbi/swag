@@ -23,7 +23,18 @@ package mangling
 // The mangler may optionally ASCII-fy letters: latin letters with diacritics (e.g. é, ü) and unicode digits are
 // converted to an ASCII equivalent, while non-latin unicode gets "phonetized" using its rune name.
 //
-// Emoji runes and unicode grapheme clusters are not supported at this moment.
+// # NOTES
+//
+// CJK runes are elided, as no easy phonetization scheme is available.
+//
+// Unicode grapheme clusters are not supported at this moment.
+//
+// ASCII and numerals:
+//
+//  -  ASCII dDigits are left as-is
+//  -  a "." (dot) is verbalized as "dot" (symbol), a "," comma is elided (separator)
+//  - unicode numerals, such as ½, are represented numerically as "0.5" verbalized as "0dot5"
+
 type Mangler struct {
 	Tokenizer
 	options // options for plurals (possibly - future - language)
@@ -43,77 +54,6 @@ func NewMangler(opts ...Option) *Mangler {
 	m := MakeMangler(opts...)
 
 	return &m
-}
-
-// TargetTransform is a compiled, immutable recipe describing how to render a segmented token stream: casing ×
-// separator × affix × stages × repair.
-//
-// All fields are unexported; build custom targets with [MakeTargetTransform].
-// The mangler supplies the data (dictionaries) that stages bind to at run time, so a target degrades gracefully across
-// manglers.
-//
-// Fields are unexported; the assembly recipe is casing × separator × symbol-policy (affix, stages and repair land
-// later — §4.5, §10).
-type TargetTransform struct {
-	firstCasing  wordCasing   // casing of the first emitted word (camelCase lowercases it)
-	restCasing   wordCasing   // casing of subsequent words
-	separator    string       // "", "_", "-", " ", "."
-	symbolPolicy symbolPolicy // drop | verbalize | keep
-}
-
-// MakeTargetTransform builds a custom [TargetTransform].
-func MakeTargetTransform(opts ...TargetOption) TargetTransform {
-	var tr TargetTransform
-	for _, apply := range opts {
-		tr = apply(tr)
-	}
-
-	return tr
-}
-
-// TargetOption customizes a [TargetTransform].
-type TargetOption func(TargetTransform) TargetTransform
-
-// WithSeparator sets the output separator emitted between tokens.
-func WithSeparator(sep string) TargetOption {
-	return func(tr TargetTransform) TargetTransform {
-		tr.separator = sep
-
-		return tr
-	}
-}
-
-// Preset targets.
-//
-// These return a fresh immutable value (they are functions, not variables, so a caller can never corrupt a shared
-// preset).
-// Named after the form they produce.
-func TargetTitle() TargetTransform {
-	return TargetTransform{firstCasing: casingTitle, restCasing: casingTitle, separator: " "}
-}
-
-func TargetSentence() TargetTransform {
-	return TargetTransform{firstCasing: casingTitle, restCasing: casingLower, separator: " "}
-}
-
-func TargetSnake() TargetTransform {
-	return TargetTransform{firstCasing: casingLower, restCasing: casingLower, separator: "_"}
-}
-
-func TargetKebab() TargetTransform {
-	return TargetTransform{firstCasing: casingLower, restCasing: casingLower, separator: "-"}
-}
-
-func TargetCamel() TargetTransform {
-	return TargetTransform{firstCasing: casingLower, restCasing: casingTitle}
-}
-
-func TargetPascal() TargetTransform {
-	return TargetTransform{firstCasing: casingTitle, restCasing: casingTitle}
-}
-
-func TargetAllCaps() TargetTransform {
-	return TargetTransform{firstCasing: casingUpper, restCasing: casingUpper, separator: "_"}
 }
 
 // Transform renders str through the target recipe: segment → assemble (casing × separator × symbol policy).
@@ -175,7 +115,7 @@ func (m Mangler) Snakize(str string) string {
 //
 // Like so:
 //
-//	kebab-case
+//	kebab-case.
 func (m Mangler) Kebabize(str string) string {
 	return m.Transform(TargetKebab(), str)
 }
@@ -209,23 +149,14 @@ func (m Mangler) AllCaps(str string) string {
 
 // Pluralize a word (a sentence?) (english)
 //
-// wolf -> wolves wolves -> (unchanged) chopper -> choppers.
+// wolf -> wolves -> (unchanged) chopper -> choppers.
 func (m Mangler) Pluralize(string) string {
 	return ""
 }
 
 // Singularize a word (english), the inverse of [Mangler.Pluralize].
 //
-// wolves -> wolf wolf -> (unchanged)
+// wolves -> wolf -> (unchanged)
 func (m Mangler) Singularize(string) string {
 	return ""
 }
-
-/*
-// Fix 3rd person conjugate, e.g. XYZ paint => XYZ paints.
-// but: XYZs paint => invariant (plural)
-// Do we really need that?
-func (m Mangler) Conjugate(string) string {
-	return ""
-}
-*/

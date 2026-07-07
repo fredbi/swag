@@ -2,17 +2,21 @@ package runewords
 
 import "sort"
 
-// Word returns the distinctive lowercase word(s) for rune r (e.g. 'α' -> "alpha",
-// '😀' -> "grinning face"), and whether r is covered. Covered runes exclude everything
-// the mangler already handles (ASCII, Latin+diacritics, digits) or elides (combining
-// marks, controls, separators, CJK, Hangul). Callers PascalCase / re-segment the result.
+// Word returns the distinctive lowercase word(s) for rune r.
 //
-// The covered set is interval-encoded (maximal runs of consecutive codepoints): a single
-// binary search over runStart locates the run, then the global rune index is pure arithmetic
-// — no linear scan. Offsets into wordBlob are 18-bit (uint16 low + 2-bit high sidecar).
-// See DESIGN_v2.md §12.
+// e.g. 'α' -> "alpha", '😀' -> "grinning face", and whether r is covered.
+//
+// Covered runes exclude everything the mangler already handles (ASCII, Latin+diacritics, digits)
+// or elides (combining marks, controls, separators, CJK, Hangul).
+//
+// Callers re-segment the result (following case breaks).
+//
+// The covered set is interval-encoded (maximal ranges of consecutive codepoints): a single binary search over runStart
+// locates the range, then the global rune index is pure arithmetic — no linear scan.
+//
+// Offsets into wordBlob are 18-bit (uint16 low + 2-bit high sidecar).
 func Word(r rune) (string, bool) {
-	u := uint32(r)
+	u := uint32(r) //nolint:gosec // false positive: rune aliases to int32, so it's okay to consider the result unsigned
 
 	// Locate the maximal run whose start is <= r (largest runStart[i] <= u).
 	i := sort.Search(len(runStart), func(i int) bool { return runStart[i] > u })
@@ -34,6 +38,11 @@ func Word(r rune) (string, bool) {
 // offset18 reconstructs the 18-bit blob offset for word id from the uint16 low array and the
 // 2-bit high sidecar (packed 4 entries per byte).
 func offset18(id uint16) uint32 {
-	hi := uint32(wordOffHi[id>>2]>>(2*(id&3))) & 0x3
+	const (
+		sidecarMask = 3
+		hiExtraBits = 2
+		hiMask      = 0x3
+	)
+	hi := uint32(wordOffHi[id>>hiExtraBits]>>(hiExtraBits*(id&sidecarMask))) & hiMask
 	return hi<<16 | uint32(wordOffLo[id])
 }

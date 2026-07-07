@@ -11,6 +11,8 @@ use (
 	./jsonutils/fixtures_test
 	./loading
 	./mangling
+	./mangling/v2
+	./mangling/v2/ucd
 	./netutils
 	./pools
 	./stringutils
@@ -18,4 +20,4 @@ use (
 	./yamlutils
 )
 
-go 1.25.0
+go 1.26.4

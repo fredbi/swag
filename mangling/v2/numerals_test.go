@@ -8,7 +8,7 @@ import (
 
 // TestNumeralAsciify covers the three distinct treatments of a Unicode numeral rune:
 //   - the numbers engine spells it        (ConstName: "½" → "OneHalf")
-//   - the asciify tier renders it plainly (ToAscii:   "½" → "0.5")
+//   - the asciify tier renders it plainly (ToASCII:   "½" → "0.5")
 //   - UnicodeName elides it               (numerals are not phonetic names)
 func TestNumeralAsciify(t *testing.T) {
 	t.Parallel()
@@ -27,7 +27,7 @@ func TestNumeralAsciify(t *testing.T) {
 		}
 	})
 
-	t.Run("ToAscii renders a plain number (3-decimal cap)", func(t *testing.T) {
+	t.Run("ToASCII renders a plain number (3-decimal cap)", func(t *testing.T) {
 		t.Parallel()
 		cases := map[string]string{
 			"½":         "0.5",
@@ -37,7 +37,7 @@ func TestNumeralAsciify(t *testing.T) {
 			"the ½ cup": "the 0.5 cup",
 		}
 		for in, want := range cases {
-			assert.EqualTf(t, want, ToAscii(in), "ToAscii(%q)", in)
+			assert.EqualTf(t, want, ToASCII(in), "ToASCII(%q)", in)
 		}
 	})
 

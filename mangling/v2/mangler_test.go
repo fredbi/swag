@@ -210,19 +210,19 @@ func TestGoManglerRuneNames(t *testing.T) {
 func TestAsciiUtilities(t *testing.T) {
 	t.Parallel()
 
-	// ToAscii: fold diacritics, name the rest, drop the unnameable.
-	assert.EqualT(t, "cafe", ToAscii("café"))
-	assert.EqualT(t, "naive", ToAscii("naïve"))
-	assert.EqualT(t, "pi", ToAscii("π"))
-	assert.EqualT(t, "grinning face", ToAscii("😀"))
-	assert.EqualT(t, "", ToAscii("日")) // CJK dropped
-	assert.EqualT(t, "plain ascii", ToAscii("plain ascii"))
+	// ToASCII: fold diacritics, name the rest, drop the unnameable.
+	assert.EqualT(t, "cafe", ToASCII("café"))
+	assert.EqualT(t, "naive", ToASCII("naïve"))
+	assert.EqualT(t, "pi", ToASCII("π"))
+	assert.EqualT(t, "grinning face", ToASCII("😀"))
+	assert.EqualT(t, "", ToASCII("日")) // CJK dropped
+	assert.EqualT(t, "plain ascii", ToASCII("plain ascii"))
 
 	// Ascii: single-rune diacritic fold only.
-	assert.EqualT(t, "e", Ascii('é'))
-	assert.EqualT(t, "n", Ascii('ñ'))
-	assert.EqualT(t, "A", Ascii('A'))
-	assert.EqualT(t, "", Ascii('π')) // no diacritic folding -> empty (use UnicodeName)
+	assert.EqualT(t, "e", ASCII('é'))
+	assert.EqualT(t, "n", ASCII('ñ'))
+	assert.EqualT(t, "A", ASCII('A'))
+	assert.EqualT(t, "", ASCII('π')) // no diacritic folding -> empty (use UnicodeName)
 
 	// UnicodeName: phonetic word for non-foldable runes.
 	assert.EqualT(t, "pi", UnicodeName('π'))

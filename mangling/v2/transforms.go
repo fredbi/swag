@@ -1,0 +1,125 @@
+package mangling
+
+import (
+	"strings"
+	"unicode/utf8"
+
+	"github.com/go-openapi/swag/mangling/v2/numbers"
+	"github.com/go-openapi/swag/mangling/v2/runewords"
+)
+
+// TargetTransform is a compiled, immutable recipe describing how to render a segmented token stream:
+// casing × separator × affix × stages × repair.
+//
+// All fields are unexported; build custom targets with [MakeTargetTransform].
+//
+// The mangler supplies the data (dictionaries) that stages bind to at run time, so a target degrades gracefully across
+// manglers.
+//
+// Fields are unexported; the assembly recipe is casing × separator × symbol-policy (affix, stages and repair land later).
+type TargetTransform struct {
+	firstCasing  wordCasing   // casing of the first emitted word (camelCase lowercases it)
+	restCasing   wordCasing   // casing of subsequent words
+	separator    string       // "", "_", "-", " ", "."
+	symbolPolicy symbolPolicy // drop | verbalize | keep
+}
+
+// MakeTargetTransform builds a custom [TargetTransform].
+func MakeTargetTransform(opts ...TargetOption) TargetTransform {
+	var tr TargetTransform
+	for _, apply := range opts {
+		tr = apply(tr)
+	}
+
+	return tr
+}
+
+// TargetOption customizes a [TargetTransform].
+type TargetOption func(TargetTransform) TargetTransform
+
+// WithSeparator sets the output separator emitted between tokens.
+func WithSeparator(sep string) TargetOption {
+	return func(tr TargetTransform) TargetTransform {
+		tr.separator = sep
+
+		return tr
+	}
+}
+
+// Preset targets.
+//
+// These return a fresh immutable value (they are functions, not variables, so a caller can never corrupt a shared
+// preset).
+// Named after the form they produce.
+func TargetTitle() TargetTransform {
+	return TargetTransform{firstCasing: casingTitle, restCasing: casingTitle, separator: " "}
+}
+
+func TargetSentence() TargetTransform {
+	return TargetTransform{firstCasing: casingTitle, restCasing: casingLower, separator: " "}
+}
+
+func TargetSnake() TargetTransform {
+	return TargetTransform{firstCasing: casingLower, restCasing: casingLower, separator: "_"}
+}
+
+func TargetKebab() TargetTransform {
+	return TargetTransform{firstCasing: casingLower, restCasing: casingLower, separator: "-"}
+}
+
+func TargetCamel() TargetTransform {
+	return TargetTransform{firstCasing: casingLower, restCasing: casingTitle}
+}
+
+func TargetPascal() TargetTransform {
+	return TargetTransform{firstCasing: casingTitle, restCasing: casingTitle}
+}
+
+func TargetAllCaps() TargetTransform {
+	return TargetTransform{firstCasing: casingUpper, restCasing: casingUpper, separator: "_"}
+}
+
+// expandRuneNames is the rune-name tier of asciification (§4.7.1 tier 4): every non-ASCII rune that
+// diacritic folding won't handle (non-Latin letters, symbols, single-codepoint emoji) is replaced by
+// its space-delimited phonetic name (π → " pi ", 😀 → " grinning face ") so it re-segments into words
+// and re-cases per word (GrinningFace, not "Grinning face"). Runes the table elides (CJK ideographs,
+// decorative symbols) are dropped. Foldable diacritics and combining marks pass through untouched for
+// the token-level fold stage. Allocates only when a substitution or drop is actually needed.
+func expandRuneNames(str string) string {
+	need := false
+	for _, r := range str {
+		if r >= utf8.RuneSelf && !isCombiningMark(r) {
+			if _, ok := asciiFold[r]; !ok {
+				need = true
+
+				break
+			}
+		}
+	}
+	if !need {
+		return str // pure ASCII, or only diacritics/combining marks the fold stage handles
+	}
+
+	var b strings.Builder
+	b.Grow(len(str) + 16)
+	for _, r := range str {
+		switch {
+		case r < utf8.RuneSelf, isCombiningMark(r):
+			b.WriteRune(r) // ASCII, or a combining mark left for the fold stage to strip
+		default:
+			if _, ok := asciiFold[r]; ok {
+				b.WriteRune(r) // foldable diacritic: left for the fold stage
+			} else if v, ok := numbers.RuneNumber(r); ok {
+				b.WriteByte(' ')
+				b.WriteString(formatNumeral(v)) // numeral rune → plain number ("½" → "0.5")
+				b.WriteByte(' ')
+			} else if w, ok := runewords.Word(r); ok {
+				b.WriteByte(' ')
+				b.WriteString(w)
+				b.WriteByte(' ')
+			} // else: an elided rune (CJK, decorative) — dropped
+		}
+	}
+
+	return b.String()
+}

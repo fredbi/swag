@@ -70,9 +70,10 @@ func (m Mangler) assemble(t *Tokens, target TargetTransform) string {
 			writeCased(&b, runes, override, nextCasing())
 		case KindInitialism:
 			writeSep(false)
-			// An initialism follows the target's casing *intent*, except title-casing preserves its canonical form: lower →
-			// lowercase (snake, and leading in unexported → "httpGet"), upper → uppercase, title/as-is → canonical
-			// ("getHTTP", not "getHttp").
+			// An initialism follows the target's casing *intent*, except title-casing preserves its canonical form:
+			// lower → lowercase (snake, and leading in unexported → "httpGet"),
+			// upper → uppercase,
+			// title/as-is → canonical ("getHTTP", not "getHttp").
 			c := target.restCasing
 			if firstWord {
 				c = target.firstCasing
@@ -104,8 +105,8 @@ func (m Mangler) assemble(t *Tokens, target TargetTransform) string {
 	return b.String()
 }
 
-// writeCased writes a token's content (its rune span, or its override string) to b, applying the casing per rune — no
-// per-token string is materialized.
+// writeCased writes a token's content (its rune span, or its override string) to b,
+// applying the casing per rune — no per-token string is materialized.
 func writeCased(b *strings.Builder, runes []rune, override string, c wordCasing) {
 	if override != "" {
 		writeStringCased(b, override, c)

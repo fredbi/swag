@@ -19,11 +19,11 @@ type (
 type (
 	tokenOptions struct {
 		separator func(rune) bool // separator identities used to split tokens
-		rules     []splitRule
 	}
 
 	options struct {
 		tokenOptions
+
 		asciify bool // fold Latin diacritics to ASCII (off in base Mangler, on in GoMangler)
 	}
 
@@ -65,7 +65,7 @@ func buildOptions(o options, opts []Option) options {
 }
 
 func buildGoOptions(o goOptions, opts []GoOption) goOptions {
-	o.options.asciify = true // GoMangler default: fold to ASCII (gosmopolitan-clean); opts may override
+	o.asciify = true // GoMangler default: fold to ASCII (gosmopolitan-clean); opts may override
 
 	for _, apply := range opts {
 		o = apply(o)
@@ -196,156 +196,5 @@ func UseGoInitialisms(...string) GoOption {
 func WithGoInitialismPlurals(...string) GoOption {
 	return func(o goOptions) goOptions {
 		return o
-	}
-}
-
-var goReservedWords = []string{
-	"break",
-	"case",
-	"chan",
-	"const",
-	"continue",
-	"default",
-	"defer",
-	"else",
-	"fallthrough",
-	"for",
-	"func",
-	"go",
-	"goto",
-	"if",
-	"import",
-	"interface",
-	"map",
-	"package",
-	"range",
-	"return",
-	"select",
-	"struct",
-	"switch",
-	"type",
-	"var",
-}
-
-var goBuiltins = []string{
-	"append",
-	"print",
-	"cap",
-	"clear",
-	"close",
-	"complex",
-	"copy",
-	"delete",
-	"len",
-	"make",
-	"max",
-	"min",
-	"new",
-	"panic",
-	"println",
-	"real",
-	"recover",
-}
-
-var goFileSuffixes = []string{
-	// goos
-	"aix",
-	"android",
-	"darwin",
-	"dragonfly",
-	"freebsd",
-	"hurd",
-	"illumos",
-	"ios",
-	"js",
-	"linux",
-	"nacl",
-	"netbsd",
-	"openbsd",
-	"plan9",
-	"solaris",
-	"windows",
-	"zos",
-
-	// arch
-	"386",
-	"amd64",
-	"amd64p32",
-	"arm",
-	"armbe",
-	"arm64",
-	"arm64be",
-	"loong64",
-	"mips",
-	"mipsle",
-	"mips64",
-	"mips64le",
-	"mips64p32",
-	"mips64p32le",
-	"ppc",
-	"ppc64",
-	"ppc64le",
-	"riscv",
-	"riscv64",
-	"s390",
-	"s390x",
-	"sparc",
-	"sparc64",
-	"wasm",
-
-	// other reserved suffixes
-	"test",
-}
-
-// Precomputed default detection sets for the Go ruleset (shared, read-only after init).
-var (
-	goKeywordsSet     = toSet(goReservedWords)
-	goBuiltinsSet     = toSet(goBuiltins)
-	goFileSuffixesSet = toSet(goFileSuffixes)
-)
-
-func DefaultInitialisms() []string {
-	return []string{
-		"ACL",
-		"API",
-		"ASCII",
-		"CPU",
-		"CSS",
-		"DNS",
-		"EOF",
-		"GUID",
-		"HTML",
-		"HTTPS",
-		"HTTP",
-		"ID",
-		"IP",
-		"IPv4", // prefer the mixed case outcome IPv4 over the capitalized IPV4
-		"IPv6", // prefer the mixed case outcome IPv6 over the capitalized IPV6
-		"JSON",
-		"LHS",
-		"OAI",
-		"QPS",
-		"RAM",
-		"RHS",
-		"RPC",
-		"SLA",
-		"SMTP",
-		"SQL",
-		"SSH",
-		"TCP",
-		"TLS",
-		"TTL",
-		"UDP",
-		"UI",
-		"UID",
-		"UUID",
-		"URI",
-		"URL",
-		"UTF8",
-		"VM",
-		"XML",
-		"XMPP",
-		"XSRF",
-		"XSS",
 	}
 }

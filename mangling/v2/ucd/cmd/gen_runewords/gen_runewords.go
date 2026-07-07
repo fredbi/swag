@@ -1,5 +1,3 @@
-//go:build ignore
-
 // Command gen builds a compact rune -> word table from ucd/DerivedName.txt.
 //
 // Pipeline (see DESIGN_v2.md §4.7.1):
@@ -18,19 +16,22 @@ import (
 	"bytes"
 	"fmt"
 	"go/format"
+	"log"
 	"os"
 	"path/filepath"
 	"regexp"
 	"sort"
 	"strings"
 	"unicode"
+
+	"github.com/go-openapi/swag/mangling/v2/ucd/internal/locate"
 )
 
 const (
-	packageName = "runewords"
-	outFile     = "tables.go"
-	inFile      = "ucd/DerivedName.txt"
-	emojiFile   = "ucd/emoji-data.txt"
+	defaultPackageName = "runewords"
+	defaultOutFile     = "tables.go"
+	ucdFile            = "DerivedName.txt"
+	ucdEmojiFile       = "emoji-data.txt"
 )
 
 type rrange struct{ lo, hi rune }
@@ -39,76 +40,18 @@ type rrange struct{ lo, hi rune }
 // protected from block elision so real emoji survive even inside mixed decorative blocks.
 var pictRanges []rrange
 
-func loadPictographic(path string) ([]rrange, error) {
-	f, err := os.Open(path)
-	if err != nil {
-		return nil, err
-	}
-	defer f.Close()
-
-	var out []rrange
-	sc := bufio.NewScanner(f)
-	for sc.Scan() {
-		line := sc.Text()
-		if i := strings.IndexByte(line, '#'); i >= 0 {
-			line = line[:i]
-		}
-		codes, prop, ok := strings.Cut(line, ";")
-		if !ok || strings.TrimSpace(prop) != "Extended_Pictographic" {
-			continue
-		}
-		codes = strings.TrimSpace(codes)
-		var lo, hi rune
-		if a, b, isRange := strings.Cut(codes, ".."); isRange {
-			fmt.Sscanf(a, "%X", &lo)
-			fmt.Sscanf(strings.TrimLeft(b, "."), "%X", &hi)
-		} else {
-			fmt.Sscanf(codes, "%X", &lo)
-			hi = lo
-		}
-		out = append(out, rrange{lo, hi})
-	}
-	sort.Slice(out, func(i, j int) bool { return out[i].lo < out[j].lo })
-	return out, sc.Err()
-}
-
-func isPictographic(r rune) bool {
-	i := sort.Search(len(pictRanges), func(i int) bool { return pictRanges[i].hi >= r })
-	return i < len(pictRanges) && r >= pictRanges[i].lo && r <= pictRanges[i].hi
-}
-
-type kept struct {
-	r    rune
-	word string
-}
-
-// exclusion tallies, in evaluation order.
-type stats struct {
-	total       int
-	rangeLine   int
-	ascii       int
-	nonprint    int
-	combining   int
-	separator   int
-	digit       int
-	latin       int
-	numeral     int
-	han         int
-	hangul      int
-	block       int
-	kept        int
-	unsummar    int
-	unsummExamp []string
-}
-
 func main() {
-	if err := run(); err != nil {
-		fmt.Fprintln(os.Stderr, "error:", err)
-		os.Exit(1)
+	pkg, outFile, ucdLocation := resolveArgs()
+
+	if err := run(pkg, outFile, ucdLocation); err != nil {
+		log.Fatalf("error: %v", err)
 	}
 }
 
-func run() error {
+func run(pkg, outFile, ucdLocation string) error {
+	inFile := filepath.Join(ucdLocation, ucdFile)
+	emojiFile := filepath.Join(ucdLocation, ucdEmojiFile)
+
 	var err error
 	if pictRanges, err = loadPictographic(emojiFile); err != nil {
 		return err
@@ -206,6 +149,7 @@ func run() error {
 			order = append(order, e.word)
 		}
 	}
+
 	var blob strings.Builder
 	offsets := make([]int, len(order)+1)
 	for i, w := range order {
@@ -214,11 +158,80 @@ func run() error {
 	}
 	offsets[len(order)] = blob.Len()
 
-	if err := emit(entries, idOf, order, blob.String(), offsets); err != nil {
+	inFile, err = filepath.Rel(filepath.Dir(ucdLocation), inFile)
+	if err != nil {
 		return err
 	}
+
+	if err := emit(inFile, pkg, outFile, entries, idOf, order, blob.String(), offsets); err != nil {
+		return err
+	}
+
 	report(&st, entries, order, blob.Len(), offsets)
+
 	return nil
+}
+
+func loadPictographic(path string) ([]rrange, error) {
+	f, err := os.Open(path)
+	if err != nil {
+		return nil, err
+	}
+	defer f.Close()
+
+	var out []rrange
+	sc := bufio.NewScanner(f)
+	for sc.Scan() {
+		line := sc.Text()
+		if i := strings.IndexByte(line, '#'); i >= 0 {
+			line = line[:i]
+		}
+		codes, prop, ok := strings.Cut(line, ";")
+		if !ok || strings.TrimSpace(prop) != "Extended_Pictographic" {
+			continue
+		}
+		codes = strings.TrimSpace(codes)
+		var lo, hi rune
+		if a, b, isRange := strings.Cut(codes, ".."); isRange {
+			fmt.Sscanf(a, "%X", &lo)
+			fmt.Sscanf(strings.TrimLeft(b, "."), "%X", &hi)
+		} else {
+			fmt.Sscanf(codes, "%X", &lo)
+			hi = lo
+		}
+		out = append(out, rrange{lo, hi})
+	}
+	sort.Slice(out, func(i, j int) bool { return out[i].lo < out[j].lo })
+	return out, sc.Err()
+}
+
+func isPictographic(r rune) bool {
+	i := sort.Search(len(pictRanges), func(i int) bool { return pictRanges[i].hi >= r })
+	return i < len(pictRanges) && r >= pictRanges[i].lo && r <= pictRanges[i].hi
+}
+
+type kept struct {
+	r    rune
+	word string
+}
+
+// exclusion tallies, in evaluation order.
+type stats struct {
+	total       int
+	rangeLine   int
+	ascii       int
+	nonprint    int
+	combining   int
+	separator   int
+	digit       int
+	latin       int
+	numeral     int
+	han         int
+	hangul      int
+	block       int
+	kept        int
+	unsummar    int
+	unsummExamp []string
 }
 
 // ─── classification ────────────────────────────────────────────────────────
@@ -401,10 +414,10 @@ func stripScriptPrefix(name string) (string, bool) {
 
 // offsetBits is the width of a blob offset. 17 bits suffice for the current blob (~103 KiB);
 // 18 gives Unicode-17 / Go-1.27 headroom (256 KiB ceiling) and, crucially, addresses the whole
-// blob so no banking is needed. Stored as uint16 low + 2-bit high sidecar (see DESIGN_v2.md §12).
+// blob so no banking is needed. Stored as uint16 low + 2-bit high sidecar.
 const offsetBits = 18
 
-func emit(entries []kept, idOf map[string]int, order []string, blob string, offsets []int) error {
+func emit(source, packageName, outFile string, entries []kept, idOf map[string]int, order []string, blob string, offsets []int) error {
 	// Interval-encode the sorted rune keys into maximal runs of consecutive codepoints.
 	var runStart []rune
 	var runFirstIndex []int
@@ -423,14 +436,14 @@ func emit(entries []kept, idOf map[string]int, order []string, blob string, offs
 
 	var b bytes.Buffer
 	fmt.Fprintf(&b, "// Code generated by gen.go. DO NOT EDIT.\n\npackage %s\n\n", packageName)
-
+	fmt.Fprintf(&b, "// Generated from %s.\n", source)
 	fmt.Fprintf(&b, "// wordBlob concatenates every distinct word (%d of them).\n", len(order))
 	fmt.Fprintf(&b, "const wordBlob = %q\n\n", blob)
 
 	// Offsets: 18-bit, split into a uint16 low array + a 2-bit high sidecar (4 entries per byte).
 	// off(id) = uint32(wordOffHi[id>>2]>>(2*(id&3))&3)<<16 | uint32(wordOffLo[id]).
-	fmt.Fprintf(&b, "// wordOffLo[id]:wordOffLo[id+1] (with high bits from wordOffHi) slices wordBlob for word id.\n")
-	fmt.Fprintf(&b, "var wordOffLo = []uint16{")
+	fmt.Fprint(&b, "// wordOffLo[id]:wordOffLo[id+1] (with high bits from wordOffHi) slices wordBlob for word id.\n")
+	fmt.Fprint(&b, "var wordOffLo = []uint16{")
 	for i, off := range offsets {
 		if i%16 == 0 {
 			b.WriteString("\n\t")
@@ -455,7 +468,7 @@ func emit(entries []kept, idOf map[string]int, order []string, blob string, offs
 
 	// Interval keys: runStart[i] starts maximal run i; runFirstIndex[i] is that run's first global rune index.
 	fmt.Fprintf(&b, "// runStart[i] is the first rune of maximal consecutive run i;\n")
-	fmt.Fprintf(&b, "// runFirstIndex[i] is its global rune index (runFirstIndex[len]=N sentinel). See DESIGN_v2.md §12.\n")
+	fmt.Fprintf(&b, "// runFirstIndex[i] is its global rune index (runFirstIndex[len]=N sentinel).\n")
 	fmt.Fprintf(&b, "var runStart = []uint32{")
 	for i, r := range runStart {
 		if i%12 == 0 {
@@ -483,7 +496,7 @@ func emit(entries []kept, idOf map[string]int, order []string, blob string, offs
 		}
 		fmt.Fprintf(&b, "%d, ", idOf[e.word])
 	}
-	b.WriteString("\n}\n")
+	_, _ = b.WriteString("\n}\n")
 
 	out, err := format.Source(b.Bytes())
 	if err != nil {
@@ -569,7 +582,7 @@ func report(st *stats, entries []kept, order []string, blobLen int, offsets []in
 		w string
 		n int
 	}
-	var top []wc
+	top := make([]wc, 0, len(count))
 	for w, n := range count {
 		top = append(top, wc{w, n})
 	}
@@ -579,4 +592,31 @@ func report(st *stats, entries []kept, order []string, blobLen int, offsets []in
 		e("  %4d x  %q\n", top[i].n, top[i].w)
 	}
 	_ = filepath.Join
+}
+
+func resolveArgs() (pkg, outFile, ucdLocation string) {
+	pkg = defaultPackageName
+	outFile = defaultOutFile
+
+	if len(os.Args) > 1 {
+		pkg = os.Args[1]
+	}
+
+	if len(os.Args) > 2 {
+		outFile = os.Args[2]
+	}
+
+	if len(os.Args) > 3 {
+		ucdLocation = os.Args[3]
+	}
+
+	if ucdLocation == "" {
+		var err error
+		ucdLocation, err = locate.UCD()
+		if err != nil {
+			log.Fatalf("cannot find ucd source: %v", err)
+		}
+	}
+
+	return pkg, outFile, ucdLocation
 }

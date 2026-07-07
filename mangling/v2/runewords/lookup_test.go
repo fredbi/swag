@@ -51,7 +51,7 @@ func TestTableInvariants(t *testing.T) {
 	// runStart strictly ascending; runFirstIndex strictly ascending starting at 0 with an N sentinel.
 	require.Equal(t, len(runStart)+1, len(runFirstIndex), "runFirstIndex must have a trailing sentinel")
 	require.Equal(t, uint32(0), runFirstIndex[0])
-	require.Equal(t, uint32(n), runFirstIndex[len(runFirstIndex)-1], "sentinel must equal rune count")
+	require.Equal(t, uint32(n), runFirstIndex[len(runFirstIndex)-1], "sentinel must equal rune count") //nolint:gosec // in this case int is small and fits in uint32 (no overflow)
 	for i := 1; i < len(runStart); i++ {
 		require.Lessf(t, runStart[i-1], runStart[i], "runStart not ascending at %d", i)
 		require.Lessf(t, runFirstIndex[i-1], runFirstIndex[i], "runFirstIndex not ascending at %d", i)
@@ -59,7 +59,7 @@ func TestTableInvariants(t *testing.T) {
 
 	// Offsets (via the 18-bit sidecar) non-decreasing, first 0, last == blob length.
 	require.Equal(t, uint32(0), offset18(0))
-	require.Equal(t, uint32(len(wordBlob)), offset18(uint16(numWords)))
+	require.Equal(t, uint32(len(wordBlob)), offset18(uint16(numWords))) //nolint:gosec // in this case int is small and fits in uint32 (no overflow)
 	for id := 1; id <= numWords; id++ {
 		require.LessOrEqualf(t, offset18(uint16(id-1)), offset18(uint16(id)), "offsets decrease at id %d", id)
 	}

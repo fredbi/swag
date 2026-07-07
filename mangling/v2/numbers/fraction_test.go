@@ -83,5 +83,9 @@ func decimalCases() iter.Seq[decimalCase] {
 		{"1.5", "one dot five"},
 		{"2.718", "two dot seven one eight"},
 		{"-1.5", "minus one dot five"},
+		{"0.16667", "one sixth"},
+		{"0.83333", "five sixths"},
+		{"0.14286", "one seventh"},
+		{"0.11111", "one ninth"},
 	})
 }

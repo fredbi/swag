@@ -1,21 +1,174 @@
 package mangling
 
-// asciiFold maps a Latin letter bearing a diacritic (or a distinct Latin letter such as æ, ß, þ) to its plain ASCII
-// equivalent, preserving case.
+import (
+	"strings"
+	"unicode"
+	"unicode/utf8"
+
+	"github.com/go-openapi/swag/mangling/v2/numbers"
+	"github.com/go-openapi/swag/mangling/v2/runewords"
+)
+
+// ToASCII transforms a string to plain ASCII: Latin diacritics are folded (café → cafe), combining
+// marks stripped, and any remaining non-ASCII rune is replaced by its phonetic Unicode-name word
+// (π → pi, 😀 → grinning face), space-separated so it reads as words. Runes with no known word (CJK
+// ideographs, decorative symbols) are dropped.
 //
-// It is the data behind [Ascii] / [ToAscii].
+// This works best for European languages; it falls back to [UnicodeName] for other scripts and emoji.
+func ToASCII[T ~string | ~[]byte](s T) string {
+	in := string(s)
+	if isASCII(in) {
+		return in
+	}
+
+	var b strings.Builder
+	b.Grow(len(in))
+	for _, r := range in {
+		switch {
+		case r < utf8.RuneSelf:
+			b.WriteRune(r)
+		case isCombiningMark(r):
+			// strip
+		default:
+			if f, ok := asciiFold[r]; ok {
+				b.WriteString(f)
+			} else if v, ok := numbers.RuneNumber(r); ok {
+				b.WriteByte(' ')
+				b.WriteString(formatNumeral(v)) // numeral rune → plain number ("½" → "0.5"), not wording
+				b.WriteByte(' ')
+			} else if w, ok := runewords.Word(r); ok {
+				b.WriteByte(' ')
+				b.WriteString(w)
+				b.WriteByte(' ')
+			} // else: dropped
+		}
+	}
+
+	return strings.Join(strings.Fields(b.String()), " ")
+}
+
+// ASCII returns the plain-ASCII equivalent of a single rune bearing a diacritic (é → "e", ñ → "n"),
+// the rune itself if already ASCII, or "" if it has no ASCII folding (non-Latin letters, symbols, emoji.
+//
+// Use [UnicodeName] for those
+//
+// NOTE: combining marks fold to "".
+func ASCII[T ~rune | ~byte](r T) string {
+	c := rune(r)
+	if c < utf8.RuneSelf {
+		return string(c)
+	}
+	if s, ok := asciiFold[c]; ok {
+		return s
+	}
+
+	return ""
+}
+
+// UnicodeName returns a lowercase phonetic word for a rune with no ASCII folding.
+//
+// The word is a distinctive Unicode-name fragment (π → "pi", 😀 → "grinning face", ж → "zhe").
+// ASCII runes are returned as-is.
+//
+// NOTE: runes the mangler elides (CJK ideographs, combining marks, decorative symbols) return "".
+func UnicodeName[T ~rune | ~byte](r T) string {
+	c := rune(r)
+	if c < utf8.RuneSelf {
+		return string(c)
+	}
+	if w, ok := runewords.Word(c); ok {
+		return w
+	}
+
+	return ""
+}
+
+// foldASCII is the ASCII-folding stage.
+//
+// It rewrites each token that contains foldable non-ASCII runes into its ASCII form
+// (Latin diacritics folded via [asciiFold], combining marks stripped).
+//
+// It runs between segmentation and assembly when folding is enabled (off in the base [Mangler], on in the [GoMangler]).
+//
+// Pure-ASCII tokens, and tokens whose non-ASCII runes are non-foldable (e.g. CJK — a future rune-name concern),
+// are left untouched, so nothing allocates for them.
+func (m Mangler) foldASCII(t *Tokens) {
+	for i := range t.Len() {
+		runes, override := t.span(i)
+		if override != "" {
+			continue // already rewritten by an earlier stage
+		}
+
+		if folded, ok := foldToASCII(runes); ok {
+			t.Rewrite(i, folded)
+		}
+	}
+}
+
+// foldToASCII returns the ASCII-folded form of runes and whether any folding happened.
+//
+// It allocates only when something is actually folded (detected in a cheap first pass).
+func foldToASCII(runes []rune) (string, bool) {
+	needsFold := false
+	for _, r := range runes {
+		if r >= utf8.RuneSelf && foldable(r) {
+			needsFold = true
+
+			break
+		}
+	}
+
+	if !needsFold {
+		return "", false
+	}
+
+	var b strings.Builder
+	b.Grow(len(runes))
+
+	for _, r := range runes {
+		switch {
+		case r < utf8.RuneSelf:
+			_, _ = b.WriteRune(r)
+		case isCombiningMark(r):
+			// strip
+		default:
+			if s, ok := asciiFold[r]; ok {
+				_, _ = b.WriteString(s)
+			} else {
+				_, _ = b.WriteRune(r) // non-foldable (e.g. CJK): left for the future rune-name stage
+			}
+		}
+	}
+
+	return b.String(), true
+}
+
+func foldable(r rune) bool {
+	if _, ok := asciiFold[r]; ok {
+		return true
+	}
+
+	return isCombiningMark(r)
+}
+
+func isCombiningMark(r rune) bool {
+	return unicode.In(r, unicode.Mn, unicode.Mc, unicode.Me)
+}
+
+// asciiFold maps a Latin letter bearing a diacritic (or a distinct Latin letter such as æ, ß, þ)
+// to its plain ASCII equivalent, preserving case.
+//
+// It is the data that supports [Ascii] / [ToASCII].
 //
 // Scope: European Latin scripts (Latin-1 Supplement, Latin Extended-A, a few Extended-B).
-// This is diacritic *folding* — strip the accent, keep the base letter (ü→u, not the German ü→ue
-// transliteration).
+//
+// This is diacritic *folding* — strip the accent, keep the base letter (ü→u, not the German ü→ue transliteration).
 //
 // Distinct letters that have no single-rune ASCII base fold to their conventional digraph (æ→ae, œ→oe, ß→ss,
 // þ→th, ð→d).
 //
 // NOT covered here (by design): symbols and punctuation — see [defaultSymbolWords]; and non-Latin scripts (Greek,
 // Cyrillic, CJK, …), which fall back to the phonetic rune name (see [UnicodeName]).
-//
-// NOTE: prepared as data only; not yet wired into the pipeline.
 var asciiFold = map[rune]string{
 	// A
 	'à': "a", 'á': "a", 'â': "a", 'ã': "a", 'ä': "a", 'å': "a", 'ā': "a", 'ă': "a", 'ą': "a", 'ǎ': "a",
@@ -80,4 +233,59 @@ var asciiFold = map[rune]string{
 	// Z
 	'ź': "z", 'ż': "z", 'ž': "z",
 	'Ź': "Z", 'Ż': "Z", 'Ž': "Z",
+}
+
+// defaultSymbolWords maps a symbol rune to the word it verbalizes to (e.g. "@" => "at", "!" => "bang").
+//
+// This is the default data for the symbol policy of §4.7 (verbalization): when a target chooses to *verbalize* a
+// symbol rather than drop it, this table supplies the word.
+// It is deliberately narrow — only symbols that read meaningfully as a word.
+//
+// Explicitly NOT included (handled elsewhere, not by verbalization):
+//   - separators and whitespace (space, and — depending on config — '-' '_' '.'): consumed by segmentation;
+//   - structural/grouping punctuation (brackets, braces, parens, quotes): default policy drops them;
+//   - letters with diacritics: folded to ASCII via [asciiFold].
+//
+// The current [defaultTokenSeparator] treats all [unicode.IsPunct] as a separator, which is too wide — it would elide
+// the very symbols listed here before they could be verbalized.
+//
+// Reconciling that (separator set vs symbol-word set) is a wiring concern, deferred.
+//
+// NOTE: prepared as data only; not yet wired into the pipeline.
+var defaultSymbolWords = map[rune]string{
+	// operators & markers (ASCII)
+	'@':  "at",
+	'&':  "and",
+	'#':  "hash",
+	'%':  "percent",
+	'+':  "plus",
+	'=':  "equals",
+	'*':  "star",
+	'/':  "slash",
+	'\\': "backslash",
+	'|':  "pipe",
+	'~':  "tilde",
+	'^':  "caret",
+	'!':  "bang",
+	'?':  "question",
+	'<':  "less",
+	'>':  "greater",
+	'$':  "dollar",
+	'.':  "dot", // e.g. spelled decimals: "one dot two" (verbalize vs. elide is the target's symbol policy)
+
+	// currency & misc symbols worth a word (non-ASCII)
+	'€': "euro",
+	'£': "pound",
+	'¥': "yen",
+	'¢': "cent",
+	'©': "copyright",
+	'®': "registered",
+	'™': "trademark",
+	'§': "section",
+	'¶': "paragraph",
+	'°': "degree",
+	'µ': "micro",
+	'×': "times",
+	'÷': "divide",
+	'±': "plusminus",
 }

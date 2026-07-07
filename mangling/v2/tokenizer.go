@@ -3,6 +3,16 @@ package mangling
 import (
 	"iter"
 	"unicode"
+
+	"github.com/go-openapi/swag/pools"
+)
+
+// Pooled backings for the zero-copy token model (§4.3), reused across [Mangler.Transform] calls.
+//
+// The token slice is the churny one; the rune slice holds the single shared copy of the input.
+var (
+	tokenSlicePool = pools.NewPoolSlice[token]()
+	runeSlicePool  = pools.NewPoolSlice[rune]()
 )
 
 // Tokenizer splits an UTF-8 string into tokens along opinionated segmentation rules (§4.2).
@@ -128,6 +138,41 @@ func (m Tokenizer) segment(t *Tokens) {
 	flush(n)
 }
 
+// token is a zero-copy view into the shared []rune of a [Tokens] value.
+// A half-open span plus the classification computed by the scanner.
+//
+// It is internal: transforms reach token data only through [Tokens]' index-based methods, so the struct can evolve
+// (e.g. the override vs. side-arena question, §9) without touching the public API.
+type token struct {
+	start, end int    // half-open span [start,end) into Tokens.runes
+	kind       Kind   // word | number | symbol | initialism
+	casing     Casing // lower | upper | title | mixed
+	override   string // rewritten content; empty unless a transform replaced the span
+}
+
+// Kind classifies a token produced by segmentation.
+//
+// The tokenizer emits [KindWord], [KindNumber] and [KindSymbol]; [KindInitialism] is set later by the initialism
+// overlay (§4.4), never by the tokenizer.
+type Kind uint8
+
+const (
+	KindWord       Kind = iota // a run of letters
+	KindNumber                 // a run of decimal digits (Nd)
+	KindSymbol                 // a single non-letter, non-digit, non-separator rune (@, #, …)
+	KindInitialism             // retagged by the initialism overlay (HTTP, JSON, …)
+)
+
+// Casing describes the case pattern of a token, computed during segmentation.
+type Casing uint8
+
+const (
+	CasingLower Casing = iota // lowercase run: "http"
+	CasingUpper               // uppercase run (screaming / all-caps): "HTTP"
+	CasingTitle               // title case: "Http"
+	CasingMixed               // anything else ("hTtP"), or content with no case
+)
+
 // runeClass is a rune's segmentation class.
 type runeClass uint8
 
@@ -204,3 +249,181 @@ func classifyCasing(runes []rune) Casing {
 // tokens.
 // See [Tokens] (token.go / tokens.go).
 type Transform func(*Tokens)
+
+// Tokens is the mutable, pooled token model: a slice of [token] spans over one shared []rune (the only full copy of the
+// input).
+//
+// Transforms mutate it in place; strings are materialized only at assembly.
+//
+// A Tokens is borrowed from a pool for the duration of one mangling and released with [Tokens.redeem]; it must not be
+// retained afterwards.
+// It is the value handed to a [Transform].
+//
+// The public surface is deliberately **index-based** (the [token] struct stays internal): a transform reads with
+// [Tokens.Len]/[Tokens.Text]/[Tokens.Kind]/[Tokens.Casing] and edits with
+// [Tokens.SetKind]/[Tokens.Rewrite]/[Tokens.Split]/[Tokens.Merge].
+type Tokens struct {
+	runes *pools.Slice[rune]
+	toks  *pools.Slice[token]
+
+	// count is the logical number of tokens.
+	//
+	// It equals the pooled slice length after segmentation, but a stage that merges tokens in place (e.g. the initialism
+	// overlay) shrinks it below the slice length, so only toks[:count] are live.
+	count int
+
+	releaseRunes func()
+	releaseToks  func()
+}
+
+// borrowTokens borrows a Tokens and loads the input as one shared []rune.
+//
+// It returns the wrapper by value so it stays on the caller's stack (no heap alloc): the pooled slices and their redeem
+// closures are cached by pools, so nothing here allocates.
+func borrowTokens(in string) Tokens {
+	// len(in) bytes is an upper bound on the rune count, so the pre-grown slice never reallocates.
+	runeSlice, releaseRunes := runeSlicePool.BorrowWithSizeAndRedeem(len(in))
+	for _, r := range in {
+		runeSlice.Append(r)
+	}
+	tokSlice, releaseToks := tokenSlicePool.BorrowWithRedeem()
+
+	return Tokens{
+		runes:        runeSlice,
+		toks:         tokSlice,
+		releaseRunes: releaseRunes,
+		releaseToks:  releaseToks,
+	}
+}
+
+// runeLen is the number of runes in the shared input (a size hint for assembly).
+func (t *Tokens) runeLen() int { return t.runes.Len() }
+
+// span returns token i's raw rune span (a view into the shared slice — no copy) and its override (empty unless a
+// transform rewrote it).
+func (t *Tokens) span(i int) ([]rune, string) {
+	tk := t.toks.Slice()[i]
+
+	return t.runes.Slice()[tk.start:tk.end], tk.override
+}
+
+// redeem returns the pooled backings.
+//
+// The Tokens must not be used afterwards.
+func (t *Tokens) redeem() {
+	t.releaseToks()
+	t.releaseRunes()
+}
+
+// push appends a token spanning [start,end) with its classification.
+//
+// Scanner-only.
+func (t *Tokens) push(start, end int, kind Kind, casing Casing) {
+	t.toks.Append(token{start: start, end: end, kind: kind, casing: casing})
+	t.count++
+}
+
+// --- read API ---
+
+// Len is the number of live tokens.
+func (t *Tokens) Len() int { return t.count }
+
+// Text returns the content of token i: its rewritten override if set, else its rune span.
+func (t *Tokens) Text(i int) string {
+	tk := t.toks.Slice()[i]
+	if tk.override != "" {
+		return tk.override
+	}
+
+	return string(t.runes.Slice()[tk.start:tk.end])
+}
+
+// Kind returns the kind of token i.
+func (t *Tokens) Kind(i int) Kind { return t.toks.Slice()[i].kind }
+
+// Casing returns the case pattern of token i.
+func (t *Tokens) Casing(i int) Casing { return t.toks.Slice()[i].casing }
+
+// All ranges over the tokens' rendered text by index (read-only).
+func (t *Tokens) All() iter.Seq2[int, string] {
+	return func(yield func(int, string) bool) {
+		for i := range t.Len() {
+			if !yield(i, t.Text(i)) {
+				return
+			}
+		}
+	}
+}
+
+// --- write API (mutating an element in place is safe; growing goes through the pool wrapper) ---.
+
+// SetKind retags token i — e.g. the initialism overlay marks a token [KindInitialism].
+func (t *Tokens) SetKind(i int, kind Kind) {
+	t.toks.Slice()[i].kind = kind
+}
+
+// Rewrite replaces the rendered content of token i (transliteration, inflection, verbalization).
+func (t *Tokens) Rewrite(i int, s string) {
+	t.toks.Slice()[i].override = s
+}
+
+// Split divides token i at offset at (relative to the token's start) into two adjacent tokens.
+//
+// insert a token, adjust spans and recompute casing.
+//
+// Needed by sub-token initialism matching (IDS → ID + S).
+func (t *Tokens) Split(i, at int) {
+	_, _ = i, at
+}
+
+// Merge folds tokens [i, j] into a single token.
+//
+// coalesce spans, recompute casing, drop the merged entries.
+//
+// Needed by the multi-token initialism merge across natural breaks (IPv4, UTF8).
+func (t *Tokens) Merge(i, j int) {
+	_, _ = i, j
+}
+
+// defaultTokenSeparator reports whether a rune is a token separator — a rune that is *elided* (dropped, never
+// emitted) and marks a boundary between tokens.
+//
+// It implements bucket 3 of the segmentation classification (see also [defaultSymbolWords]):
+//
+//  1. letters & digits    -> token content (never a separator).
+//  2. verbalized symbols  -> NOT a separator. A rune in [defaultSymbolWords] (@ ! # & . …) becomes
+//     its own single-rune *symbol token*; whether it is then dropped or turned into a word is the
+//     target's symbol policy (§4.7), decided downstream — not here. This is why "." can both be
+//     elided for an identifier (Index01) and spelled "dot" when a target verbalizes.
+//  3. everything else      -> separator (this function): whitespace, non-printable runes, and the
+//     structural punctuation categories not claimed by bucket 2.
+//
+// Design notes:
+//   - !unicode.IsGraphic covers control (Cc), format (Cf: zero-widths, BOM, soft hyphen) and
+//     line/paragraph separators (Zl, Zp), plus surrogate/private/unassigned — no explicit test needed.
+//   - Symbol categories Sm/Sc/So (+ < = > | ~ $ …) are intentionally NOT tested by category: a symbol
+//     we verbalize is pulled out by bucket 2; one we don't falls through as a symbol token (→ drop or
+//     rune-name fallback downstream). Plain unicode.IsPunct was both too wide (ate @ ! #) and too
+//     narrow (missed + < = >); this split fixes both.
+//   - Sk (modifier symbols: backtick, spacing accents ´ ¨ ¯ ¸ ˆ ˜ …) ARE elided, except those the
+//     word map claims (e.g. ^ -> caret), which map-first keeps as symbol tokens.
+//
+// NOTE: this is the intended default predicate; it is not yet wired into a working tokenizer.
+func defaultTokenSeparator(r rune) bool {
+	if _, verbalize := defaultSymbolWords[r]; verbalize {
+		return false // bucket 2: a symbol token, not a separator
+	}
+
+	return unicode.IsSpace(r) ||
+		!unicode.IsGraphic(r) || // control, format, line/para separators, surrogate, private, unassigned
+		unicode.In(r,
+			unicode.Pd, // dashes / hyphens
+			unicode.Ps, // open brackets/parens/braces
+			unicode.Pe, // close brackets/parens/braces
+			unicode.Pi, // initial quotes
+			unicode.Pf, // final quotes
+			unicode.Pc, // connectors (underscore, ties)
+			unicode.Po, // other punctuation (comma, colon, semicolon, … minus the verbalized ones)
+			unicode.Sk, // modifier symbols: backtick, spacing accents (´ ¨ ¯ ¸ ˆ ˜ …), minus verbalized ones (^)
+		)
+}
