@@ -1,6 +1,9 @@
 # Mangling v2 — design
 
-> Status: **draft / in discussion** (started 2026-06-05, branch `exp/mangling-v2`).
+> Status: **core implemented, iterating** (started 2026-06-05, branch `exp/mangling-v2`; status refreshed 2026-07-06).
+> The pipeline, the Go ruleset (idents / package / module / file / const), the initialism overlay, ASCII folding and
+> the `numbers` subpackage are built and tested. Remaining work is scoped in **§11 Implementation status** — chiefly
+> Unicode rune-naming and the inflection engine.
 > This document is exploratory. v2 is expected to graduate into its own repository as a core,
 > reusable codegen primitive shared across the go-openapi / go-swagger ecosystem. v1 (`go-openapi/swag/mangling`)
 > remains maintained and frozen for a long time. There are **no backward-compatibility constraints** on the v2 API.
@@ -159,17 +162,22 @@ A **Target** describes how to render the token stream:
 - **separator**: `""`, `"_"`, `"-"`, `" "`, `"."`.
 - **affix / prefix safeguard**: leading-non-letter repair for identifiers (v1's `PrefixFunc`, default `X`).
 
-**Exported and unexported identifiers are the *same* target**, differing only by the initial-rune case rule. Every
-other decision — segmentation, transforms, and especially the reserved-word repair (§4.6) — is shared, so the two
-outputs stay pure case-variants of each other. Because all Go keywords and predeclared identifiers are lowercase, the
-exported form never collides on its own; deciding repair per-target independently would desync them (`Unexported("type")`
-→ `typeVar` while `Exported("type")` → `Type`). We therefore decide repair on the shared, case-insensitive basis and apply
-it to both: `typeVar` / `TypeVar`. Symmetric repair is the **default**; an option may decouple it for callers who prefer the
-exported form left un-repaired.
+**Exported and unexported identifiers share the same target**, differing only by the initial-rune case rule (plus the
+leading-initialism lowercasing for unexported, §4.4). One place they *diverge*: **reserved-word repair (§4.6)**.
+
+**Repair is applied only where a collision actually occurs — the unexported form** (`Unexported("type")` → `typeVar`).
+Because all Go keywords and predeclared identifiers are lowercase, a Title-cased exported name can never equal one, so
+**the exported form is left undistorted** (`Exported("type")` → `Type`, `Exported("append")` → `Append`).
+
+> Rationale (revised — was "symmetric repair" in an earlier draft): the goal is **minimum distortion of the origin
+> token**. We do *not* suffix the exported form just to keep it a case-variant of the unexported one (`TypeVar`) — `Type`
+> is a perfectly good exported name and needs no mangling. The explicit `IdentExported` / `IdentUnexported` API is what
+> earns this: unlike v1, where everything was a "go name" and callers nested `ToVarName(ToGoName(...))` unsure which
+> rule applied, every generated item (exported field, func, or a local/unexported var) now calls the mangler exactly
+> once, and lands with the least distortion for its role.
 
 The repair **token** is a ruleset field (§4.6). The Go ruleset defaults to the word suffix `Var` (matching
-go-swagger's current behavior, easing migration); the token is a plain word rather than a trailing `_`, but the
-symmetry argument is unchanged — `typeVar` and `TypeVar` remain pure case-variants regardless of the token.
+go-swagger's convention: `type` → `typeVar`), configurable per ruleset.
 
 ### 4.6 Validate / repair (the consolidation seam)
 
@@ -178,7 +186,7 @@ rules move in. Each is *detect collision → mutate*:
 
 | Target | Check | Default repair |
 |---|---|---|
-| identifier | not a Go keyword/predeclared (also builtins for unexported); valid identifier | word suffix (`type`→`TypeVar`) |
+| identifier (unexported only) | not a Go keyword/predeclared or builtin (all lowercase → only unexported can collide) | word suffix (`type`→`typeVar`) |
 | package name | lower, no separator, valid, not a keyword, not reserved dir | repair |
 | dir name | not `vendor` / `internal` | suffix (go-swagger: `_swagger`) |
 | file name | last `_`-segment ∉ {GOOS, GOARCH, `test`} | append safe token (go-swagger: `swagger` → `test_swagger.go`) |
@@ -206,12 +214,17 @@ fragments to the core mangler:
    - **package name / alias** ← the **last `-`-delimited segment** of the basename, made a valid lowercase identifier.
      `alpha-beta` → `beta`; `go-redis` → `redis`. This is a *code-generation* convention (we own the emitted
      `package X` name), distinct from `IdentExported`/`Unexported`, which keep every word (`alphaBeta`).
-3. **`/vN` major-version elements**: a trailing `/v2` is a version, not the name-bearer — skip it when choosing the
-   basename to name from (`github.com/user/repo/v2` → name from `repo`).
+3. **Go-toolchain short-name repairs** (on the last `-`-segment): a reserved name gets `pkg` appended directly
+   (`main`→`mainpkg`; likewise `vendor`/`internal`/`testdata`); a bare major-version element `^[vV]\d+$` becomes
+   `version<N>` (`xxxx/v2`→`version2`, `pkg = xxxx/version2`). The repair reflects into `pkg` and `parts` too.
+   *(This supersedes an earlier note that a `/vN` should be skipped to name from the parent — go-swagger transforms
+   `v2`→`version2` instead, which is simpler and needs no cross-element lookback.)*
 4. **Bare input** (no `/`): basename = whole string, empty prefix; falls out naturally.
 
-So `Package`/`Module` are thin path-aware compositions over the primitives (split → mangle basename two ways → rejoin
-with `/`), and the tokenizer stays single-purpose.
+Implemented as `Package(pth) (shortName, pkg)` and `PackageWithParts(pth) (shortName, pkg, parts)` — the latter hands
+the caller the `[x, y, z]` parts to make its own alias-deconfliction decisions. Only `/` is a separator (a package path
+is not a filesystem path); a trailing `/` is trimmed first. NOT yet applied: reserved-*keyword* repair on the short name
+(`MyPackage`→short `package`, a keyword) — left raw for the caller, pending a decision.
 
 ### 4.7 Verbalizing non-word input (values → identifiers)
 
@@ -373,7 +386,7 @@ func MakeGoMangler(opts ...GoOption) GoMangler
 func NewGoMangler(opts ...GoOption) *GoMangler
 
 func (g GoMangler) IdentExported(s string) string    // was ToGoName
-func (g GoMangler) IdentUnexported(s string) string  // was ToVarName; case-variant, shared repair (TypeVar/typeVar)
+func (g GoMangler) IdentUnexported(s string) string  // was ToVarName; reserved-word repair here only (type→typeVar)
 func (g GoMangler) Package(s string) (alias, pkg string)
 func (g GoMangler) Module(s string) string
 func (g GoMangler) File(s string) string             // neutralizes _test, _linux, _amd64, … suffixes
@@ -385,20 +398,20 @@ func (g GoMangler) HumanName(s string, title bool) string
 // codegen template's job (typeName + ConstName(value)), not the mangler's. (EnumName dropped.)
 func (g GoMangler) ConstName(value string, opts ...ValueOption) string
 
-// ─── ValueMangler: arbitrary literals → words (best-effort, knob-driven) ────
-type ValueMangler struct { Tokenizer /* + valueOptions */ }
-func MakeValueMangler(opts ...ValueOption) ValueMangler
-func (v ValueMangler) Verbalize(s string) string
-// Value knobs — the caller owns policy for gibberish input:
-func OnSymbol(p SymbolPolicy) ValueOption      // drop | verbalize | phonetic, per (symbol, position)
-func OnNumber(p NumberPolicy) ValueOption       // to-words | keep-digits | bounded
-func OnUnknownRune(p RunePolicy) ValueOption    // drop | rune-name | prefix
-func WithValuePrefix(word string) ValueOption   // leading-digit / empty-result safeguard
+// ─── Value → identifier: knob-driven, best-effort ───────────────────────────
+// NOTE (2026-07-06): the standalone `ValueMangler` type was dropped. Verbalization is reached only through
+// `GoMangler.ConstName(value, ...ValueOption)` — there is no separate value entry point (§11). The value knobs
+// below are the *planned* option surface for ConstName; only WithGoNumberOptions is wired today.
+// func OnSymbol(p SymbolPolicy) ValueOption      // drop | verbalize | phonetic, per (symbol, position)  [planned]
+// func OnNumber(p NumberPolicy) ValueOption       // to-words | keep-digits | bounded                     [planned]
+// func OnUnknownRune(p RunePolicy) ValueOption    // drop | rune-name | prefix                            [planned]
+// func WithValuePrefix(word string) ValueOption   // leading-digit / empty-result safeguard               [planned]
 
 // ─── package numbers: separate subpackage (own scope & complexity) ──────────
 type NumberMangler struct { /* numberOptions */ }
-func (m NumberMangler) NumberWords(s string) string  // "123" → "one hundred and twenty three"
-func (m NumberMangler) DigitWords(s string) string   // "123" → "one two three"
+func (m NumberMangler) NumberWords(s string) string           // "123" → "one hundred and twenty three"
+func (m NumberMangler) AppendWords(dst []byte, s string) []byte // string-free sibling; caller pools dst → 0 alloc
+func (m NumberMangler) DigitWords(s string) string            // "123" → "one two three"
 func NumberWords[T Numerical](n T) string
 func NumberOrdinal[T Numerical](n T) string          // 31 → 31st
 func NumberRoman[T Integer](n T) string              // 6 → vi (codegen: compact loop indices)
@@ -453,6 +466,15 @@ func WithRepairToken(tok string) Option                  // ruleset field (Go de
 > _To expand._ Matching algorithm (trie / Aho-Corasick vs current state machine); pooling strategy for `Tokens`;
 > the alloc budget vs v1; benchmark continuity (carry the `BenchmarkToXXXName` suite forward as a regression gate).
 
+**Alloc budget (measured, 2026-07-07).** The ident hot path (`IdentExported`/`IdentUnexported`, `Camelize`) is
+**1 alloc/op** — a single pooled `Tokens` (zero-copy rune views) plus one assembly buffer. The number verbalizer
+streams into one byte sink (`buf`) instead of building `[]string`+`strings.Join`: cardinals fill a stack `[7]int64`
+of digit groups and write words through a shared buffer; the scanner is byte-based (no `[]rune` copy) and slices
+number runs directly out of the input. Net: `NumberWords` is **0 alloc** for non-numeric input (fast path), **1**
+for numeric; `ConstName` fell 5 → **1 alloc/op** over two passes. `NumberMangler.AppendWords(dst, s)` is the
+string-free sibling — a caller that pools `dst` verbalizes **allocation-free** (differential-fuzzed against
+`NumberWords` for parity).
+
 ## 8. Migration / v1 mapping
 
 > _To expand._ Table mapping each v1 method + option to its v2 expression; note where output intentionally changes
@@ -473,8 +495,9 @@ Still open:
 Resolved in the 2026-07-05 review (→ §10):
 
 - ~~Facade shape~~ — no `.Go()`; a concrete `GoMangler` with an enlarged scope (idents, packages, files, modules).
-- ~~Reserved-word repair strategy~~ — rule-based (detection set + repair token); Go default token `Var`; per-word
-  repair map deferred; symmetry preserved (`typeVar`/`TypeVar`).
+- ~~Reserved-word repair strategy~~ — rule-based (detection set = keywords ∪ builtins + repair token); Go default
+  token `Var`; per-word repair map deferred. **Unexported only** (`type`→`typeVar`); exported left undistorted
+  (`Type`) — minimum-distortion over symmetry (revised 2026-07 — see §4.5).
 - ~~Letter↔digit boundary / digit-group rule~~ — tokenizer stays opinionated & lookahead-free; digit-group
   reconstruction moves to `numbers`.
 - ~~`To(Target, …)` vs facade~~ — the composable core is `Mangler.Transform(TargetTransform, string)`; targets are
@@ -515,6 +538,186 @@ Resolved in the 2026-07-05 review (→ §10):
     for the rest (CJK ideographs excepted). A defined **never-render set** (`Mn/Mc/Me`, `Cc/Cf`, `Cs/Co/Cn`, `Lm/Sk`)
     is always elided. **Graphemes + extended-Unicode tables** (flags→ISO-3166, ZWJ emoji, generator à la
     `go-runewidth`) are a **forthcoming enhancement**; for now single-codepoint emoji only.
+
+## 11. Implementation status — 2026-07-06
+
+Snapshot of the branch against this design. Legend: ✅ done & tested · 🚧 stub / partial · 📋 planned · ❌ dropped.
+
+### Built and tested ✅
+
+| Area | What landed | Design ref |
+|---|---|---|
+| Segmentation | `Tokenizer` with the §4.2 boundary signals; case-alternance is a first-class boundary (all-caps no longer explodes) | §4.2 |
+| Token model | zero-copy `Tokens` over a shared rune slice, pooled; `Text`/`Kind`/`Casing`/`All`/`SetKind`/`Rewrite` | §4.3 |
+| Assembly | `assemble` = casing × separator; `writeCased` initialism/word casing by position | §4.5 |
+| Composable core | `Mangler.Transform(TargetTransform, string)`; `MakeTargetTransform`; presets **as functions** | §4.5, §10.1–2 |
+| Presets | `TargetTitle/Sentence/Snake/Kebab/Camel/Pascal/AllCaps` + methods `Titleize/Humanize/Snakize/Kebabize/Camelize/Pascalize/AllCaps` (**`Pascal` added beyond the sketch**) | §5 |
+| Initialisms | `initialismTrie`: whole-token, sub-token, adjacent-window merge (`IPv4`/`UTF8`), pluralized keys | §4.4 |
+| ASCII folding | `foldASCII` stage, `foldToASCII` (diacritic map, digraphs), combining-mark strip; `WithAsciiFolding` | §4.7.1 tiers 1&3, §6 |
+| GoMangler | `IdentExported`, `IdentUnexported`, `Package`/`PackageWithParts`, `Module`, `File`, `ConstName` | §4.5, §4.6.1, §5 |
+| Go repairs | reserved-word (unexported only → `typeVar`), file-suffix (`_test`/GOOS/GOARCH → `swagger`), package/module short-name (`main`→`mainpkg`, `/v2`→`version2`) | §4.5, §4.6 |
+| Go options | `WithGoDefaults`, `WithGoInitialisms`/`UseGoInitialisms`, `WithGoInitialismPlurals`, `WithManglerOptions`, `WithGoNumberOptions` | §5, §4.8 |
+| numbers pkg | own subpackage: `NumberWords` (cardinals, fractions, digit-group reconstruction, special numbers, `StripOne`/`StripAnd`/precision), `NumberRoman`; wired into `ConstName` | §4.7.2, §5, §10.6 |
+| Leading-digit repair | `verbalizeLeadingNumber` verbalizes a leading numeral, keeps interior digits (`12 men`→`Twelve…`, `var 12`→`Var12`) | §4.7.2 |
+
+### Stub / partial 🚧 — the remaining work
+
+| Item | Current state | Design ref |
+|---|---|---|
+| **Unicode rune-naming** | ✅ **Done.** `v2/runewords/` generator + table (below); `ToAscii`/`UnicodeName`/`Ascii` implemented and wired into the asciify tier + `ConstName` (`expandRuneNames`, §4.7.1 tier 4). | §4.7.1 tiers 2&4, §4.7 layer 3 |
+| **Inflection engine** | `Pluralize`/`Singularize` `return ""`; `Conjugate` commented out. The `go-openapi/inflect` absorb has not started; initialism plurals currently carry their own precompute rather than sharing an engine. | §6, §4.4 |
+| **Value-policy knobs** | `ConstName` accepts `...ValueOption` but ignores them (`_ = opts`). `OnSymbol`/`OnNumber`/`OnUnknownRune`/`WithValuePrefix` unbuilt; symbol policy (`@id`→drop) not implemented. | §4.7 layer 1, §5 |
+| `Tokens.Split`/`Merge` | present but `TODO(#3)` — not needed by any built stage yet. | §4.3 |
+| Target build options | only `WithSeparator` exists; `WithCasing`/`WithAffix`/`WithRepair`/`InjectStage` from the §5 sketch are not exposed (presets cover current needs). | §5 |
+
+### Rune-naming prototype — `v2/runewords/` (2026-07-06)
+
+Own subpackage (like `numbers`) for dependency isolation — the table **always links** (asciification is a core
+feature; decided 2026-07-07, §12), it is not opt-in. `gen.go` (`//go:build ignore`) builds a compact `rune → word`
+table from `ucd/DerivedName.txt`; `lookup.go` exposes `Word(rune) (string, bool)`.
+Pipeline, in the sequence agreed with Fred:
+
+1. **Exclude what other layers already handle or elide** — ASCII, Latin+diacritics (fold map), digits (`Nd`),
+   combining marks, controls/format, separators/spacing-modifiers.
+2. **Exclude drop-during-asciify classes** — CJK Han, Hangul syllables (algorithmic romanizations; Hangul alone is
+   11,737 lines), and a curated list of **decorative/technical symbol blocks** (box drawing, block elements,
+   geometric shapes, braille, control pictures, Misc Technical/Symbols, Dingbats, Yijing, musical, mahjong/domino,
+   legacy-computing) — **gated by `Extended_Pictographic`** (from `ucd/emoji-data.txt`) so real emoji inside mixed
+   blocks survive (`❤`→Heart, `✈`→Airplane, `⌚`→Watch, `☯`→YinYang) while non-emoji decoration (`✓ ⌂ ─`) is elided.
+3. **Extract the distinctive remainder** — strip taxonomy (letter/syllable/character/sign/number templates + a
+   leading **script-token** strip from `unicode.Scripts`), then apply **one collapse rule** embodying "one readable
+   word is enough": ≤2-word remainders are kept whole (`GrinningFace`, `ThumbsUp`, `KoKai`), 3+ word phrases reduce
+   to their most-distinctive token — the longest word that is neither glue nor a qualifier (color/weight/orientation
+   stoplist), so `heavy black heart`→`heart`, `place of sajdah`→`sajdah`, `fehu feoh fe f`→`fehu`.
+4. **Compact index** — interned word blob (`directData` trick on *every* entry: short words dedupe hard, 994×
+   `"mathematical"`, 109× `"a"`), plus the compacted lookup structure (**§12**): keys are **interval-encoded** as 740
+   maximal runs of consecutive codepoints (`runStart`/`runFirstIndex`) — a single binary search then arithmetic, no
+   scan; offsets are **18-bit** (`wordOffLo` uint16 + `wordOffHi` 2-bit sidecar); `nameWordID` maps rune position → word
+   id. The flat `nameRunes []rune` and `wordOffsets []uint32` are gone.
+
+Real numbers (Unicode 15.0, 44,115 named codepoints): **24,235 kept (55%)**; after the §12 compaction the table is
+**~178 KiB** (was ~286 KiB before interval keys + 18-bit offsets), still **~7× smaller** than x/text/runenames' 1.3 MB
+for full names (blob 103 KiB, vocabulary 11,098 words). The aggressive collapse eliminated the verbose tail entirely
+(every kept remainder is now ≤2 words). Sample idents: `α`→`Alpha`, `ж`→`Zhe`, `😀`→`GrinningFace`, `👍`→`ThumbsUp`,
+`❤`→`Heart`, `۩`→`Sajdah`, `€`→`Euro`; box-drawing/braille/geometric/non-emoji decoration elided.
+
+**Wired into the mangler (2026-07-06):** rune-naming is a **neutral `Mangler` capability**, not Go-specific. The
+string-level `expandRuneNames` pass runs via `Mangler.asciifyInput` *before* segmentation — shared by
+`Mangler.Transform` (so every preset — `Camelize`, `Snakize`, … — names runes when folding is on) and by
+`GoMangler.identifier`. Running before segmentation lets a multi-word name re-segment and re-case per word
+(`😀`→`GrinningFace`, not "Grinning face"); diacritics stay in the zero-alloc token-fold stage; CJK/decorative runes
+drop to a separator. Gated by the same `asciify` option as diacritic folding. `ConstName` inherits it via
+`IdentExported`. Verified across both manglers: `σ value`→`SigmaValue`/`sigma_value`, `π`→`Pi`,
+`δ plus ε`→`DeltaPlusEpsilon`, `日本 value`→`Value`. (`TestGoManglerRuneNames`, `TestAsciiUtilities`, harness CJK case.)
+
+**Remaining tuning (not blockers):** the qualifier stoplist size. Compaction is **done** (§12: 286 → 178 KiB) and the
+table is **always linked** (not opt-in). Number-class routing and grapheme sequences (flags, ZWJ emoji) remain tracked
+in the **§12 backlog**.
+
+### Dropped / superseded ❌
+
+- **`ValueMangler` type** — folded entirely into `GoMangler.ConstName`; no separate value entry point (§5 note).
+- **`EnumName`** — type-name prefixing is the codegen template's job (already recorded §10.7).
+- **`split_rule.go` helpers** (`splitRuleCaseAlternance`/`Separators`/`DigitGroups`) — dead `TODO` stubs; the tokenizer segments internally.
+
+### Not built — scope undecided 📋
+
+`DirName`, `JSONName`, `HumanName`, `NumberOrdinal`, a public `DigitWords` method — all sketched in §5 but not implemented and not yet confirmed in scope. `NumberOrdinal` in particular is parked (likely ditch). Decide per need before building.
+
+## 12. Backlog & review — 2026-07-07
+
+Reassessment pause after the alloc-reduction and rune-naming work. Groups the remaining path to graduation.
+
+### Decisions locked this round
+
+1. **`numbers` stays a subpackage — won't lift into core.** Its number-aware scanner (it must see decimal points and
+   digit-group separators the general tokenizer elides) has proven an effective, self-contained interface. No merge.
+2. **`buf` stays concrete — won't genericize over a `sink` type-param to avoid the one `unsafe.String`.** The single
+   `unsafeStr` (fresh buffer, never mutated after — same invariant as `strings.Builder.String()`) keeps `NumberWords`
+   at 1 alloc and `AppendWords` at 0 when pooled. When the linter (`gosec`, `default: all`) flags it, add a scoped
+   `//nolint` with the invariant as its comment — cheaper and clearer than a generic indirection.
+
+### Remaining work items (path to graduation)
+
+| Item | Kind | Notes |
+|---|---|---|
+| **Inflection engine** | feature (orthogonal) | `Pluralize`/`Singularize`/`Conjugate`; absorb `go-openapi/inflect`; share with initialism plurals (§6, §4.4). |
+| **asciify: route number-class runes through `numbers`** | enhancement | `No`/`Nl` (`½`, `Ⅶ`) should verbalize via `numbers`, not name-lookup — saves a word of description in the table. Needs the extra UCD file for numeric values. |
+| **asciify: grapheme support** | enhancement | Flags (→ISO-3166), ZWJ emoji sequences — the parked §4.7.1 work; currently single-codepoint only. Needs additional UCD data (emoji-sequences / region-indicator). |
+| **Fuzz tests** | test | Add targets; name the invariants explicitly: differential parity (have it for `AppendWords`≡`NumberWords`) **plus idempotency** `f(f(x)) == f(x)` for every identifier producer (`ToGoName`/`ConstName`/`VarName`/`FileName`). |
+| **Coverage → 85%+** | test | A few uncovered paths remain; close them. |
+| **Concurrency test** | test | Explicit `-race` test hammering `Transform`/`ConstName` from N goroutines — closes the §10.4 "concurrency-safe" claim. |
+| **`GoIdent*` empty-result edge case** | correctness | Input that fully reduces to separators/elided runes yields an incorrect empty string. **Decide the contract once and apply it uniformly** across `ToGoName`/`ConstName`/`VarName`/`FileName` (empty vs. `_` sentinel vs. error) — not a per-function patch. |
+| **README + docstrings** | documentation | Beef up README (started); **explicit v1 differences** (case-alternance boundary — [go-openapi/swag#123](https://github.com/go-openapi/swag/issues/123)); comprehensive docstrings; better-documented options. |
+| **Productize the UCD codegen** | documentation / tooling | See "provenance" below. |
+| **asciify toggle granularity** | open design decision | Single `asciify` flag vs. separate fold-diacritics / name-runes toggles. Shapes public API — resolve **before** graduation. (Was §9 open. Purely an API-shape call now: the runewords table always links regardless — decided 2026-07-07.) |
+| **v1→v2 comparative benchmark** | perf / doc | Not just standalone benches — a v1-vs-v2 table feeds the "explicit v1 differences" doc and the migration story. |
+
+### UCD codegen provenance (part of "productize")
+
+`gen.go` records **no Unicode version** and no source checksums. For a table meant to be a stable failsafe, emit into
+the `tables.go` header: the UCD version, a `//go:generate` line, and source-file checksums — so regeneration is
+reproducible and data drift is detectable. This is the load-bearing part of productizing the codegen.
+
+### Rune-name table: compaction — LOCKED plan (2026-07-07 spike)
+
+Every candidate was measured on the real data (24,235 kept runes, Unicode 15.0) via throwaway in-package harnesses
+before committing. Two independent encodings win; both keep the table pure static `.rodata` (no heap, no init-alloc,
+no `unsafe`, no `deflate`).
+
+**Starting footprint:**
+
+| Segment | Bytes | Role in lookup |
+|---|---:|---|
+| `nameRunes` (`[]rune`) | 96,940 | ① keys — sorted rune set + rank |
+| `wordBlob` (`string`) | 102,901 | ⑤ interned distinct words (11,098) |
+| `nameWordID` (`[]uint16`) | 48,470 | ③ rune position → word id |
+| `wordOffsets` (`[]uint32`) | 44,396 | ④ word id → blob slice |
+| **total** | **292,707 (285.8 KiB)** | |
+
+**Decision 1 — keys: interval (range) encoding, replaces `nameRunes`.** The kept codepoints are near-contiguous
+(measured: 99.7% of consecutive deltas are 1), so the sorted set collapses to **740 maximal runs** of consecutive
+runes. Store `runStart []uint32` (740) + `runFirstIndex []uint32` (741, +sentinel). Lookup is a single binary search
+over `runStart` (~10 steps) then pure arithmetic `pos = runFirstIndex[i] + (r − runStart[i])`, bounds-checked against
+`runFirstIndex[i+1]` (catches runes in a gap). **No linear scan, no popcount** — this beat blocked-varint (26 KiB,
+≤63 scan), Elias–Fano (13 KiB, select/rank machinery), high/low prefix split (25 KiB), and per-page bitmap-hybrid
+(5.4 KiB but needs popcount). **95 KiB → 5.9 KiB.** (Measured alternatives kept in the design history; interval
+encoding won on size × simplicity × lookup cost jointly.)
+
+**Decision 2 — offsets: 18-bit via `uint16` base + 2-bit sidecar, replaces `wordOffsets`.** Offsets need only 17 bits
+(blob 103 KiB); 18 bits (256 KiB ceiling) gives Unicode-17/Go-1.27 headroom **and removes any need for banking** (the
+banking-to-`uint16` idea was superseded — 18 bits addresses the whole blob, so a single global blob keeps full dedup,
+zero cross-bank duplication). Implemented as `wordOffLo []uint16` (low 16 bits) + `wordOffHi []byte` (high 2 bits,
+packed 4/byte, ~2,775 B) rather than a fully-packed 18-bit stream — same byte count, but byte-aligned reads (no
+4-byte-spanning mask, no trailing pad). Reader: `off = uint32(hi)<<16 | uint32(lo)`. **44.4 KiB → 24.4 KiB.**
+
+**Result:**
+
+| Segment | Before | After |
+|---|---:|---:|
+| keys (`nameRunes` → `runStart`+`runFirstIndex`) | 96,940 | 5,924 |
+| offsets (`wordOffsets` → `wordOffLo`+`wordOffHi`) | 44,396 | ~24,400 |
+| `nameWordID` (unchanged) | 48,470 | 48,470 |
+| `wordBlob` (unchanged) | 102,901 | 102,901 |
+| **total** | **285.8 KiB** | **~177 KiB (−38%)** |
+
+Both changes are pure static tables (no `unsafe`), lookup stays the 5-step chain (① binary-search range → ② arithmetic
+→ ③ `nameWordID` → ④ 18-bit offset → ⑤ blob slice). Generator emits the runs + split offsets; a round-trip test
+(pack→read == original) plus the existing rune-naming parity tests guard correctness.
+
+**Not pursued** (recorded, diminishing returns past ~177 KiB):
+- `nameWordID` (48 KiB) bit-pack to 14-bit → ~−6 KiB; consecutive runes have unrelated word-ids so no run structure.
+- `wordBlob` (103 KiB) suffix-merge → ~−10–20 KiB at real generator complexity.
+- "id-becomes-offset" (drop `wordOffsets`, per-rune offset) → ~−6 KiB more than Decision 2 but needs per-word length
+  bytes (~+12 KiB) and a length-scan — net worse trade than the 18-bit sidecar.
+- **`deflate` + inflate-at-init** — rejected: destroys the static-`.rodata`, zero-alloc property.
+
+**Decision (2026-07-07): the table always links — not opt-in.** Asciification has become a *major* feature of the
+package, so the Unicode data loading unconditionally is accepted as a core cost, not something to gate behind a build
+tag or a separate import. At ~178 KiB the whole failsafe table is already **~7× smaller than golang.org/x/text/unicode/
+runenames' 1.3 MB** (and far more useful here — collapsed identifier words, not full formal names). No opt-in
+machinery; simplicity wins. (This retires the earlier "make it opt-in" lever and removes the linking-cost argument from
+the asciify-toggle-granularity item — that item now stands or falls on API shape alone.)
 
 ---
 
