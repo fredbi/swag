@@ -3,7 +3,7 @@ package mangling
 import "github.com/go-openapi/swag/mangling/v2/numbers"
 
 type (
-	// TokenOption customizes the behavior of the [Tokenizer].
+	// TokenOption customizes the behavior of the [tokenizer].
 	TokenOption func(tokenOptions) tokenOptions
 
 	// Option customizes the behavior of the [Mangler].
@@ -11,9 +11,6 @@ type (
 
 	// GoOption customizes the behavior of the [GoMangler].
 	GoOption func(goOptions) goOptions
-
-	// ValueOption customizes value verbalization (e.g. [GoMangler.ConstName]).
-	ValueOption func(valueOptions) valueOptions
 )
 
 type (
@@ -40,8 +37,6 @@ type (
 		identFallback    string                 // word used when an identifier reduces to nothing (default "empty")
 		numberOpts       []numbers.NumberOption // configure the NumberMangler used by ConstName / leading-digit verbalization
 	}
-
-	valueOptions struct{}
 )
 
 func buildTokenOptions(o tokenOptions, opts []TokenOption) tokenOptions {
@@ -123,25 +118,6 @@ func WithTokenSeparator(separator func(rune) bool) TokenOption {
 	}
 }
 
-// WithSeparators makes exactly the given runes the token separators — a convenience over
-// [WithTokenSeparator] for the common case of a fixed set. It replaces the default separator set.
-func WithSeparators(seps ...rune) TokenOption {
-	set := make(map[rune]struct{}, len(seps))
-	for _, r := range seps {
-		set[r] = struct{}{}
-	}
-
-	return func(o tokenOptions) tokenOptions {
-		o.separator = func(r rune) bool {
-			_, ok := set[r]
-
-			return ok
-		}
-
-		return o
-	}
-}
-
 func WithTokenOptions(opts ...TokenOption) Option {
 	return func(o options) options {
 		o.tokenOptions = buildTokenOptions(o.tokenOptions, opts)
@@ -192,6 +168,28 @@ func WithGoNumberOptions(opts ...numbers.NumberOption) GoOption {
 func WithGoIdentFallback(word string) GoOption {
 	return func(o goOptions) goOptions {
 		o.identFallback = word
+
+		return o
+	}
+}
+
+// WithGoReservedSuffix sets the suffix appended to an unexported identifier that collides with a Go keyword
+// or builtin (default "Var": "type" → "typeVar", "append" → "appendVar"). A house-style knob for generators
+// that prefer a different convention.
+func WithGoReservedSuffix(suffix string) GoOption {
+	return func(o goOptions) goOptions {
+		o.reservedSuffix = suffix
+
+		return o
+	}
+}
+
+// WithGoFileRepairSuffix sets the suffix appended to a file stem that would otherwise be build-constrained by
+// a GOOS/GOARCH/`_test` suffix (default "swagger": "config_linux" → "config_linux_swagger"). The go-swagger
+// default is not appropriate for every generator, so it is configurable.
+func WithGoFileRepairSuffix(suffix string) GoOption {
+	return func(o goOptions) goOptions {
+		o.fileRepairSuffix = suffix
 
 		return o
 	}

@@ -22,7 +22,7 @@ func BenchmarkGoMangler(b *testing.B) {
 
 	b.Run("IdentExported", benchmarkMangle(g.IdentExported, benchmarkSamples))
 	b.Run("IdentUnexported", benchmarkMangle(g.IdentUnexported, benchmarkSamples))
-	b.Run("ConstName", benchmarkMangle(func(s string) string { return g.ConstName(s) }, constNameSamples))
+	b.Run("ConstName", benchmarkMangle(g.ConstName, constNameSamples))
 }
 
 func benchmarkMangle(fn func(string) string, samples []string) func(*testing.B) {

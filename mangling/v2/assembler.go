@@ -34,7 +34,7 @@ const (
 // symbol or a leading number doesn't consume it.
 //
 // Initialism casing, when present, is preserved from the token rather than re-cased.
-func (m Mangler) assemble(t *Tokens, target TargetTransform) string {
+func (m Mangler) assemble(t *tokens, target TargetTransform) string {
 	var b strings.Builder
 	b.Grow(t.runeLen()) // one buffer alloc; ~exact for ASCII output
 
@@ -65,14 +65,14 @@ func (m Mangler) assemble(t *Tokens, target TargetTransform) string {
 	for i := range t.Len() {
 		runes, override := t.span(i)
 
-		switch t.Kind(i) {
-		case KindWord:
+		switch t.kindOf(i) {
+		case kindWord:
 			if override == "" && isAllCombiningMarks(runes) {
 				continue // renders to nothing (marks are stripped) — don't emit a separator or consume the first-word slot
 			}
 			writeSep(false)
 			writeCased(&b, runes, override, nextCasing())
-		case KindInitialism:
+		case kindInitialism:
 			writeSep(false)
 			// An initialism follows the target's casing *intent*, except title-casing preserves its canonical form:
 			// lower → lowercase (snake, and leading in unexported → "httpGet"),
@@ -87,10 +87,10 @@ func (m Mangler) assemble(t *Tokens, target TargetTransform) string {
 				c = casingAsIs
 			}
 			writeCased(&b, runes, override, c)
-		case KindNumber:
+		case kindNumber:
 			writeSep(true) // glue to the preceding token
 			writeCased(&b, runes, override, casingAsIs)
-		case KindSymbol:
+		case kindSymbol:
 			switch target.symbolPolicy {
 			case symbolDrop:
 				// elide
@@ -104,7 +104,7 @@ func (m Mangler) assemble(t *Tokens, target TargetTransform) string {
 				}
 			}
 		default:
-			panic(fmt.Errorf("internal error: invalid Kind: %v", t.Kind(i)))
+			panic(fmt.Errorf("internal error: invalid tokenKind: %v", t.kindOf(i)))
 		}
 	}
 

@@ -24,7 +24,7 @@ func MakeGoMangler(opts ...GoOption) GoMangler {
 	var g GoMangler
 	g.goOptions = buildGoOptions(g.goOptions, opts)
 	g.Mangler.options = g.goOptions.options
-	g.Tokenizer.tokenOptions = g.goOptions.tokenOptions
+	g.tokenizer.tokenOptions = g.goOptions.tokenOptions
 	g.n = numbers.MakeNumberMangler(g.numberOpts...)
 	g.trie = buildInitialismTrie(g.initialisms)
 
@@ -151,9 +151,9 @@ func (g GoMangler) File(input string) string {
 // Type-name prefixing of enum members (Color + Red -> ColorRed) is the code generator's job.
 //
 //	ConstName("0.25") == "OneQuarter"   ConstName("300") == "ThreeHundred"   ConstName("read only") == "ReadOnly"
-func (g GoMangler) ConstName(value string, opts ...ValueOption) string {
-	_ = opts // TODO: value options (symbol / keep-digits / rune-name policies)
-
+func (g GoMangler) ConstName(value string) string {
+	// Value-policy options (symbol / keep-digits / rune-name) are deferred to post-1.0; a variadic can be
+	// added back without breaking callers (DESIGN_v2.md §13).
 	return g.IdentExported(g.n.NumberWords(value))
 }
 

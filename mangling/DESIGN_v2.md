@@ -4,7 +4,8 @@
 > The pipeline, the Go ruleset (idents / package / module / file / const), the initialism overlay, ASCII folding,
 > Unicode rune-naming + numeral routing, and the `numbers` subpackage are built, tested and **lint-clean**
 > (`golangci-lint`, both modules 0 issues). UCD codegen is productized into a versioned `ucd` module. Remaining work is
-> scoped in **§11 Implementation status** / **§12 backlog** — chiefly the inflection engine plus test & doc hardening.
+> scoped in **§11 Implementation status** / **§12 backlog**. **Road to 1.0 in §13** (2026-07-07 reassessment): the ship
+> gate is the **public-API freeze + docs**, not features — the missing features are mostly post-1.0.
 > This document is exploratory. v2 is expected to graduate into its own repository as a core,
 > reusable codegen primitive shared across the go-openapi / go-swagger ecosystem. v1 (`go-openapi/swag/mangling`)
 > remains maintained and frozen for a long time. There are **no backward-compatibility constraints** on the v2 API.
@@ -771,6 +772,70 @@ tag or a separate import. At ~178 KiB the whole failsafe table is already **~7×
 runenames' 1.3 MB** (and far more useful here — collapsed identifier words, not full formal names). No opt-in
 machinery; simplicity wins. (This retires the earlier "make it opt-in" lever and removes the linking-cost argument from
 the asciify-toggle-granularity item — that item now stands or falls on API shape alone.)
+
+---
+
+## 13. Road to 1.0 — reassessment 2026-07-07
+
+Agreed after a full debate (Fred + assistant). **Framing: the ship gate is the public-API freeze, not the feature
+list.** v2 is already well-loaded and well-tested; the missing features are mostly post-1.0. "No backward-compat
+constraints" holds only until we ship — after that the surface is a contract, so freezing it well is the real work.
+
+### P0 — ship gate (do next)
+
+**API freeze — ✅ done 2026-07-07:**
+- ✅ Removed `Mangler.Pluralize`/`Singularize` stubs (memo → future `plurals` package, P2).
+- ✅ Commented out the dead `Tokens` methods as a capability memo. **Went further** (final review): the whole token
+  model was exported but *unusable* (no injection API), so **un-exported it entirely** — `Tokens`→`tokens`,
+  `Tokenizer`→`tokenizer`, `Kind`→`tokenKind`, deleted the write-only `Casing` machinery and the unused `Transform`
+  type. `Tokenize` stays public (promoted onto `Mangler`). Re-export a deliberate injection API post-1.0 (non-breaking).
+- ✅ Exposed `WithGoReservedSuffix` / `WithGoFileRepairSuffix`.
+- ✅ Removed the ignored `...ValueOption` from `ConstName` + deleted the `ValueOption` type (re-addable, non-breaking).
+- ✅ Shrank `numbers`: removed the value generics `NumberWords[T]`/`NumberRoman[T]` + numeric constraints; the engine
+  is `NumberMangler` (text) + `RuneNumber` (runes). Internal `numberWords`/`roman` retained.
+- ✅ Renamed `ASCII`→`RuneToASCII`, `UnicodeName`→`RuneShortName` for consistency with `ToASCII`.
+- Result surface — `mangling/v2`: `Mangler`/`GoMangler` (+ `Tokenize`), options, `TargetTransform`, `DefaultInitialisms`,
+  `ToASCII`/`RuneToASCII`/`RuneShortName`. `numbers`: `NumberMangler` + `RuneNumber` + options. All green, 0 lint.
+- *Not* adding knobs to customize internal maps (keywords/builtins are Go-spec-fixed; symbol verbalization on demand).
+
+**Docs (`./docs`, thematized — the adoption story):**
+- `asciification.md` — the showcase (a major leap over v1): `café→Cafe`, **Cyrillic** & **Greek** (clean
+  single-letter romanization; expect Greek uppercasing oddities — fine), Arabic, `½→OneHalf`, `٧→Seven`,
+  `Ⅶ→Seven`, `😀→GrinningFace`, and the "even Japanese kana works" flourish (`カタカナ→KaTaKaNa`). `GoConstName`
+  is the vehicle.
+- `numbers.md` — cardinals / ordinals / **fractions** (`0.25→OneQuarter`, the leap over inflect-era codegen) /
+  digit-group reconstruction.
+- `go-identifiers.md` — the **fuzz-proven "always a valid Go identifier"** guarantee (v1 could emit invalid idents;
+  v2 cannot, by construction, for any input) + the repairs.
+- `v1-differences.md` — migration / why.
+
+### P1 — fast follow (point releases)
+
+- **Unicode v17** (lands with go1.27, ~1 month out — *after* we'd want to ship). Additive: a second generated table
+  set guarded by `//go:build go1.27`, selected v15-vs-v17 at compile time (only one links). Slightly larger tables,
+  maybe a few new summarization heuristics. Prep now, but **must not gate 1.0**. The codegen may grow a build-guard
+  emission step.
+- **Test-quality harmonization** ("Fred's gate" — one common approach across dozens of repos): make the mangling
+  tables iterator-driven like the `numbers` tests; factor test cases.
+
+### P2 — enhancement releases (study/design now, build later)
+
+- **`plurals` standalone package** — pick the ~200 lines of `go-openapi/inflect` actually used (English rules +
+  irregular/uncountable tables), make it correct and fast as `plurals.Pluralize`/`Singularize` (package functions,
+  no `Mangler`), **then archive `inflect` for good.** Use case is narrow (docstrings: `MyArray is a collection of
+  MyTypes`).
+- **Grapheme support** — flags (→ISO-3166), ZWJ emoji. Architecturally **safe/deferred**: a grapheme pre-pass groups
+  codepoints *before* `expandRuneNames`, purely additive, does not touch the core encoding. Value is thin for
+  identifiers (showcase, not substance). No v17 needed.
+- **CJK (Han ideographs) — value-uncertain, deferred, must not shape the core.** Coverage today: **Japanese kana
+  (Hiragana + Katakana) already romanize to romaji** via the rune-name table (`こんにちは→KoNNiTiHa`), so the *only*
+  gap is the shared **CJK Unified Ideographs** block (Kanji/Hanzi), which is elided → a *valid* fallback identifier.
+  Native-script idents work today with asciify off. Romanizing Han would need a word-keyed source (CEDICT) — but
+  char-level pinyin is unreliable (polyphonic chars) and would blow past the 18-bit blob ceiling (→ 20-bit+ and a
+  separate `runewords/cjk` **build-tagged** sub-table). Keep the architecture open; be honest it may never clear the
+  value bar.
+- **Language-break as a token boundary** (§4.2 signal #4) — near-dead: only matters for "folding off + genuinely
+  mixed-script + wants boundary splits". Soften the `tokenizer.go` note to "intentionally deferred".
 
 ---
 

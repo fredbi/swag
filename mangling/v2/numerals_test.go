@@ -9,7 +9,7 @@ import (
 // TestNumeralAsciify covers the three distinct treatments of a Unicode numeral rune:
 //   - the numbers engine spells it        (ConstName: "½" → "OneHalf")
 //   - the asciify tier renders it plainly (ToASCII:   "½" → "0.5")
-//   - UnicodeName elides it               (numerals are not phonetic names)
+//   - RuneShortName elides it               (numerals are not phonetic names)
 func TestNumeralAsciify(t *testing.T) {
 	t.Parallel()
 
@@ -41,10 +41,10 @@ func TestNumeralAsciify(t *testing.T) {
 		}
 	})
 
-	t.Run("UnicodeName elides numerals", func(t *testing.T) {
+	t.Run("RuneShortName elides numerals", func(t *testing.T) {
 		t.Parallel()
-		assert.Equal(t, "", UnicodeName('½'))
-		assert.Equal(t, "", UnicodeName('Ⅶ'))
+		assert.Equal(t, "", RuneShortName('½'))
+		assert.Equal(t, "", RuneShortName('Ⅶ'))
 	})
 
 	// In the name-mangling paths (Camelize/Ident*), a numeral rune is spelled out as words — a name reads

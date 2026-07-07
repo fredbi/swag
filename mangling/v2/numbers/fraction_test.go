@@ -29,12 +29,13 @@ func TestSpellDecimal(t *testing.T) {
 func TestNumberWords(t *testing.T) {
 	t.Parallel()
 
-	assert.EqualT(t, "twelve", NumberWords(12))
-	assert.EqualT(t, "three hundred", NumberWords(300))
-	assert.EqualT(t, "one quarter", NumberWords(0.25))
-	assert.EqualT(t, "one tenth", NumberWords(0.1))
-	assert.EqualT(t, "one third", NumberWords(1.0/3.0))
-	assert.EqualT(t, "zero", NumberWords(0))
+	// numberWords is the internal value verbalizer (the exported generic was removed for 1.0, §13)
+	assert.EqualT(t, "twelve", numberWords(12, numberOptions{}))
+	assert.EqualT(t, "three hundred", numberWords(300, numberOptions{}))
+	assert.EqualT(t, "one quarter", numberWords(0.25, numberOptions{}))
+	assert.EqualT(t, "one tenth", numberWords(0.1, numberOptions{}))
+	assert.EqualT(t, "one third", numberWords(1.0/3.0, numberOptions{}))
+	assert.EqualT(t, "zero", numberWords(0, numberOptions{}))
 }
 
 type fractionCase struct {

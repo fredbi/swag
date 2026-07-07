@@ -16,7 +16,7 @@ var (
 	runeSlicePool  = pools.NewPoolSlice[rune]()
 )
 
-// Tokenizer splits an UTF-8 string into tokens along opinionated segmentation rules.
+// tokenizer splits an UTF-8 string into tokens along opinionated segmentation rules.
 //
 // # Token boundaries
 //
@@ -38,15 +38,15 @@ var (
 // Script/Unicode-category change (§4.2 signal #4) is not yet implemented.
 //
 // Separators may be customized by injecting a predicate with option [WithTokenSeparator].
-type Tokenizer struct {
+type tokenizer struct {
 	tokenOptions
 }
 
 // Tokenize splits a string into its tokens, materialized as strings.
 //
 // This is a convenience surface (it allocates a string per token).
-// The mangling pipeline works on the zero-copy [Tokens] model directly.
-func (m Tokenizer) Tokenize(in string) iter.Seq[string] {
+// The mangling pipeline works on the zero-copy [tokens] model directly.
+func (m tokenizer) Tokenize(in string) iter.Seq[string] {
 	return func(yield func(string) bool) {
 		t := borrowTokens(in)
 		defer t.redeem()
@@ -61,7 +61,7 @@ func (m Tokenizer) Tokenize(in string) iter.Seq[string] {
 }
 
 // segment fills t with the tokens of its shared []rune, implementing the boundary rules above.
-func (m Tokenizer) segment(t *Tokens) {
+func (m tokenizer) segment(t *tokens) {
 	sep := m.separator
 	if sep == nil {
 		sep = defaultTokenSeparator
@@ -71,17 +71,13 @@ func (m Tokenizer) segment(t *Tokens) {
 	n := len(runes)
 
 	runStart := -1 // -1 means "no active run"
-	var runKind Kind
+	var runKind tokenKind
 
 	flush := func(end int) {
 		if runStart < 0 {
 			return
 		}
-		casing := CasingMixed
-		if runKind == KindWord {
-			casing = classifyCasing(runes[runStart:end])
-		}
-		t.push(runStart, end, runKind, casing)
+		t.push(runStart, end, runKind)
 		runStart = -1
 	}
 
@@ -95,32 +91,32 @@ func (m Tokenizer) segment(t *Tokens) {
 
 		case classSymbol:
 			flush(i)
-			t.push(i, i+1, KindSymbol, CasingMixed)
+			t.push(i, i+1, kindSymbol)
 
 		case classMark:
 			if runStart < 0 {
 				// orphan/leading mark: keep it in a word run so nothing is silently lost (the fold stage will strip it).
-				runStart, runKind = i, KindWord
+				runStart, runKind = i, kindWord
 			}
 			// otherwise it attaches to the current run (extends on flush)
 
 		case classDigit:
 			switch {
 			case runStart < 0:
-				runStart, runKind = i, KindNumber
-			case runKind == KindWord:
+				runStart, runKind = i, kindNumber
+			case runKind == kindWord:
 				flush(i) // letter↔digit boundary
-				runStart, runKind = i, KindNumber
+				runStart, runKind = i, kindNumber
 			}
 			// else: extend the number run
 
 		case classLetter:
 			switch {
 			case runStart < 0:
-				runStart, runKind = i, KindWord
-			case runKind == KindNumber:
+				runStart, runKind = i, kindWord
+			case runKind == kindNumber:
 				flush(i) // digit↔letter boundary
-				runStart, runKind = i, KindWord
+				runStart, runKind = i, kindWord
 			default:
 				// letter continuing a word run: check case alternance
 				prev, cur := runeCase(runes[i-1]), runeCase(r)
@@ -128,11 +124,11 @@ func (m Tokenizer) segment(t *Tokens) {
 				case prev == caseLower && cur == caseUpper:
 					// fooBar => foo | Bar
 					flush(i)
-					runStart, runKind = i, KindWord
+					runStart, runKind = i, kindWord
 				case prev == caseUpper && cur == caseLower && i-1 > runStart && runeCase(runes[i-2]) == caseUpper:
 					// Upper-run(>=2) → lower: HTTPServer => HTTP | Server (boundary before the last upper)
 					flush(i - 1)
-					runStart, runKind = i-1, KindWord
+					runStart, runKind = i-1, kindWord
 				default:
 				}
 				// otherwise: same case / single-upper / caseless → extend the run
@@ -144,39 +140,28 @@ func (m Tokenizer) segment(t *Tokens) {
 	flush(n)
 }
 
-// token is a zero-copy view into the shared []rune of a [Tokens] value.
+// token is a zero-copy view into the shared []rune of a [tokens] value.
 // A half-open span plus the classification computed by the scanner.
 //
-// It is internal: transforms reach token data only through [Tokens]' index-based methods, so the struct can evolve
+// It is internal: transforms reach token data only through [tokens]' index-based methods, so the struct can evolve
 // without touching the public API.
 type token struct {
-	start, end int    // half-open span [start,end) into Tokens.runes
-	kind       Kind   // word | number | symbol | initialism
-	casing     Casing // lower | upper | title | mixed
-	override   string // rewritten content; empty unless a transform replaced the span
+	start, end int       // half-open span [start,end) into tokens.runes
+	kind       tokenKind // word | number | symbol | initialism
+	override   string    // rewritten content; empty unless a stage replaced the span
 }
 
-// Kind classifies a token produced by segmentation.
+// tokenKind classifies a token produced by segmentation.
 //
-// The tokenizer emits [KindWord], [KindNumber] and [KindSymbol].
-// [KindInitialism] is set later by the initialism overlay, never by the tokenizer.
-type Kind uint8
+// The tokenizer emits [kindWord], [kindNumber] and [kindSymbol].
+// [kindInitialism] is set later by the initialism overlay, never by the tokenizer.
+type tokenKind uint8
 
 const (
-	KindWord       Kind = iota // a run of letters
-	KindNumber                 // a run of decimal digits (Nd)
-	KindSymbol                 // a single non-letter, non-digit, non-separator rune (@, #, …)
-	KindInitialism             // retagged by the initialism overlay (HTTP, JSON, …)
-)
-
-// Casing describes the case pattern of a token, computed during segmentation.
-type Casing uint8
-
-const (
-	CasingLower Casing = iota // lowercase run: "http"
-	CasingUpper               // uppercase run (screaming / all-caps): "HTTP"
-	CasingTitle               // title case: "Http"
-	CasingMixed               // anything else ("hTtP"), or content with no case
+	kindWord       tokenKind = iota // a run of letters
+	kindNumber                      // a run of decimal digits (Nd)
+	kindSymbol                      // a single non-letter, non-digit, non-separator rune (@, #, …)
+	kindInitialism                  // retagged by the initialism overlay (HTTP, JSON, …)
 )
 
 // runeClass is a rune's segmentation class.
@@ -223,52 +208,15 @@ func runeCase(r rune) int {
 	}
 }
 
-// classifyCasing derives a word run's [Casing] from its runes (marks/caseless runes are ignored).
-func classifyCasing(runes []rune) Casing {
-	var upper, lower int
-	for _, r := range runes {
-		switch {
-		case unicode.IsUpper(r):
-			upper++
-		case unicode.IsLower(r):
-			lower++
-		}
-	}
-
-	switch {
-	case upper == 0 && lower == 0:
-		return CasingMixed // caseless content
-	case lower == 0:
-		return CasingUpper // all-caps: HTTP, A
-	case upper == 0:
-		return CasingLower // http
-	case upper == 1 && unicode.IsUpper(runes[0]):
-		return CasingTitle // Http (only the first rune is upper)
-	default:
-		return CasingMixed // hTtP
-	}
-}
-
-// Transform is a pipeline stage: it mutates the token model in place.
-//
-// It replaces the retired string-based transformer tier — stages see position, kind and casing, and may split/merge
-// tokens.
-// See [Tokens] (token.go / tokens.go).
-type Transform func(*Tokens)
-
-// Tokens is the mutable, pooled token model: a slice of [token] spans over one shared []rune (the only full copy of the
+// tokens is the mutable, pooled token model: a slice of [token] spans over one shared []rune (the only full copy of the
 // input).
 //
-// Transforms mutate it in place; strings are materialized only at assembly.
+// Pipeline stages mutate it in place; strings are materialized only at assembly. It is borrowed from a pool for the
+// duration of one mangling and released with [tokens.redeem]; it must not be retained afterwards.
 //
-// A Tokens is borrowed from a pool for the duration of one mangling and released with [Tokens.redeem]; it must not be
-// retained afterwards.
-// It is the value handed to a [Transform].
-//
-// The public surface is deliberately **index-based** (the [token] struct stays internal): a transform reads with
-// [Tokens.Len]/[Tokens.Text]/[Tokens.Kind]/[Tokens.Casing] and edits with
-// [Tokens.SetKind]/[Tokens.Rewrite]/[Tokens.Split]/[Tokens.Merge].
-type Tokens struct {
+// The internal surface is index-based (the [token] struct stays private): a stage reads with Len/Text/tokenKind and edits
+// with Rewrite. (An exported Transform-injection API and the token model itself are deferred to post-1.0 — DESIGN §13.)
+type tokens struct {
 	runes *pools.Slice[rune]
 	toks  *pools.Slice[token]
 
@@ -282,11 +230,11 @@ type Tokens struct {
 	releaseToks  func()
 }
 
-// borrowTokens borrows a Tokens and loads the input as one shared []rune.
+// borrowTokens borrows a tokens and loads the input as one shared []rune.
 //
 // It returns the wrapper by value so it stays on the caller's stack (no heap alloc): the pooled slices and their redeem
 // closures are cached by pools, so nothing here allocates.
-func borrowTokens(in string) Tokens {
+func borrowTokens(in string) tokens {
 	// len(in) bytes is an upper bound on the rune count, so the pre-grown slice never reallocates.
 	runeSlice, releaseRunes := runeSlicePool.BorrowWithSizeAndRedeem(len(in))
 	for _, r := range in {
@@ -294,7 +242,7 @@ func borrowTokens(in string) Tokens {
 	}
 	tokSlice, releaseToks := tokenSlicePool.BorrowWithRedeem()
 
-	return Tokens{
+	return tokens{
 		runes:        runeSlice,
 		toks:         tokSlice,
 		releaseRunes: releaseRunes,
@@ -305,10 +253,10 @@ func borrowTokens(in string) Tokens {
 // --- read API ---
 
 // Len is the number of live tokens.
-func (t *Tokens) Len() int { return t.count }
+func (t *tokens) Len() int { return t.count }
 
 // Text returns the content of token i: its rewritten override if set, else its rune span.
-func (t *Tokens) Text(i int) string {
+func (t *tokens) Text(i int) string {
 	tk := t.toks.Slice()[i]
 	if tk.override != "" {
 		return tk.override
@@ -317,59 +265,37 @@ func (t *Tokens) Text(i int) string {
 	return string(t.runes.Slice()[tk.start:tk.end])
 }
 
-// Kind returns the kind of token i.
-func (t *Tokens) Kind(i int) Kind { return t.toks.Slice()[i].kind }
-
-// Casing returns the case pattern of token i.
-func (t *Tokens) Casing(i int) Casing { return t.toks.Slice()[i].casing }
-
-// All ranges over the tokens' rendered text by index (read-only).
-func (t *Tokens) All() iter.Seq2[int, string] {
-	return func(yield func(int, string) bool) {
-		for i := range t.Len() {
-			if !yield(i, t.Text(i)) {
-				return
-			}
-		}
-	}
-}
+// Deferred tokens capabilities — no current caller, kept commented as a capability memo rather than
+// shipped as dead public API (DESIGN_v2.md §13, P0 API freeze). Uncomment + test when a transform needs one.
+//
+//	// All ranges over the tokens' rendered text by index (read-only).
+//	func (t *tokens) All() iter.Seq2[int, string] { ... }
+//
+//	// SetKind retags token i — e.g. the initialism overlay marks a token kindInitialism.
+//	func (t *tokens) SetKind(i int, kind tokenKind) { t.toks.Slice()[i].kind = kind }
+//
+//	// Split divides token i at offset at into two adjacent tokens (sub-token initialism, IDS → ID + S).
+//	func (t *tokens) Split(i, at int) { ... }
+//
+//	// Merge folds tokens [i, j] into one (multi-token initialism merge, IPv4/UTF8).
+//	func (t *tokens) Merge(i, j int) { ... }
 
 // --- write API (mutating an element in place is safe; growing goes through the pool wrapper) ---.
 
-// SetKind retags token i — e.g. the initialism overlay marks a token [KindInitialism].
-func (t *Tokens) SetKind(i int, kind Kind) {
-	t.toks.Slice()[i].kind = kind
-}
-
 // Rewrite replaces the rendered content of token i (transliteration, inflection, verbalization).
-func (t *Tokens) Rewrite(i int, s string) {
+func (t *tokens) Rewrite(i int, s string) {
 	t.toks.Slice()[i].override = s
 }
 
-// Split divides token i at offset at (relative to the token's start) into two adjacent tokens.
-//
-// insert a token, adjust spans and recompute casing.
-//
-// Needed by sub-token initialism matching (IDS → ID + S).
-func (t *Tokens) Split(i, at int) {
-	_, _ = i, at
-}
-
-// Merge folds tokens [i, j] into a single token.
-//
-// coalesce spans, recompute casing, drop the merged entries.
-//
-// Needed by the multi-token initialism merge across natural breaks (IPv4, UTF8).
-func (t *Tokens) Merge(i, j int) {
-	_, _ = i, j
-}
+// kindOf returns the kind of token i.
+func (t *tokens) kindOf(i int) tokenKind { return t.toks.Slice()[i].kind }
 
 // runeLen is the number of runes in the shared input (a size hint for assembly).
-func (t *Tokens) runeLen() int { return t.runes.Len() }
+func (t *tokens) runeLen() int { return t.runes.Len() }
 
 // span returns token i's raw rune span (a view into the shared slice — no copy) and its override (empty unless a
 // transform rewrote it).
-func (t *Tokens) span(i int) ([]rune, string) {
+func (t *tokens) span(i int) ([]rune, string) {
 	tk := t.toks.Slice()[i]
 
 	return t.runes.Slice()[tk.start:tk.end], tk.override
@@ -377,8 +303,8 @@ func (t *Tokens) span(i int) ([]rune, string) {
 
 // redeem returns the pooled backings.
 //
-// The Tokens must not be used afterwards.
-func (t *Tokens) redeem() {
+// The tokens must not be used afterwards.
+func (t *tokens) redeem() {
 	t.releaseToks()
 	t.releaseRunes()
 }
@@ -386,8 +312,8 @@ func (t *Tokens) redeem() {
 // push appends a token spanning [start,end) with its classification.
 //
 // Scanner-only.
-func (t *Tokens) push(start, end int, kind Kind, casing Casing) {
-	t.toks.Append(token{start: start, end: end, kind: kind, casing: casing})
+func (t *tokens) push(start, end int, kind tokenKind) {
+	t.toks.Append(token{start: start, end: end, kind: kind})
 	t.count++
 }
 

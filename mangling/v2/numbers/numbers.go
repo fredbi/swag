@@ -95,46 +95,7 @@ func (m NumberMangler) AppendWords(dst []byte, in string) []byte {
 	return w.b
 }
 
-// NumberWords renders a number as english words with default options.
-//
-// Cardinals for integers ("123" → "one hundred and twenty three"),
-// simple fractions or spelled decimals for floats
-// ("0.25" → "one quarter", "0.31456" → "zero dot three one four five six").
-func NumberWords[T Numerical](n T) string {
-	return numberWords(float64(n), numberOptions{})
-}
-
-// NumberRoman renders a lowercase roman numeral,
-// e.g. 4 -> iv, 12 -> xii.
-//
-// Undefined (empty) for n <= 0.
-func NumberRoman[T Integer](n T) string {
-	return roman(int64(n))
-}
-
-type (
-	// these type constraints are redefined after golang.org/x/exp/constraints
-
-	// Signed integer types, cf. [golang.org/x/exp/constraints.Signed]
-	Signed interface {
-		~int | ~int8 | ~int16 | ~int32 | ~int64
-	}
-
-	// Unsigned integer types, cf. [golang.org/x/exp/constraints.Unsigned]
-	Unsigned interface {
-		~uint | ~uint8 | ~uint16 | ~uint32 | ~uint64 | ~uintptr
-	}
-
-	Integer interface {
-		Signed | Unsigned
-	}
-	// Float numerical types, cf. [golang.org/x/exp/constraints.Float]
-	Float interface {
-		~float32 | ~float64
-	}
-
-	// Numerical types
-	Numerical interface {
-		Signed | Unsigned | Float
-	}
-)
+// Note: the standalone value verbalizers NumberWords[T Numerical] / NumberRoman[T Integer] and their
+// numeric constraints were removed from the public API for 1.0 (DESIGN_v2.md §13). The engine is reached
+// through NumberMangler (text) and RuneNumber (numeral runes); the internal numberWords/roman remain.
+// Re-add typed value helpers when a consumer needs them — adding exported functions is non-breaking.

@@ -157,11 +157,11 @@ func (t *initialismTrie) match(toks []token, runes []rune, r, n int) (string, in
 
 // applyInitialisms is the Go initialism overlay: a single forward compaction pass that rewrites runs of tokens forming
 // a known initialism — whole-token (HTTP), a contiguous multi-token break-run (ipv4 → [ipv,4]), or a
-// lowercase-plural (IDs → [I,Ds]) — into one [KindInitialism] token carrying the canonical casing.
+// lowercase-plural (IDs → [I,Ds]) — into one [kindInitialism] token carrying the canonical casing.
 //
 // Merges shrink the slice in place; assembly then renders the canonical form (with the leading-unexported lowercasing
 // rule).
-func (g GoMangler) applyInitialisms(t *Tokens) {
+func (g GoMangler) applyInitialisms(t *tokens) {
 	if g.trie == nil {
 		return
 	}
@@ -175,7 +175,7 @@ func (g GoMangler) applyInitialisms(t *Tokens) {
 		if canonical, span := g.trie.match(toks, runes, r, n); span > 0 {
 			merged := toks[r]
 			merged.end = toks[r+span-1].end
-			merged.kind = KindInitialism
+			merged.kind = kindInitialism
 			merged.override = canonical
 			toks[w] = merged
 			w++

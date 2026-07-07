@@ -14,7 +14,7 @@ import (
 // (π → pi, 😀 → grinning face), space-separated so it reads as words. Runes with no known word (CJK
 // ideographs, decorative symbols) are dropped.
 //
-// This works best for European languages; it falls back to [UnicodeName] for other scripts and emoji.
+// This works best for European languages; it falls back to [RuneShortName] for other scripts and emoji.
 func ToASCII[T ~string | ~[]byte](s T) string {
 	in := string(s)
 	if isASCII(in) {
@@ -47,13 +47,11 @@ func ToASCII[T ~string | ~[]byte](s T) string {
 	return strings.Join(strings.Fields(b.String()), " ")
 }
 
-// ASCII returns the plain-ASCII equivalent of a single rune bearing a diacritic (é → "e", ñ → "n"),
-// the rune itself if already ASCII, or "" if it has no ASCII folding (non-Latin letters, symbols, emoji.
+// RuneToASCII returns the plain-ASCII equivalent of a single rune bearing a diacritic (é → "e", ñ → "n"),
+// the rune itself if already ASCII, or "" if it has no ASCII folding (non-Latin letters, symbols, emoji).
 //
-// Use [UnicodeName] for those
-//
-// NOTE: combining marks fold to "".
-func ASCII[T ~rune | ~byte](r T) string {
+// Use [RuneShortName] for those. Combining marks fold to "".
+func RuneToASCII[T ~rune | ~byte](r T) string {
 	c := rune(r)
 	if c < utf8.RuneSelf {
 		return string(c)
@@ -65,13 +63,13 @@ func ASCII[T ~rune | ~byte](r T) string {
 	return ""
 }
 
-// UnicodeName returns a lowercase phonetic word for a rune with no ASCII folding.
+// RuneShortName returns a lowercase phonetic word for a rune with no ASCII folding.
 //
 // The word is a distinctive Unicode-name fragment (π → "pi", 😀 → "grinning face", ж → "zhe").
 // ASCII runes are returned as-is.
 //
 // NOTE: runes the mangler elides (CJK ideographs, combining marks, decorative symbols) return "".
-func UnicodeName[T ~rune | ~byte](r T) string {
+func RuneShortName[T ~rune | ~byte](r T) string {
 	c := rune(r)
 	if c < utf8.RuneSelf {
 		return string(c)
@@ -92,7 +90,7 @@ func UnicodeName[T ~rune | ~byte](r T) string {
 //
 // Pure-ASCII tokens, and tokens whose non-ASCII runes are non-foldable (e.g. CJK — a future rune-name concern),
 // are left untouched, so nothing allocates for them.
-func (m Mangler) foldASCII(t *Tokens) {
+func (m Mangler) foldASCII(t *tokens) {
 	for i := range t.Len() {
 		runes, override := t.span(i)
 		if override != "" {
@@ -206,7 +204,7 @@ func isAllCombiningMarks(runes []rune) bool {
 // þ→th, ð→d).
 //
 // NOT covered here (by design): symbols and punctuation — see [defaultSymbolWords]; and non-Latin scripts (Greek,
-// Cyrillic, CJK, …), which fall back to the phonetic rune name (see [UnicodeName]).
+// Cyrillic, CJK, …), which fall back to the phonetic rune name (see [RuneShortName]).
 var asciiFold = map[rune]string{
 	// A
 	'à': "a", 'á': "a", 'â': "a", 'ã': "a", 'ä': "a", 'å': "a", 'ā': "a", 'ă': "a", 'ą': "a", 'ǎ': "a",

@@ -8,6 +8,10 @@ import (
 	"github.com/go-openapi/swag/mangling/v2/runewords"
 )
 
+// numeralVerbalizer spells a numeral rune to words in the asciify pass (½ → "one half"). A default,
+// immutable NumberMangler is enough — the rune-aware scanner turns string(r) into its value's words.
+var numeralVerbalizer = numbers.MakeNumberMangler()
+
 // TargetTransform is a compiled, immutable recipe describing how to render a segmented token stream:
 // casing × separator × affix × stages × repair.
 //
@@ -120,10 +124,10 @@ func expandRuneNames(str string) string {
 				b.WriteRune(r) // foldable diacritic: left for the fold stage
 			} else if d, ok := asciiDigit(r); ok {
 				b.WriteByte(d) // non-ASCII decimal digit (Nd) → its ASCII digit ('٧' → '7'), then handled as a digit
-			} else if v, ok := numbers.RuneNumber(r); ok {
+			} else if _, ok := numbers.RuneNumber(r); ok {
 				b.WriteByte(' ')
-				b.WriteString(numbers.NumberWords(v)) // numeral rune → words ("½" → "one half"); a name reads
-				b.WriteByte(' ')                      // better spelled out (ToASCII keeps the plain number)
+				b.WriteString(numeralVerbalizer.NumberWords(string(r))) // numeral rune → words ("½" → "one half");
+				b.WriteByte(' ')                                        // a name reads better spelled out (ToASCII keeps the plain number)
 			} else if w, ok := runewords.Word(r); ok {
 				b.WriteByte(' ')
 				b.WriteString(w)

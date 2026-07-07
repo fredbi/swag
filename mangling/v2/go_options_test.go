@@ -7,6 +7,22 @@ import (
 	"github.com/go-openapi/testify/v2/assert"
 )
 
+func TestWithGoReservedSuffix(t *testing.T) {
+	t.Parallel()
+
+	g := MakeGoMangler(WithGoReservedSuffix("Kw"))
+	assert.EqualT(t, "typeKw", g.IdentUnexported("type"))                // custom suffix
+	assert.EqualT(t, "typeVar", MakeGoMangler().IdentUnexported("type")) // default unchanged
+}
+
+func TestWithGoFileRepairSuffix(t *testing.T) {
+	t.Parallel()
+
+	g := MakeGoMangler(WithGoFileRepairSuffix("gen"))
+	assert.EqualT(t, "config_linux_gen", g.File("config_linux"))         // custom suffix
+	assert.EqualT(t, "test_swagger.go", MakeGoMangler().File("test.go")) // default unchanged
+}
+
 func TestWithGoInitialisms(t *testing.T) {
 	t.Parallel()
 
@@ -46,14 +62,6 @@ func TestUseGoInitialisms(t *testing.T) {
 		assert.EqualT(t, "ZZZQQQ", g.IdentExported("zzz qqq"))
 		assert.EqualT(t, "Http", g.IdentExported("http")) // default gone
 	})
-}
-
-func TestWithSeparators(t *testing.T) {
-	t.Parallel()
-
-	tk := Tokenizer{tokenOptions: buildTokenOptions(tokenOptions{}, []TokenOption{WithSeparators('|', '/')})}
-	got := slices.Collect(tk.Tokenize("a|b/c"))
-	assert.Truef(t, slices.Equal([]string{"a", "b", "c"}, got), "Tokenize(a|b/c) = %v", got)
 }
 
 func TestPointerConstructors(t *testing.T) {
@@ -102,7 +110,7 @@ func TestModuleNonVersionSuffix(t *testing.T) {
 func TestTokenizeEarlyBreak(t *testing.T) {
 	t.Parallel()
 
-	tk := Tokenizer{tokenOptions: buildTokenOptions(tokenOptions{}, nil)}
+	tk := tokenizer{tokenOptions: buildTokenOptions(tokenOptions{}, nil)}
 	n := 0
 	for range tk.Tokenize("a b c") {
 		n++
@@ -117,7 +125,7 @@ func TestTokenizeEarlyBreak(t *testing.T) {
 func TestTokenizeOrphanLeadingMark(t *testing.T) {
 	t.Parallel()
 
-	tk := Tokenizer{tokenOptions: buildTokenOptions(tokenOptions{}, nil)}
+	tk := tokenizer{tokenOptions: buildTokenOptions(tokenOptions{}, nil)}
 	got := slices.Collect(tk.Tokenize("́abc")) // leading combining acute
 	assert.Truef(t, slices.Equal([]string{"́abc"}, got), "got %v", got)
 }

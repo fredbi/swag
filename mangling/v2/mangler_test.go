@@ -230,17 +230,17 @@ func TestAsciiUtilities(t *testing.T) {
 	assert.EqualT(t, "plain ascii", ToASCII("plain ascii"))
 
 	// Ascii: single-rune diacritic fold only.
-	assert.EqualT(t, "e", ASCII('é'))
-	assert.EqualT(t, "n", ASCII('ñ'))
-	assert.EqualT(t, "A", ASCII('A'))
-	assert.EqualT(t, "", ASCII('π')) // no diacritic folding -> empty (use UnicodeName)
+	assert.EqualT(t, "e", RuneToASCII('é'))
+	assert.EqualT(t, "n", RuneToASCII('ñ'))
+	assert.EqualT(t, "A", RuneToASCII('A'))
+	assert.EqualT(t, "", RuneToASCII('π')) // no diacritic folding -> empty (use RuneShortName)
 
-	// UnicodeName: phonetic word for non-foldable runes.
-	assert.EqualT(t, "pi", UnicodeName('π'))
-	assert.EqualT(t, "zhe", UnicodeName('ж'))
-	assert.EqualT(t, "grinning face", UnicodeName('😀'))
-	assert.EqualT(t, "A", UnicodeName('A')) // ASCII as-is
-	assert.EqualT(t, "", UnicodeName('中'))  // elided
+	// RuneShortName: phonetic word for non-foldable runes.
+	assert.EqualT(t, "pi", RuneShortName('π'))
+	assert.EqualT(t, "zhe", RuneShortName('ж'))
+	assert.EqualT(t, "grinning face", RuneShortName('😀'))
+	assert.EqualT(t, "A", RuneShortName('A')) // ASCII as-is
+	assert.EqualT(t, "", RuneShortName('中'))  // elided
 }
 
 func testMangler(m mangler, mode testMode, tc manglerTestCase) func(*testing.T) {

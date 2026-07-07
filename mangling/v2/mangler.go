@@ -36,7 +36,7 @@ package mangling
 //  - unicode numerals, such as ½, are represented numerically as "0.5" verbalized as "0dot5"
 
 type Mangler struct {
-	Tokenizer
+	tokenizer
 	options // options for plurals (possibly - future - language)
 }
 
@@ -44,7 +44,7 @@ type Mangler struct {
 func MakeMangler(opts ...Option) Mangler {
 	var m Mangler
 	m.options = buildOptions(m.options, opts)
-	m.Tokenizer.tokenOptions = m.options.tokenOptions
+	m.tokenizer.tokenOptions = m.options.tokenOptions
 
 	return m
 }
@@ -135,19 +135,10 @@ func (m Mangler) AllCaps(str string) string {
 	return m.Transform(TargetAllCaps(), str)
 }
 
-// Pluralize a word (a sentence?) (english)
-//
-// wolf -> wolves -> (unchanged) chopper -> choppers.
-func (m Mangler) Pluralize(string) string {
-	return ""
-}
-
-// Singularize a word (english), the inverse of [Mangler.Pluralize].
-//
-// wolves -> wolf -> (unchanged)
-func (m Mangler) Singularize(string) string {
-	return ""
-}
+// Pluralization (Pluralize/Singularize) is deliberately NOT part of the mangler API: it is orthogonal to
+// tokenization (it inflects a single word), so it will ship as a standalone `plurals` subpackage
+// (English rules + irregular/uncountable tables) — see DESIGN_v2.md §13 (P2). The former empty stubs were
+// removed to avoid shipping silent-empty methods on the public surface.
 
 // asciifyInput is the string-level half of ASCII-fication, applied before segmentation when folding
 // is enabled: it expands non-foldable runes to their phonetic name so multi-word names re-segment.
