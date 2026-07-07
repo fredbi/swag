@@ -1,13 +1,10 @@
 package numbers
 
-import "maps"
-
-// NumberMangler produces written numerals (cardinals, ordinals, roman) and digit-group aware
-// number reconstruction.
+// NumberMangler produces written numerals (cardinals, ordinals, roman) and digit-group aware number reconstruction.
 //
-// It is a standalone engine: unlike the name-oriented manglers it does its own number-aware
-// scanning (it must see decimal points and digit-group separators that the general tokenizer elides),
-// so it does not depend on the tokenizer.
+// It is a standalone engine: unlike the name-oriented manglers it does its own number-aware scanning
+// (it must see decimal points and digit-group separators that the general tokenizer elides),
+// so it does not depend on a separate tokenizer.
 type NumberMangler struct {
 	numberOptions
 }
@@ -27,132 +24,86 @@ func NewNumberMangler(opts ...NumberOption) *NumberMangler {
 	return &m
 }
 
-// NumberWords produces written english numerals.
+// NumberWords rewrites every number found in a string as english words.
 //
-// "123" becomes: "one hundred and twenty three".
+// It leaves the surrounding text untouched,
+// e.g. "10 11" => "ten eleven", "level 0.25 here" => "level one quarter here".
 //
-// Non-numerals present in the string are kept as-is, e.g. "11 and 12" => "eleven and twelve".
+// Multiple numbers are handled independently.
 //
-// # Thousands separators
+// Each number is an optional sign followed by digits with an optional decimal point:
 //
-// Groups of digits separated by a comma, a blank space (not a tab) or an underscore are considered as a single group,
-// like so:
+//   - integers become cardinals: "123" => "one hundred and twenty three";
+//   - a value in (-1, 1) matching a simple fraction becomes that fraction: "0.25" => "one quarter",
+//     "0.1" => "one tenth", "0.75" => "three quarters";
+//   - any other decimal is spelled digit-by-digit after "dot": "0.31456" => "zero dot three one four
+//     five six";
+//   - negatives are prefixed with "minus".
 //
-// - 1 234 or 1,234, or 1_234 => one thousand two hundred and thirty four
-// - but 1;234 => one;two hundred and thiry four
+// Thousands separators are reconstructed: within a number, a space, comma or underscore followed by exactly three
+// digits joins the group, so "1 234", "1,234" and "1_234" all become "one thousand two hundred and thirty four",
+// while "1 2" stays two numbers ("one two") and "1;234" is not joined (";" is not a separator).
 //
-// # Fractional numbers
+// Registered special numbers ([WithSpecialNumbers]) are matched (within tolerance) ahead of everything else, so
+// "3.1415" => "pi".
 //
-// Simple fractions are identified:
-//
-//   - 0.1 => one tenth (or simply "tenth" if the NumbersStringone option is true).
-//   - 0.25 => one quarter
-//   - 0.125 => one eighth
-//   - 0.3333 => one third (use 3 decimals precision to infer the fraction)
-//
-// General decimals are spelled using "dot", as in:
-//
-//   - 0.31456 => zero dot three FRED TODO
-//
-// You may use [WithSpecialNumbers] to register specific numeric strings with a given name. Like so:
-//
-//	  WithSpecialNumbers(map[string]{
-//				"3.1415": "pi",
-//	     "2.718": "e",
-//	     "0.707": "√2/2",
-//		 })
-//
-// Multiple distinct numbers in the same string are processed independently,
-// e.g. "10 11" becomes "ten eleven".
-func (m NumberMangler) NumberWords(string) string {
-	return ""
+// Rendering honors the mangler's options: [WithNumberStripOne] ("one hundred" => "hundred", "one tenth" => "tenth"),
+// [WithNumberStripAnd] (drops the "and"), and [WithNumberDetectPrecision] (fraction and special-number tolerance).
+func (m NumberMangler) NumberWords(in string) string {
+	if !hasDigit(in) {
+		return in // no numeric run possible: nothing to rewrite, no allocation
+	}
+
+	var w buf
+	const sensibleGrowth = 16
+	w.Grow(len(in) + sensibleGrowth) // verbalized numbers expand (e.g. "200" -> "two hundred")
+	scanInto(&w, in, m.numberOptions)
+
+	return unsafeStr(w.b)
 }
 
-// DigitWords produces written english numerals for digits only.
+// AppendWords appends the english-words form of in (numbers verbalized, surrounding text verbatim) to
+// dst and returns the extended slice.
 //
-// "123" becomes: "one two three".
+// This is the string-free sibling of [NumberMangler.NumberWords].
 //
-// The decimal separator "." is spelled "dot": "1.23" => "one dot two three".
+// The caller owns dst and may reuse it across calls, so bulk verbalization runs allocation-free, like so:
 //
-// Non digits present in the string are kept as-is.
-func (m NumberMangler) DigitWords(string) string {
-	return ""
+//	var scratch []byte
+//	for _, s := range inputs {
+//		scratch = m.AppendWords(scratch[:0], s)
+//		use(scratch) // valid until the next AppendWords into scratch
+//	}
+func (m NumberMangler) AppendWords(dst []byte, in string) []byte {
+	if !hasDigit(in) {
+		return append(dst, in...)
+	}
+
+	w := buf{b: dst}
+	scanInto(&w, in, m.numberOptions)
+
+	return w.b
 }
 
+// NumberWords renders a number as english words with default options.
+//
+// Cardinals for integers ("123" → "one hundred and twenty three"),
+// simple fractions or spelled decimals for floats
+// ("0.25" → "one quarter", "0.31456" → "zero dot three one four five six").
 func NumberWords[T Numerical](n T) string {
-	return ""
+	return numberWords(float64(n), numberOptions{})
 }
 
-// NumberOrdinal renders an ordinal, e.g. 31 -> 31st.
-func NumberOrdinal[T Numerical](n T) string {
-	return ""
-}
-
-// NumberRoman renders a roman numeral, e.g. 4 -> iv.
-func NumberRoman[T Integer](n T) string {
-	return ""
-}
-
-type (
-	// NumberOption customizes the behavior of the [NumberMangler].
-	NumberOption func(numberOptions) numberOptions
-
-	numberOptions struct {
-		stripOne  bool
-		stripAnd  bool
-		digits    uint
-		precision uint
-		specials  map[string]string
-	}
-)
-
-func buildNumberOptions(o numberOptions, opts []NumberOption) numberOptions {
-	for _, apply := range opts {
-		o = apply(o)
-	}
-
-	return o
-}
-
-// WithNumberStripOne alters how [NumberMangler.NumberWords] renders numerals:
-// whenever stripped the "one" prefix in "one hundred", "one tenth", etc is elided.
-func WithNumberStripOne(strip bool) NumberOption {
-	return func(o numberOptions) numberOptions {
-		o.stripOne = strip
-		return o
-	}
-}
-
-// WithNumberStripAnd alters how [NumberMangler.NumberWords] renders numerals:
-// whenever stripped the "and" in "one hundred and ten", etc is elided.
-func WithNumberStripAnd(strip bool) NumberOption {
-	return func(o numberOptions) numberOptions {
-		o.stripAnd = strip
-		return o
-	}
-}
-
-func WithNumberDetectPrecision(precision uint) NumberOption {
-	return func(o numberOptions) numberOptions {
-		o.precision = precision
-		return o
-	}
-}
-
-// WithSpecialNumbers allow to recognize special numbers.
+// NumberRoman renders a lowercase roman numeral,
+// e.g. 4 -> iv, 12 -> xii.
 //
-// Example: map[float64]string{"0.314": "pi"} will transform all recognized 0.314 numbers
-// (up to the configured detect precision) as "pi" words.
-func WithSpecialNumbers(specials map[string]string) NumberOption {
-	return func(o numberOptions) numberOptions {
-		maps.Copy(o.specials, specials)
-		return o
-	}
+// Undefined (empty) for n <= 0.
+func NumberRoman[T Integer](n T) string {
+	return roman(int64(n))
 }
 
 type (
-	// these type constraints are redefined after golang.org/x/exp/constraints,
-	// because importing that package causes an undesired go upgrade.
+	// these type constraints are redefined after golang.org/x/exp/constraints
 
 	// Signed integer types, cf. [golang.org/x/exp/constraints.Signed]
 	Signed interface {
