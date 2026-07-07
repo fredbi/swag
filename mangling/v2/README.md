@@ -1,75 +1,70 @@
 # mangling
 
-The `mangling` package exposes utilities to turn strings into valid `go` identifiers.
+Turn arbitrary strings into valid Go identifiers, and apply common recasing operations
+(camelCase, kebab-case, snake_case, ...).
 
-It also allows common recasing operations like camel-casing, kebab-casing, etc.
+It supersedes `github.com/go-openapi/swag/mangling` (v0.x) with an equivalent job and a
+stricter, more robust, faster implementation. See [differences with v1](docs/v1-differences.md).
 
-It supersedes `github.com/go-openapi/swag/mangling`, providing an equivalent functionality,
-with a more stricter, more robust yet faster implementation.
+```go
+import "github.com/go-openapi/swag/mangling/v2"
+```
 
-## Main features
+## The three manglers
 
-* `Mangler`
-* `GoMangler`
-* `numbers/NumberMangler`
+**`Mangler`** — general-purpose recasing.
 
-## Asciify: Verbalization & romanisation
+```go
+m := mangling.MakeMangler()
+m.Camelize("sample text")  // "sampleText"
+m.Snakize("sampleText")    // "sample_text"
+m.Titleize("hello world")  // "Hello World"
+```
 
-Numbers
+**`GoMangler`** — names a Go code generator can safely emit. Any input yields a valid,
+non-empty identifier.
 
-Latin with diacritics
+```go
+g := mangling.MakeGoMangler()
+g.IdentExported("sample text") // "SampleText"
+g.ConstName("status 200")      // "StatusTwoHundred"
+g.File("test.go")              // "test_swagger.go"
+```
 
-Non-latin
+**`numbers.NumberMangler`** — verbalize numbers in text.
 
-Emojis & others
+```go
+nm := numbers.MakeNumberMangler()
+nm.NumberWords("0.25") // "one quarter"
+```
 
-Not supported for now:
-* CJK (unicode points for East-Asian languages).
-* graphemes
+Manglers are immutable values, configured with functional options at construction
+(`MakeXxx` returns a value, `NewXxx` a pointer), and safe for concurrent use.
 
-## `GoMangler` API
+## Documentation
 
-The contract: the go mangler turns any string into a valid go identifier.
+- [Go identifiers](docs/go-identifiers.md) — the "always a valid Go identifier" guarantee,
+  `Ident*` / `ConstName` / `File` / `Package` / `Module`, and the repairs.
+- [ASCII-fication](docs/asciification.md) — folding and romanization: `café → Cafe`,
+  Cyrillic / Greek / Arabic, `½ → OneHalf`, `😀 → GrinningFace`, Japanese kana.
+- [Numbers](docs/numbers.md) — cardinals, fractions, digit-group reconstruction.
+- [Differences with v1](docs/v1-differences.md) — migration and rationale.
 
-### `GoIdentExported`, `GoIdentUnexported`: go identifiers rules
+Full API reference: [pkg.go.dev](https://pkg.go.dev/github.com/go-openapi/swag/mangling/v2).
 
-go compiler constraints:
+## Not supported
 
-A `go` identifier (exported or unexported) must start with a letter.
-The remainder is made of letters or unicode decimal digits.
+- CJK Han ideographs (Kanji / Hanzi) — elided (Japanese kana works); native-script identifiers
+  remain available with folding off.
+- Grapheme clusters (flag emoji, ZWJ sequences).
 
-Letters are unicode letters or "_". 
+## Performance
 
-If the initial letter is upper-case, the identifier is exported ("public").
-
-Identifiers must not conflict with a reserved word of the go language.
-
-usage enforced by linters
-
-* avoidance of "_", camel-case or pascal-case are considered idiomatic
-* initialisms (`revive`)
-* unicode is accepted, but ASCII-only identifiers are usually preferred (`gosmopolitan`)
-* identifiers should not shadow a go builtin function
-
-### `File`: go file names
-
-### `Package`, `Module`: go package and module names
-
-### `GoConstName`: identifiers for enum values
-
-Differences with `GoIdentExported`.
-
-## `Mangler` API
-
-## Differences with `go-openapi/swag/mangling@v0.x`
+A typical mangling takes on the order of 1,000 ns. All methods scale linearly with the number of
+tokens (~300 ns/token) and perform zero internal allocation beyond the returned string —
+see [PERFORMANCE.md](docs/PERFORMANCE.md).
 
 ## Tests
 
-The go mangler is fuzzed with the objective of producing a valid go identifier against all-weather input.
-
-## Performances
-
-A typical mangling operation takes about 1,000 ns.
-
-All mangling methods scale linearly with the number of tokens in the input string (~< 200-300 ns/token),
-and perform zero internal allocation (only the returned string is allocated).
+The Go mangler is fuzzed with the objective of producing a valid Go identifier against all-weather
+input. Run the suite with `go test ./...`.

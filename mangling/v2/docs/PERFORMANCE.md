@@ -1,7 +1,5 @@
 # Performance & scalability
 
-Draft analysis notes — to be folded into the package documentation.
-
 ## Summary
 
 `GoMangler.IdentUnexported` (the richest default path: asciify → segment → ASCII fold → initialism
