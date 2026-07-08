@@ -32,13 +32,26 @@ recognizably preserved.
 
 Scripts that have no Latin fold are romanized letter-by-letter using each rune's Unicode name.
 This is deterministic and always ASCII-safe. It is **not** a linguistic transliteration — a rune
-becomes the name Unicode gives it, so Cyrillic `р` becomes `er` (its name), not `r`.
+becomes the *name* Unicode gives it, not its sound.
 
-| Input | `ConstName` | Script |
+For **Greek** this reads cleanly, because the letter names are words we already use:
+
+| Input | `ConstName` |
+|---|---|
+| `λ` | `Lambda` |
+| `αβγ` | `AlphaBetaGamma` |
+| `πΣΩ` | `PiSigmaOmega` |
+
+(λ's Unicode name is actually "lamda"; we normalize that one to "lambda".)
+
+For most other scripts you get the letter *names*, which spell the word out rather than transliterate
+it — stable and unique, but not pretty:
+
+| Input | `ConstName` | letter names |
 |---|---|---|
-| `Ελληνικά` | `EpsilonLamdaLamdaEtaNuIotaKappaAlpha` | Greek (note: Unicode 15.0 spells λ "lamda") |
-| `Ярославль` | `YaErOEsElAVeElSoftSign` | Cyrillic |
-| `مرحبا` | `MeemRehHahBehAlef` | Arabic |
+| `Иди` | `IDeI` | Cyrillic i-de-i — not "idi" |
+| `Мир` | `EmIEr` | Cyrillic em-i-er — not "mir" |
+| `مرحبا` | `MeemRehHahBehAlef` | Arabic meem-reh-hah-beh-alef |
 
 The value proposition here is a *guaranteed, stable, ASCII* identifier — not a pretty one.
 

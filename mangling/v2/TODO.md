@@ -1,4 +1,4 @@
-* small corrections to the ucd set: greek lambda etc
+* [x] small corrections to the ucd set: greek lambda (post-collapse wordOverrides rule "lamda"->"lambda" in gen_runewords)
 * [x] expose numbers.Romans(int64)
 * [x]  fix ToASCII / ASCIIRune for non-ascii digits
 * [x] ensure complete ascii_fold (diacritics - generated)

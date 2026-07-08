@@ -368,11 +368,23 @@ func collapse(s string) string {
 	return best
 }
 
+// wordOverrides replaces a collapsed word with a more natural spelling than the (deliberately technical) Unicode name.
+//
+// Applied after collapse, as an exact whole-word match. Keep it tiny and defensible: only for cases where Unicode's
+// choice reads as a database artifact and the natural English word is unambiguous.
+var wordOverrides = map[string]string{
+	"lamda": "lambda", // Unicode names λ "LAMDA"; "lambda" is the standard English spelling
+}
+
 func summarize(name string) (string, bool) {
 	norm := func(s string) string {
 		s = reWith.ReplaceAllString(s, "") // drop "... WITH ACUTE" diacritic tails
 		s = reSpaces.ReplaceAllString(strings.TrimSpace(s), " ")
-		return collapse(strings.ToLower(s))
+		w := collapse(strings.ToLower(s))
+		if o, ok := wordOverrides[w]; ok {
+			return o
+		}
+		return w
 	}
 	for _, re := range []*regexp.Regexp{reLetter, reSyllable, reCharacter, reNumber} {
 		if m := re.FindStringSubmatch(name); m != nil {

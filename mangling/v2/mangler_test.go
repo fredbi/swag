@@ -256,6 +256,7 @@ func TestAsciiUtilities(t *testing.T) {
 	// RuneShortName: phonetic word for non-foldable runes.
 	assert.EqualT(t, "pi", RuneShortName('π'))
 	assert.EqualT(t, "zhe", RuneShortName('ж'))
+	assert.EqualT(t, "lambda", RuneShortName('λ')) // wordOverrides: Unicode's "lamda" -> "lambda"
 	assert.EqualT(t, "grinning face", RuneShortName('😀'))
 	assert.EqualT(t, "A", RuneShortName('A')) // ASCII as-is
 	assert.EqualT(t, "", RuneShortName('中'))  // elided
