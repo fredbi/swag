@@ -1,42 +1,14 @@
 package mangling
 
-// Mangler exposes general purpose well-known case formatters with simple recasing rules.
+// Mangler exposes general purpose well-known case formatters ([Mangler.Camelize], [Mangler.Snakize],
+// [Mangler.Kebabize], [Mangler.Titleize], ...) with simple recasing rules.
 //
-// It works best with latin letters and unicode letters that define upper and lowercase classes.
+// It works best with latin letters and unicode letters that define upper and lowercase classes. ASCII folding is
+// off by default (see [GoMangler] for the on-by-default variant).
 //
-// # Case handling
-//
-// Casing follows unicode rules: the first letter of a capitalized word is title-cased (via [unicode.ToTitle], which
-// differs from uppercase for a handful of digraphs), while ALL-CAPS uses uppercase and the remainder is lower-cased.
-//
-// Special casing rules (e.g. [unicode.SpecialCase]) are not supported at this moment.
-//
-// Letters in languages that do not support case remain unchanged.
-//
-// # Symbols verbalization
-//
-// Common symbols such as "?", "@", "#" are verbalized and replaced by a short word (e.g. "question", "at", "hash").
-//
-// # ASCII transform
-//
-// By default, all letters and digits remain unchanged.
-//
-// The mangler may optionally ASCII-fy letters: latin letters with diacritics (e.g. é, ü) and unicode digits are
-// converted to an ASCII equivalent, while non-latin unicode gets "phonetized" using its rune name.
-//
-// # NOTES
-//
-// CJK runes are elided, as no easy phonetization scheme is available.
-//
-// Unicode grapheme clusters are not supported at this moment.
-//
-// ASCII and numerals:
-//
-//   - ASCII digits are left as-is
-//   - a "." (dot) is verbalized as "dot" (symbol), a "," comma is elided (separator)
-//   - unicode numerals, such as ½, verbalize as words when ASCII folding is on ("½ cup" → "one half cup"); with
-//     folding off they are dropped, like other non-foldable runes. (The package-level [ToASCII] renders a numeral as
-//     a plain number instead: "½" → "0.5".)
+// Case handling, symbol verbalization, ASCII folding and numeral handling are shared with [GoMangler] and
+// documented in the package overview — see the "Case handling", "Symbol verbalization", "ASCII folding" and
+// "Numerals" sections there.
 type Mangler struct {
 	tokenizer
 	options // options for plurals (possibly - future - language)

@@ -21,6 +21,9 @@ import (
 //
 // The producers honor a configurable list of initialisms (API, HTTP, ...), resolve collisions with go keywords and
 // builtins, and guarantee a valid, non-empty identifier for any input.
+//
+// Case handling, symbol verbalization, ASCII folding and numeral handling are shared with [Mangler] and documented
+// in the package overview. Numbers are verbalized through the [numbers] subpackage (see [numbers.NumberMangler]).
 type GoMangler struct {
 	Mangler
 	goOptions
