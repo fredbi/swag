@@ -1,6 +1,7 @@
 package numbers
 
-// NumberMangler produces written numerals (cardinals, ordinals, roman) and digit-group aware number reconstruction.
+// NumberMangler verbalizes the numbers found in text as English words: cardinals and common fractions, with
+// digit-group (thousands) reconstruction.
 //
 // It is a standalone engine: unlike the name-oriented manglers it does its own number-aware scanning (it must see
 // decimal points and digit-group separators that the general tokenizer elides), so it does not depend on a separate
@@ -98,7 +99,7 @@ func (m NumberMangler) AppendWords(dst []byte, in string) []byte {
 	return w.b
 }
 
-// The engine is reached through NumberMangler (which verbalizes numbers found in text) and RuneNumber (which resolves a
-// numeral rune to its value).
-// The internal numberWords/roman helpers verbalize a single value; typed public value helpers can be added later if a
-// consumer needs them, without breaking callers.
+// The engine is reached through NumberMangler (which verbalizes numbers found in text), RuneNumber (which resolves a
+// numeral rune to its value), and Roman (which renders an integer as a roman numeral).
+// The internal numberWords helper verbalizes a single cardinal value; a typed public cardinal helper can be added later
+// if a consumer needs one, without breaking callers.

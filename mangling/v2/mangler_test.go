@@ -230,11 +230,28 @@ func TestAsciiUtilities(t *testing.T) {
 	assert.EqualT(t, "", ToASCII("日")) // CJK dropped
 	assert.EqualT(t, "plain ascii", ToASCII("plain ascii"))
 
-	// Ascii: single-rune diacritic fold only.
+	// non-ASCII decimal digits (Nd) fold to their ASCII value, like the mangler pipeline (item٧ → item7).
+	assert.EqualT(t, "7", ToASCII("٧")) // Arabic-Indic
+	assert.EqualT(t, "7", ToASCII("๗")) // Thai
+	assert.EqualT(t, "7", ToASCII("７")) // fullwidth
+	assert.EqualT(t, "item7", ToASCII("item٧"))
+	assert.EqualT(t, "7", ToASCII("Ⅶ")) // Nl numeral renders as a plain number
+
+	// diacritic fold now spans every Latin block (generated asciiFold): Vietnamese, pinyin, ligatures.
+	assert.EqualT(t, "Tieng Viet", ToASCII("Tiếng Việt"))
+	assert.EqualT(t, "Ni hao", ToASCII("Nǐ hǎo")) // pinyin ǐ→i, ǎ→a
+	assert.EqualT(t, "office", ToASCII("oﬃce"))   // ﬃ ligature → ffi
+
+	// RuneToASCII: single-rune diacritic / digit fold only.
 	assert.EqualT(t, "e", RuneToASCII('é'))
 	assert.EqualT(t, "n", RuneToASCII('ñ'))
 	assert.EqualT(t, "A", RuneToASCII('A'))
-	assert.EqualT(t, "", RuneToASCII('π')) // no diacritic folding -> empty (use RuneShortName)
+	assert.EqualT(t, "7", RuneToASCII('٧'))  // non-ASCII decimal digit (Nd) folds to its ASCII value
+	assert.EqualT(t, "9", RuneToASCII('๙'))  // Thai
+	assert.EqualT(t, "e", RuneToASCII('ế'))  // Vietnamese e-circumflex-acute
+	assert.EqualT(t, "o", RuneToASCII('ơ'))  // horn
+	assert.EqualT(t, "oe", RuneToASCII('œ')) // OE ligature
+	assert.EqualT(t, "", RuneToASCII('π'))   // no diacritic folding -> empty (use RuneShortName)
 
 	// RuneShortName: phonetic word for non-foldable runes.
 	assert.EqualT(t, "pi", RuneShortName('π'))

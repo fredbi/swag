@@ -268,7 +268,9 @@ func classify(r rune) string {
 	case unicode.Is(unicode.Han, r):
 		return "han" // CJK ideographs: no phonetic name -> elide
 	case unicode.Is(unicode.Hangul, r):
-		return "hangul" // enumerated syllables with algorithmic romanized names -> elide
+		// all Hangul: the algorithmic syllables AND the standalone Jamo letters. The Jamo do carry real names
+		// (ㄱ = "HANGUL LETTER KIYEOK") — naming them is a possible future improvement, elided for now.
+		return "hangul"
 	case inElideBlock(r) && !isPictographic(r):
 		return "block" // decorative / technical symbol blocks, minus real emoji (Extended_Pictographic)
 	}

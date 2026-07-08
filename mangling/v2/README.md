@@ -57,6 +57,8 @@ Full API reference: [pkg.go.dev](https://pkg.go.dev/github.com/go-openapi/swag/m
 
 - CJK Han ideographs (Kanji / Hanzi) — elided (Japanese kana works); native-script identifiers
   remain available with folding off.
+- Korean Hangul — elided, both syllables and standalone Jamo letters (a future improvement could
+  romanize the Jamo by letter name).
 - Grapheme clusters (flag emoji, ZWJ sequences).
 
 ## Performance

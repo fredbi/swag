@@ -84,6 +84,11 @@ g.ConstName("こんにちは")  // "KoNNiTiHa"
   Note this affects Han specifically: Japanese *kana* (tier 5 above) romanize today. Native-script
   identifiers also remain available with folding turned off.
 
+- **Hangul** (Korean) is **elided** too — both the composed syllables (`가`–`힣`, algorithmically named
+  like the Han block) and the individual **Jamo** letters (`ㄱ`, `ㅏ`, …). A possible future improvement
+  is to romanize the standalone Jamo by their letter name (`ㄱ → kiyeok`, `ㅏ → a`), the way Greek and
+  Cyrillic letters already resolve; it is left out for now as standalone Jamo are rare in identifiers.
+
 - **Grapheme clusters** (flag emoji, ZWJ sequences) are not grouped before folding. This is a
   planned enhancement, thin in value for identifiers.
 

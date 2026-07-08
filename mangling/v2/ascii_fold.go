@@ -1,3 +1,5 @@
+//go:generate go run ./ucd/cmd/gen_asciifold mangling asciifold_table.go
+
 package mangling
 
 import (
@@ -14,6 +16,8 @@ import (
 // Latin diacritics are folded (café → cafe), combining marks stripped,
 // and any remaining non-ASCII rune is replaced by its phonetic Unicode-name word (π → pi, 😀 → grinning face),
 // space-separated so it reads as words.
+//
+// Non-ASCII decimal digits fold to their ASCII value (٧ → 7), and numeral runes render as a plain number (½ → 0.5).
 //
 // Runes with no known word (CJK ideographs, decorative symbols) are dropped.
 //
@@ -35,6 +39,8 @@ func ToASCII[T ~string | ~[]byte](s T) string {
 		default:
 			if f, ok := asciiFold[r]; ok {
 				b.WriteString(f)
+			} else if d, ok := asciiDigit(r); ok {
+				b.WriteByte(d) // non-ASCII decimal digit (Nd) → its ASCII value ("٧" → "7"), like the pipeline
 			} else if v, ok := numbers.RuneNumber(r); ok {
 				b.WriteByte(' ')
 				b.WriteString(formatNumeral(v)) // numeral rune → plain number ("½" → "0.5"), not wording
@@ -50,8 +56,9 @@ func ToASCII[T ~string | ~[]byte](s T) string {
 	return strings.Join(strings.Fields(b.String()), " ")
 }
 
-// RuneToASCII returns the plain-ASCII equivalent of a single rune bearing a diacritic (é → "e", ñ → "n"), the
-// rune itself if already ASCII, or "" if it has no ASCII folding (non-Latin letters, symbols, emoji).
+// RuneToASCII returns the plain-ASCII equivalent of a single rune bearing a diacritic (é → "e", ñ → "n"),
+// a non-ASCII decimal digit folded to its ASCII value (٧ → "7"), the rune itself if already ASCII,
+// or "" if it has no ASCII folding (non-Latin letters, symbols, emoji).
 //
 // Use [RuneShortName] for those.
 // Combining marks fold to "".
@@ -62,6 +69,9 @@ func RuneToASCII[T ~rune | ~byte](r T) string {
 	}
 	if s, ok := asciiFold[c]; ok {
 		return s
+	}
+	if d, ok := asciiDigit(c); ok {
+		return string(d)
 	}
 
 	return ""
@@ -197,87 +207,6 @@ func isAllCombiningMarks(runes []rune) bool {
 	return true
 }
 
-// asciiFold maps a Latin letter bearing a diacritic (or a distinct Latin letter such as æ, ß, þ) to its plain ASCII
-// equivalent, preserving case.
-//
-// It is the data that supports [Ascii] / [ToASCII].
-//
-// Scope: European Latin scripts (Latin-1 Supplement, Latin Extended-A, a few Extended-B).
-//
-// This is diacritic *folding* — strip the accent, keep the base letter (ü→u, not the German ü→ue
-// transliteration).
-//
-// Distinct letters that have no single-rune ASCII base fold to their conventional digraph (æ→ae, œ→oe, ß→ss,
-// þ→th, ð→d).
-//
-// NOT covered here (by design): symbols and punctuation — see [defaultSymbolWords]; and non-Latin scripts (Greek,
-// Cyrillic, CJK, …), which fall back to the phonetic rune name (see [RuneShortName]).
-var asciiFold = map[rune]string{
-	// A
-	'à': "a", 'á': "a", 'â': "a", 'ã': "a", 'ä': "a", 'å': "a", 'ā': "a", 'ă': "a", 'ą': "a", 'ǎ': "a",
-	'À': "A", 'Á': "A", 'Â': "A", 'Ã': "A", 'Ä': "A", 'Å': "A", 'Ā': "A", 'Ă': "A", 'Ą': "A", 'Ǎ': "A",
-	// AE (ligature / distinct letter)
-	'æ': "ae", 'Æ': "AE",
-	// C
-	'ç': "c", 'ć': "c", 'ĉ': "c", 'ċ': "c", 'č': "c",
-	'Ç': "C", 'Ć': "C", 'Ĉ': "C", 'Ċ': "C", 'Č': "C",
-	// D (incl. đ d-bar and ð eth)
-	'ď': "d", 'đ': "d", 'ð': "d",
-	'Ď': "D", 'Đ': "D", 'Ð': "D",
-	// E (incl. ə schwa)
-	'è': "e", 'é': "e", 'ê': "e", 'ë': "e", 'ē': "e", 'ĕ': "e", 'ė': "e", 'ę': "e", 'ě': "e", 'ə': "e",
-	'È': "E", 'É': "E", 'Ê': "E", 'Ë': "E", 'Ē': "E", 'Ĕ': "E", 'Ė': "E", 'Ę': "E", 'Ě': "E",
-	// G
-	'ĝ': "g", 'ğ': "g", 'ġ': "g", 'ģ': "g",
-	'Ĝ': "G", 'Ğ': "G", 'Ġ': "G", 'Ģ': "G",
-	// H
-	'ĥ': "h", 'ħ': "h",
-	'Ĥ': "H", 'Ħ': "H",
-	// I (incl.
-	// Turkish ı dotless and İ dotted)
-	'ì': "i", 'í': "i", 'î': "i", 'ï': "i", 'ĩ': "i", 'ī': "i", 'ĭ': "i", 'į': "i", 'ı': "i",
-	'Ì': "I", 'Í': "I", 'Î': "I", 'Ï': "I", 'Ĩ': "I", 'Ī': "I", 'Ĭ': "I", 'Į': "I", 'İ': "I",
-	// J
-	'ĵ': "j", 'Ĵ': "J",
-	// K
-	'ķ': "k", 'Ķ': "K",
-	// L (incl. ł l-stroke)
-	'ĺ': "l", 'ļ': "l", 'ľ': "l", 'ŀ': "l", 'ł': "l",
-	'Ĺ': "L", 'Ļ': "L", 'Ľ': "L", 'Ŀ': "L", 'Ł': "L",
-	// N (incl. ŋ eng)
-	'ñ': "n", 'ń': "n", 'ņ': "n", 'ň': "n", 'ŋ': "n",
-	'Ñ': "N", 'Ń': "N", 'Ņ': "N", 'Ň': "N", 'Ŋ': "N",
-	// O (incl. ø o-slash)
-	'ò': "o", 'ó': "o", 'ô': "o", 'õ': "o", 'ö': "o", 'ø': "o", 'ō': "o", 'ŏ': "o", 'ő': "o",
-	'Ò': "O", 'Ó': "O", 'Ô': "O", 'Õ': "O", 'Ö': "O", 'Ø': "O", 'Ō': "O", 'Ŏ': "O", 'Ő': "O",
-	// OE (ligature)
-	'œ': "oe", 'Œ': "OE",
-	// R
-	'ŕ': "r", 'ŗ': "r", 'ř': "r",
-	'Ŕ': "R", 'Ŗ': "R", 'Ř': "R",
-	// S (incl. ș s-comma)
-	'ś': "s", 'ŝ': "s", 'ş': "s", 'š': "s", 'ș': "s",
-	'Ś': "S", 'Ŝ': "S", 'Ş': "S", 'Š': "S", 'Ș': "S",
-	// SS (sharp s)
-	'ß': "ss", 'ẞ': "SS",
-	// T (incl. ț t-comma)
-	'ţ': "t", 'ť': "t", 'ŧ': "t", 'ț': "t",
-	'Ţ': "T", 'Ť': "T", 'Ŧ': "T", 'Ț': "T",
-	// TH (thorn)
-	'þ': "th", 'Þ': "Th",
-	// U
-	'ù': "u", 'ú': "u", 'û': "u", 'ü': "u", 'ũ': "u", 'ū': "u", 'ŭ': "u", 'ů': "u", 'ű': "u", 'ų': "u",
-	'Ù': "U", 'Ú': "U", 'Û': "U", 'Ü': "U", 'Ũ': "U", 'Ū': "U", 'Ŭ': "U", 'Ů': "U", 'Ű': "U", 'Ų': "U",
-	// W
-	'ŵ': "w", 'Ŵ': "W",
-	// Y
-	'ý': "y", 'ÿ': "y", 'ŷ': "y",
-	'Ý': "Y", 'Ÿ': "Y", 'Ŷ': "Y",
-	// Z
-	'ź': "z", 'ż': "z", 'ž': "z",
-	'Ź': "Z", 'Ż': "Z", 'Ž': "Z",
-}
-
 // defaultSymbolWords maps a symbol rune to the word it verbalizes to (e.g. "@" => "at", "!" => "bang").
 //
 // This is the default data for the symbol verbalization policy: when a target chooses to *verbalize* a symbol rather
@@ -321,9 +250,15 @@ var defaultSymbolWords = map[rune]string{
 	'£': "pound",
 	'¥': "yen",
 	'¢': "cent",
+	'¤': "currency", // generic currency sign
+	'₹': "rupee",    // our word, not Unicode's ("INDIAN RUPEE SIGN")
+	'₩': "won",
+	'₽': "ruble",
+	'₿': "bitcoin",
 	'©': "copyright",
 	'®': "registered",
 	'™': "trademark",
+	'№': "numero",
 	'§': "section",
 	'¶': "paragraph",
 	'°': "degree",

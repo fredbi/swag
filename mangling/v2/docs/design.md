@@ -205,11 +205,15 @@ Other features are mostly deferred to forthcoming minor releases, so the surface
   existing per-codepoint path. Value is thin for real identifiers, so it is a showcase, not a
   priority. Single-codepoint emoji work today.
 
-- **CJK Han support.** Japanese *kana* already romanize (`こんにちは → KoNNiTiHa`); the only gap is
-  the shared CJK Unified Ideographs block (Kanji / Hanzi), currently elided to a valid fallback.
-  Romanizing Han needs a word-keyed source (CEDICT) because character-level pinyin is unreliable for
-  polyphonic characters, and would need a separate build-tagged sub-table to stay off the default
-  budget. The architecture stays open to it; whether it clears the value bar is honestly uncertain.
+- **CJK & Hangul support.** Two distinct scripts are elided today, for different reasons. Japanese
+  *kana* already romanize (`こんにちは → KoNNiTiHa`); the gap is the shared CJK Unified Ideographs block
+  (Kanji / Hanzi), currently elided to a valid fallback — romanizing Han needs a word-keyed source
+  (CEDICT) because character-level pinyin is unreliable for polyphonic characters, and a separate
+  build-tagged sub-table to stay off the default budget. **Korean Hangul** is also elided: the composed
+  syllables (`가`–`힣`) are algorithmic like Han, and the standalone **Jamo** letters (`ㄱ`, `ㅏ`) are
+  currently dropped rather than romanized — a cheap future improvement would name them by their letter
+  name (`ㄱ → kiyeok`, `ㅏ → a`), consistent with Greek/Cyrillic, but standalone Jamo are rare in
+  identifiers. The architecture stays open to both; whether either clears the value bar is uncertain.
 
 - **A public token-injection API.** The token model is intentionally unexported for 1.0 — it was
   exported but had no injection surface, so nothing could use it. A deliberate `InjectStage` hook

@@ -276,7 +276,10 @@ in order:
 4. **Everything else renderable** (non-Latin base letters, `Nl`/`No` numbers, unmapped symbols, single-codepoint
    emoji) → **rune-name fallback**, opt-in via `runenames` (`Ⅶ`→"…SEVEN", `Г`→"…GHE", `😀`→`GrinningFace`).
    Hard limit: **CJK unified ideographs have no phonetic name** (`中` = "CJK UNIFIED IDEOGRAPH-4E2D") → elide or
-   placeholder. Hangul/Greek/Cyrillic/etc. have real names and work.
+   placeholder. Greek/Cyrillic/etc. have real names and work. **Korean Hangul is also elided today** (both the
+   algorithmic syllables and the individual Jamo letters, all classified as `unicode.Hangul`), even though the Jamo do
+   carry real names (`ㄱ` = "HANGUL LETTER KIYEOK") — naming them is a possible future improvement (see §13 P2), left
+   out for now as standalone Jamo are rare in identifiers.
 
 **The "never render" set** — elided even though `runenames` could name them:
 
@@ -574,7 +577,7 @@ Snapshot of the branch against this design. Legend: ✅ done & tested · 🚧 st
 | Leading-digit repair | `verbalizeLeadingNumber` verbalizes a leading numeral, keeps interior digits (`12 men`→`Twelve…`, `var 12`→`Var12`) | §4.7.2 |
 | Rune-naming / asciify | `runewords` table (interval keys + 18-bit offsets, ~173 KiB); `ToASCII`/`ASCII`/`UnicodeName`; `expandRuneNames` pre-segmentation pass shared by both manglers | §4.7.1, §12 |
 | Empty-result guard | Go idents/const/file never return `""` — a reduced-to-nothing input yields a per-target-cased fallback (`WithGoIdentFallback`, default `"empty"`); Package/Module stay empty-allowed; base `Mangler` exempt | §12 |
-| UCD codegen | dependency-free `ucd` module: versioned data (`ucd/v15/`), `cmd/gen_runewords` + `cmd/gen_numerals`, `internal/locate`; `//go:generate` in each consuming package; regen is idempotent | §12 |
+| UCD codegen | dependency-free `ucd` module: versioned data (`ucd/v15/`), `cmd/gen_runewords` + `cmd/gen_numerals` + `cmd/gen_asciifold`, `internal/locate`; `//go:generate` in each consuming package; regen is idempotent | §12 |
 
 ### Stub / partial 🚧 — the remaining work
 
@@ -595,8 +598,9 @@ feature; decided 2026-07-07, §12), it is not opt-in. The generator lives in the
 
 1. **Exclude what other layers already handle or elide** — ASCII, Latin+diacritics (fold map), digits (`Nd`),
    combining marks, controls/format, separators/spacing-modifiers.
-2. **Exclude drop-during-asciify classes** — CJK Han, Hangul syllables (algorithmic romanizations; Hangul alone is
-   11,737 lines), and a curated list of **decorative/technical symbol blocks** (box drawing, block elements,
+2. **Exclude drop-during-asciify classes** — CJK Han, all Hangul (the ~11,172 algorithmic syllables *and* the ~300
+   Jamo letters — everything classified `unicode.Hangul`; naming the standalone Jamo is a deferred improvement, §13 P2),
+   and a curated list of **decorative/technical symbol blocks** (box drawing, block elements,
    geometric shapes, braille, control pictures, Misc Technical/Symbols, Dingbats, Yijing, musical, mahjong/domino,
    legacy-computing) — **gated by `Extended_Pictographic`** (from `ucd/emoji-data.txt`) so real emoji inside mixed
    blocks survive (`❤`→Heart, `✈`→Airplane, `⌚`→Watch, `☯`→YinYang) while non-emoji decoration (`✓ ⌂ ─`) is elided.
@@ -713,6 +717,31 @@ one-liner.
 belongs with the v17 bump. `internal/locate` also has a `// TODO: temporary location` — the data path is hardcoded
 relative to the swag git root and will need adjusting when v2 graduates to its own repo.
 
+### asciiFold: generated + exhaustive across all Latin blocks (2026-07-08)
+
+A completeness sweep of `DerivedName.txt` against the hand-written `asciiFold` (193 entries, scoped to Latin-1 +
+Extended-A + a few Extended-B) found the map was far from exhaustive — and, worse, that the gap was a **silent leak**:
+`gen_runewords` classifies *every* `unicode.Latin` rune as "handled by the fold map" and drops it from the rune-name
+table, so the ~350 Latin letters *not* in the hand map got neither folded nor named — with folding on they leaked
+unchanged into "ASCII" output.
+
+Fixed by **generating** the table (third UCD generator, `ucd/cmd/gen_asciifold`, `//go:generate` wired):
+
+- Name-driven rule: `LATIN {SMALL|CAPITAL} {LETTER|LIGATURE} <BASE> [WITH …]` folds to `<BASE>` when it reduces to a
+  single A–Z or a known digraph/ligature (AE OE DZ LJ NJ IJ · FF FI FL FFI FFL ST). Covers **all** Latin blocks
+  (Vietnamese `ế→e`, pinyin `ǐǒǔ ǖǘǚǜ`, horns `ơư`, Nordic `ǻǽǿ`, ligatures `œ→oe ﬃ→ffi`) uniformly.
+- Distinct letters with no ASCII base (OPEN O, SCHWA, ESH, EZH, GAMMA, clicks, turned/reversed) are correctly skipped
+  → they fall through to the rune-name stage.
+- Atomic conventions not derivable from the name (eth→d, thorn→Th, sharp-s→ss, eng→n, long-s→s, dotless-i→i, the
+  titlecase digraphs Dž/Lj/Nj/Dz) live in a curated `seeds` table in the generator.
+- Result: **762 entries, 0 regressions** vs the old map (all 193 preserved byte-for-byte in value), 569 new folds.
+  `go generate` round-trips byte-identical; fuzz/tests/lint green. No `runewords` regen needed (those runes were never
+  in that table).
+
+Symbols were deliberately **not** generated — no closed rule (Unicode's own wording is wrong for us: "Solidus" vs our
+"slash"), and exhaustive inclusion produces nonsense idents. `defaultSymbolWords` got a small curated bump only
+(`¤`→currency, `₹`→rupee, `₩`→won, `₽`→ruble, `₿`→bitcoin, `№`→numero), still unwired.
+
 ### Rune-name table: compaction — LOCKED plan (2026-07-07 spike)
 
 Every candidate was measured on the real data (24,235 kept runes, Unicode 15.0) via throwaway in-package harnesses
@@ -792,7 +821,10 @@ constraints" holds only until we ship — after that the surface is a contract, 
 - ✅ Exposed `WithGoReservedSuffix` / `WithGoFileRepairSuffix`.
 - ✅ Removed the ignored `...ValueOption` from `ConstName` + deleted the `ValueOption` type (re-addable, non-breaking).
 - ✅ Shrank `numbers`: removed the value generics `NumberWords[T]`/`NumberRoman[T]` + numeric constraints; the engine
-  is `NumberMangler` (text) + `RuneNumber` (runes). Internal `numberWords`/`roman` retained.
+  is `NumberMangler` (text) + `RuneNumber` (runes). Internal `numberWords` retained.
+  - *Follow-up (2026-07-08):* re-exported the roman renderer as the non-generic `Roman(int64) string` — a real
+    consumer (compact sequence labels / nested-loop indices `i, ii, iii, iv, …`) surfaced, exactly the "add a typed
+    value helper when needed" path noted below. `numberWords` stays internal until a cardinal consumer appears.
 - ✅ Renamed `ASCII`→`RuneToASCII`, `UnicodeName`→`RuneShortName` for consistency with `ToASCII`.
 - Result surface — `mangling/v2`: `Mangler`/`GoMangler` (+ `Tokenize`), options, `TargetTransform`, `DefaultInitialisms`,
   `ToASCII`/`RuneToASCII`/`RuneShortName`. `numbers`: `NumberMangler` + `RuneNumber` + options. All green, 0 lint.
@@ -820,13 +852,13 @@ constraints" holds only until we ship — after that the surface is a contract, 
 
 ### Known nits — small correctness/doc fixes (found during the 2026-07-07 docs pass)
 
-- **`ToASCII` drops a lone non-ASCII Nd digit.** `ToASCII("٧")` returns `""`, while `ToASCII("Ⅶ")` → `"7"` and the
-  mangler pipeline folds `item٧` → `item7`. The standalone `ToASCII` should fold an Arabic-Indic (and other Nd) digit
-  to its ASCII value like the pipeline does, rather than eliding it. Cheap fix; add a regression case.
-- **`NumberMangler` godoc overstates the surface.** Its doc says it produces "cardinals, ordinals, roman", but only
-  cardinals/fractions are reachable through `NumberWords` — ordinals are not spelled (`1st` → `onest`, not `first`)
-  and roman output is internal-only. Either reword the godoc to match the public surface, or (post-1.0) expose the
-  ordinal/roman renderers.
+- ~~**`ToASCII` drops a lone non-ASCII Nd digit.**~~ ✅ **fixed (2026-07-08).** `ToASCII` now folds a decimal-digit
+  rune to its ASCII value via `asciiDigit` (`ToASCII("٧")` → `"7"`, matching the pipeline's `item٧` → `item7`), before
+  the numeral/rune-name fallbacks. Regression cases (Arabic-Indic, Thai, fullwidth, `Ⅶ`) added to `TestAsciiUtilities`;
+  godoc updated to note digit + numeral handling.
+- ~~**`NumberMangler` godoc overstates the surface.**~~ ✅ **fixed (2026-07-08).** The type doc no longer claims
+  "ordinals, roman" — reworded to the reachable surface: "cardinals and common fractions, with digit-group (thousands)
+  reconstruction." (Exposing the internal ordinal/roman renderers stays a post-1.0 option.)
 
 ### P2 — enhancement releases (study/design now, build later)
 
@@ -838,12 +870,18 @@ constraints" holds only until we ship — after that the surface is a contract, 
   codepoints *before* `expandRuneNames`, purely additive, does not touch the core encoding. Value is thin for
   identifiers (showcase, not substance). No v17 needed.
 - **CJK (Han ideographs) — value-uncertain, deferred, must not shape the core.** Coverage today: **Japanese kana
-  (Hiragana + Katakana) already romanize to romaji** via the rune-name table (`こんにちは→KoNNiTiHa`), so the *only*
-  gap is the shared **CJK Unified Ideographs** block (Kanji/Hanzi), which is elided → a *valid* fallback identifier.
-  Native-script idents work today with asciify off. Romanizing Han would need a word-keyed source (CEDICT) — but
-  char-level pinyin is unreliable (polyphonic chars) and would blow past the 18-bit blob ceiling (→ 20-bit+ and a
+  (Hiragana + Katakana) already romanize to romaji** via the rune-name table (`こんにちは→KoNNiTiHa`), so the gaps are
+  the shared **CJK Unified Ideographs** block (Kanji/Hanzi) and **Korean Hangul** — both elided → a *valid* fallback
+  identifier. Native-script idents work today with asciify off. Romanizing Han would need a word-keyed source (CEDICT) —
+  but char-level pinyin is unreliable (polyphonic chars) and would blow past the 18-bit blob ceiling (→ 20-bit+ and a
   separate `runewords/cjk` **build-tagged** sub-table). Keep the architecture open; be honest it may never clear the
   value bar.
+- **Hangul Jamo naming — cheap, low-value, deferred.** Distinct from Han: the standalone **Jamo** letters (`ㄱ`, `ㅏ`;
+  the Compatibility Jamo block U+3130–318F) *do* carry real Unicode names, so un-eliding just that block and letting the
+  existing collapse name them by letter (`ㄱ→kiyeok`, `ㅏ→a`, consistent with Greek/Cyrillic) would work with **no new
+  data** (`Jamo.txt`'s short romanizations `ㄱ→G` were evaluated 2026-07-08 and rejected: wrong block — conjoining not
+  compatibility — plus empty entries like ieung and a convention clash with our letter-name naming). Left elided for now
+  because standalone Jamo are rare in identifiers; the composed syllables stay elided like Han regardless.
 - **Language-break as a token boundary** (§4.2 signal #4) — near-dead: only matters for "folding off + genuinely
   mixed-script + wants boundary splits". Soften the `tokenizer.go` note to "intentionally deferred".
 
