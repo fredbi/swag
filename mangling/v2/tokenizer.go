@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"iter"
 	"unicode"
+	"unicode/utf8"
 
 	"github.com/go-openapi/swag/pools"
 )
@@ -185,7 +186,7 @@ func classify(r rune, sep func(rune) bool) runeClass {
 		return classLetter
 	case unicode.Is(unicode.Nd, r): // decimal digits only; Nl/No (roman, fractions) fall to classSymbol
 		return classDigit
-	case unicode.In(r, unicode.Mn, unicode.Mc, unicode.Me):
+	case isCombiningMark(r): // has its own ASCII/Latin-1 short-circuit
 		return classMark
 	default:
 		return classSymbol
@@ -344,8 +345,27 @@ func (t *tokens) push(start, end int, kind tokenKind) {
 //   - Sk (modifier symbols: backtick, spacing accents ´ ¨ ¯ ¸ ˆ ˜ …) ARE elided, except those the
 //     word map claims (e.g. ^ -> caret), which map-first keeps as symbol tokens.
 //
-// NOTE: this is the intended default predicate; it is not yet wired into a working tokenizer.
+// Segmentation touches every rune and most runes are ASCII, so the ASCII decisions are precomputed into
+// [asciiSeparator]: the hot path is a single array lookup, and only non-ASCII runs the full category test.
 func defaultTokenSeparator(r rune) bool {
+	if r < utf8.RuneSelf {
+		return asciiSeparator[r]
+	}
+
+	return separatorForRune(r)
+}
+
+// asciiSeparator caches [separatorForRune] for every ASCII rune, filled in init.
+var asciiSeparator [utf8.RuneSelf]bool
+
+func init() {
+	for r := rune(0); r < utf8.RuneSelf; r++ {
+		asciiSeparator[r] = separatorForRune(r)
+	}
+}
+
+// separatorForRune is the full default separator predicate; see [defaultTokenSeparator] for the rationale.
+func separatorForRune(r rune) bool {
 	if _, verbalize := defaultSymbolWords[r]; verbalize {
 		return false // bucket 2: a symbol token, not a separator
 	}

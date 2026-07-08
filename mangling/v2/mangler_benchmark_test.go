@@ -41,25 +41,19 @@ func BenchmarkGoManglerPaths(b *testing.B) {
 	}
 }
 
-// benchmarkFastSamples are pure-ASCII inputs that trip no string-level pre-pass — the engine's floor.
-var benchmarkFastSamples = []string{
-	"sampleText",
-	"findThingById",
-	"HTTPResponseWriter",
-	"user_id",
-	"created at timestamp",
-	"list of email addresses",
-}
+// Every benchmark input below is three space-separated tokens so ns/op is directly comparable: the fast baseline is
+// three plain tokens, and each slow entry replaces the first token with a trigger, isolating that trigger's cost.
+var benchmarkFastSamples = []string{"gamma alpha beta"}
 
-// benchmarkSlowSamples pairs each slow-path trigger with a representative input.
+// benchmarkSlowSamples pairs each slow-path trigger (the first of three tokens) with the pass it exercises.
 var benchmarkSlowSamples = []struct{ name, in string }{
-	{"diacritics", "café résumé"},        // token-level ASCII fold
-	{"cjk-elided", "日本語findThingById"},   // rune-name pass, elision
-	{"greek-named", "Ελληνικά value"},    // rune-name pass, romanization
-	{"numeral-rune", "½ cup portions"},   // numeral verbalization
-	{"leading-number", "200 ok results"}, // verbalizeLeadingNumber
-	{"operators", "a != b && c"},         // expandOperators
-	{"emoji", "😀 grinning face"},         // rune-name pass
+	{"diacritics", "café alpha beta"},      // token-level ASCII fold
+	{"cjk-elided", "日本 alpha beta"},        // rune-name pass, elision
+	{"greek-named", "Ελληνικά alpha beta"}, // rune-name pass, romanization
+	{"numeral-rune", "½ alpha beta"},       // numeral verbalization
+	{"leading-number", "200 alpha beta"},   // verbalizeLeadingNumber
+	{"operators", "!= alpha beta"},         // expandOperators
+	{"emoji", "😀 alpha beta"},              // rune-name pass
 }
 
 func benchmarkMangle(fn func(string) string, samples []string) func(*testing.B) {

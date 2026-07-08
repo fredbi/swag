@@ -165,6 +165,12 @@ func foldable(r rune) bool {
 }
 
 func isCombiningMark(r rune) bool {
+	// No combining mark (Mn/Mc/Me) exists below U+0300, so ASCII and Latin-1 skip the three range-table binary
+	// searches — this runs per rune in writeCased/foldToASCII on the hot path.
+	if r < 0x0300 {
+		return false
+	}
+
 	return unicode.In(r, unicode.Mn, unicode.Mc, unicode.Me)
 }
 
@@ -177,6 +183,11 @@ func isCombiningMark(r rune) bool {
 func asciiDigit(r rune) (byte, bool) {
 	if r >= '0' && r <= '9' {
 		return byte(r), true
+	}
+	if r < 0x0660 {
+		// No non-ASCII decimal digit (Nd) exists below U+0660 (Arabic-Indic), so skip the block scan for the common
+		// Latin/Greek/Cyrillic range.
+		return 0, false
 	}
 	for _, rg := range unicode.Nd.R16 {
 		lo, hi := rune(rg.Lo), rune(rg.Hi)

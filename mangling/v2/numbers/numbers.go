@@ -71,6 +71,12 @@ func (m NumberMangler) NumberWords(in string) string {
 // plain number ('½' → "0.5").
 // Table in numerals.go.
 func RuneNumber(r rune) (float64, bool) {
+	if r < 0x00B2 {
+		// No No/Nl numeral exists below U+00B2 (superscript two), so ASCII and low-Latin runes skip the map lookup —
+		// this is called per rune while scanning text.
+		return 0, false
+	}
+
 	v, ok := runeNumericValue[r]
 
 	return v, ok

@@ -172,18 +172,19 @@ var operatorWords = map[string]string{
 	"→": "to", "⇒": "implies", "≈": "approximately", "≡": "equivalent", "¬": "not",
 }
 
-// operatorLeadByte[c] reports whether byte c can start an [operatorWords] key. Derived from the map's keys so it never
-// drifts, indexed by the full byte range (an ASCII key contributes its byte; a glyph key its UTF-8 lead byte, 0xE2 or
-// 0xC2). It lets the scan skip an ordinary character — including any non-glyph non-ASCII rune such as CJK — with a
-// single array lookup and no map lookup.
-var operatorLeadByte = func() [256]bool {
-	var t [256]bool
-	for k := range operatorWords {
-		t[k[0]] = true
-	}
+// operatorLeadByte[c] reports whether byte c can start an [operatorWords] key — the first byte of each key (an ASCII
+// key contributes its byte; a glyph key its UTF-8 lead byte, 0xE2 for the U+2xxx glyphs or 0xC2 for ¬). It lets the
+// scan skip an ordinary character — including any non-glyph non-ASCII rune such as CJK — with a single array lookup
+// and no map lookup.
+//
+// Derived from [operatorWords] in init, so it never drifts.
+var operatorLeadByte [256]bool
 
-	return t
-}()
+func init() {
+	for k := range operatorWords {
+		operatorLeadByte[k[0]] = true
+	}
+}
 
 // expandOperators replaces operator sequences with their space-padded words, ahead of segmentation, so a multi-word
 // operator re-segments and cases per word.
