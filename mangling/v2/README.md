@@ -65,7 +65,7 @@ Full API reference: [pkg.go.dev](https://pkg.go.dev/github.com/go-openapi/swag/m
 
 A typical mangling takes on the order of 1,000 ns. All methods scale linearly with the number of
 tokens (~300 ns/token) and perform zero internal allocation beyond the returned string —
-see [PERFORMANCE.md](docs/PERFORMANCE.md).
+see [our performance analysis](docs/performance.md).
 
 ## Tests
 

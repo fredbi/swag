@@ -53,25 +53,8 @@ func TestGoManglerFile(t *testing.T) {
 	t.Parallel()
 
 	g := MakeGoMangler()
-	cases := []struct {
-		in, out string
-	}{
-		{"MyModel", "my_model"},
-		{"my model", "my_model"},
-		{"test.go", "test_swagger.go"},           // reserved: test
-		{"config_linux", "config_linux_swagger"}, // reserved: GOOS
-		{"arm64.tmpl", "arm64_swagger.tmpl"},     // reserved: GOARCH, extension preserved
-		{"windows", "windows_swagger"},           // whole stem is a GOOS
-		{"handler_test", "handler_test_swagger"},
-		{"user_id", "user_id"},                            // "id" is an initialism but snake lowercases it; not a file suffix
-		{"some/dir/MyModel", "some/dir/my_model"},         // directory prefix reconducted verbatim
-		{`win\dir\MyModel.json`, `win\dir\my_model.json`}, // backslash dir + extension reconducted verbatim
-		{"IPv4Config.json", "ipv4_config.json"},           // break-crossing initialism merged
-		{"HTTPServer", "http_server"},                     // initialism lowercased in snake
-		{"café résumé", "cafe_resume"},                    // ASCII folded
-	}
 
-	for _, tc := range cases {
+	for tc := range goFileCases() {
 		t.Run(tc.in, func(t *testing.T) {
 			assert.EqualTf(t, tc.out, g.File(tc.in), "File(%q)", tc.in)
 		})
@@ -82,28 +65,8 @@ func TestGoManglerPackage(t *testing.T) {
 	t.Parallel()
 
 	g := MakeGoMangler()
-	cases := []struct {
-		in, short, pkg string
-		parts          []string
-	}{
-		{"MyPackage", "package", "my-package", []string{"my", "package"}},
-		{"github.com/go-redis/redis", "redis", "github.com/go-redis/redis", []string{"redis"}},
-		{"github.com/toktok/@alpha-beta", "beta", "github.com/toktok/at-alpha-beta", []string{"at", "alpha", "beta"}},
-		{"github.com/user/GoThing/", "thing", "github.com/user/go-thing", []string{"go", "thing"}}, // trailing "/" trimmed
-		{"SomeHTTPClient", "client", "some-http-client", []string{"some", "http", "client"}},       // initialism lowercased
-		{"path/to/IPv4Utils", "utils", "path/to/ipv4-utils", []string{"ipv4", "utils"}},            // break-crossing initialism merged
-		{"café", "cafe", "cafe", []string{"cafe"}},                                                 // ASCII folded
 
-		// go-toolchain short-name repairs
-		{"main", "mainpkg", "mainpkg", []string{"mainpkg"}},                                                 // reserved package name
-		{"github.com/user/internal", "internalpkg", "github.com/user/internalpkg", []string{"internalpkg"}}, // reserved dir
-		{"pkg/vendor", "vendorpkg", "pkg/vendorpkg", []string{"vendorpkg"}},
-		{"testdata", "testdatapkg", "testdatapkg", []string{"testdatapkg"}},
-		{"xxxx/v2", "version2", "xxxx/version2", []string{"version2"}}, // major-version element
-		{"foo/V10", "version10", "foo/version10", []string{"version10"}},
-	}
-
-	for _, tc := range cases {
+	for tc := range goPackageCases() {
 		t.Run(tc.in, func(t *testing.T) {
 			short, pkg, parts := g.PackageWithParts(tc.in)
 			assert.EqualTf(t, tc.short, short, "short for %q", tc.in)
@@ -121,23 +84,8 @@ func TestGoManglerModule(t *testing.T) {
 	t.Parallel()
 
 	g := MakeGoMangler()
-	cases := []struct {
-		in, out string
-	}{
-		{"MyModule", "my-module"},
-		{"github.com/user/MyRepo", "github.com/user/my-repo"},        // dir kept verbatim
-		{"github.com/user/repo/v2", "github.com/user/repo/version2"}, // load-bearing version neuterized (caller re-adds /vN)
-		{"example.com/main", "example.com/mainpkg"},                  // a "main" module isn't go-gettable
-		{"example.com/internal", "example.com/internalpkg"},          // reserved dir
-		{"example.com/testdata", "example.com/testdatapkg"},          // reserved dir
-		{"example.com/con", "example.com/conpkg"},                    // Windows device name
-		{"host.tld/COM1", "host.tld/com1pkg"},                        // case-insensitive
-		{"example.com/my-con", "example.com/my-con"},                 // whole element is legal → not touched
-		{"example.com/my-v2", "example.com/my-v2"},                   // not a bare version element
-		{"café", "cafe"}, // ASCII folded
-	}
 
-	for _, tc := range cases {
+	for tc := range goModuleCases() {
 		t.Run(tc.in, func(t *testing.T) {
 			assert.EqualTf(t, tc.out, g.Module(tc.in), "Module(%q)", tc.in)
 		})
@@ -147,120 +95,87 @@ func TestGoManglerModule(t *testing.T) {
 func TestGoManglerConstName(t *testing.T) {
 	t.Parallel()
 
-	g := MakeGoMangler()
-	cases := []struct {
-		in, out string
-	}{
-		{"read only", "ReadOnly"},
-		{"1", "One"},
-		{"300", "ThreeHundred"},
-		{"0.25", "OneQuarter"},             // fraction
-		{"0.1", "OneTenth"},                // fraction
-		{"-5", "MinusFive"},                // sign
-		{"3.14", "ThreeDotOneFour"},        // non-fraction decimal
-		{"status 200", "StatusTwoHundred"}, // every number verbalized
-		// regression: numeral runes and non-ASCII digits verbalize into valid const names (FuzzGoIdent)
-		{"½ off", "OneHalfOff"}, // No numeral rune
-		{"٧", "Seven"},          // Nd non-ASCII digit (Arabic-Indic), via digit-offset
-		{"Ⅶ", "Seven"},          // Nl roman numeral
-		{"①", "One"},            // No circled digit
-		{"50%", "FiftyPercent"},
-	}
+	t.Run("general constants", func(t *testing.T) {
+		t.Parallel()
 
-	for _, tc := range cases {
-		t.Run(tc.in, func(t *testing.T) {
-			assert.EqualTf(t, tc.out, g.ConstName(tc.in), "ConstName(%q)", tc.in)
-		})
-	}
+		g := MakeGoMangler()
 
-	// regression: an integer too large for int64 is spelled digit by digit, so the const name stays a valid
-	// (non-digit-leading) identifier rather than raw digits.
-	assert.EqualT(t, strings.Repeat("Nine", 19), g.ConstName("9999999999999999999"))
+		for tc := range goConstNameCases() {
+			t.Run(tc.in, func(t *testing.T) {
+				assert.EqualTf(t, tc.out, g.ConstName(tc.in), "ConstName(%q)", tc.in)
+			})
+		}
+	})
+
+	t.Run("with NumberOptions", func(t *testing.T) {
+		t.Parallel()
+
+		// number options flow into ConstName via WithGoNumberOptions
+		g := MakeGoMangler(WithGoNumberOptions(
+			numbers.WithSpecialNumbers(map[string]string{"3.1415": "pi", "2.718": "e"}),
+		))
+
+		assert.EqualT(t, "Pi", g.ConstName("3.1415"))
+		assert.EqualT(t, "E", g.ConstName("2.718"))
+		assert.EqualT(t, "OneQuarter", g.ConstName("0.25"))                             // non-special still works
+		assert.EqualT(t, "ThreeDotOneFourOneFive", MakeGoMangler().ConstName("3.1415")) // default: no specials
+	})
+
+	t.Run("with rune names", func(t *testing.T) {
+		t.Parallel()
+
+		g := MakeGoMangler()
+
+		for tc := range goRuneNameCases() {
+			t.Run(tc.in, func(t *testing.T) {
+				assert.EqualTf(t, tc.out, g.ConstName(tc.in), "ConstName(%q)", tc.in)
+			})
+		}
+	})
+
+	t.Run("with ascii folding off", func(t *testing.T) {
+		t.Parallel()
+
+		// asciify off preserves the original runes (no folding, no naming).
+		raw := MakeGoMangler(WithManglerOptions(WithASCIIFolding(false)))
+		assert.EqualT(t, "Café", raw.IdentExported("café"))
+	})
 }
 
-func TestGoManglerConstNameNumberOptions(t *testing.T) {
-	t.Parallel()
-
-	// number options flow into ConstName via WithGoNumberOptions
-	g := MakeGoMangler(WithGoNumberOptions(
-		numbers.WithSpecialNumbers(map[string]string{"3.1415": "pi", "2.718": "e"}),
-	))
-
-	assert.EqualT(t, "Pi", g.ConstName("3.1415"))
-	assert.EqualT(t, "E", g.ConstName("2.718"))
-	assert.EqualT(t, "OneQuarter", g.ConstName("0.25"))                             // non-special still works
-	assert.EqualT(t, "ThreeDotOneFourOneFive", MakeGoMangler().ConstName("3.1415")) // default: no specials
-}
-
-func TestGoManglerRuneNames(t *testing.T) {
-	t.Parallel()
-
-	g := MakeGoMangler()
-	cases := []struct {
-		in, out string
-	}{
-		{"café", "Cafe"},                       // diacritic fold
-		{"naïve", "Naive"},                     // diaeresis fold
-		{"π", "Pi"},                            // non-Latin letter -> phonetic name
-		{"σ field", "SigmaField"},              // named rune re-segments and re-cases as a word
-		{"δ plus ε", "DeltaPlusEpsilon"},       // multiple named runes
-		{"grinning 😀", "GrinningGrinningFace"}, // single-codepoint emoji named
-		{"Ω max", "OmegaMax"},                  // uppercase Greek
-		{"日本 value", "Value"},                  // CJK ideographs elided -> clean ASCII
-	}
-	for _, tc := range cases {
-		t.Run(tc.in, func(t *testing.T) {
-			assert.EqualTf(t, tc.out, g.ConstName(tc.in), "ConstName(%q)", tc.in)
-		})
-	}
-
-	// asciify off preserves the original runes (no folding, no naming).
-	raw := MakeGoMangler(WithManglerOptions(WithASCIIFolding(false)))
-	assert.EqualT(t, "Café", raw.IdentExported("café"))
-}
-
-func TestAsciiUtilities(t *testing.T) {
+func TestASCIIUtilities(t *testing.T) {
 	t.Parallel()
 
 	// ToASCII: fold diacritics, name the rest, drop the unnameable.
-	assert.EqualT(t, "cafe", ToASCII("café"))
-	assert.EqualT(t, "naive", ToASCII("naïve"))
-	assert.EqualT(t, "pi", ToASCII("π"))
-	assert.EqualT(t, "grinning face", ToASCII("😀"))
-	assert.EqualT(t, "", ToASCII("日")) // CJK dropped
-	assert.EqualT(t, "plain ascii", ToASCII("plain ascii"))
+	t.Run("ToASCII", func(t *testing.T) {
+		t.Parallel()
 
-	// non-ASCII decimal digits (Nd) fold to their ASCII value, like the mangler pipeline (item٧ → item7).
-	assert.EqualT(t, "7", ToASCII("٧")) // Arabic-Indic
-	assert.EqualT(t, "7", ToASCII("๗")) // Thai
-	assert.EqualT(t, "7", ToASCII("７")) // fullwidth
-	assert.EqualT(t, "item7", ToASCII("item٧"))
-	assert.EqualT(t, "7", ToASCII("Ⅶ")) // Nl numeral renders as a plain number
-
-	// diacritic fold now spans every Latin block (generated asciiFold): Vietnamese, pinyin, ligatures.
-	assert.EqualT(t, "Tieng Viet", ToASCII("Tiếng Việt"))
-	assert.EqualT(t, "Ni hao", ToASCII("Nǐ hǎo")) // pinyin ǐ→i, ǎ→a
-	assert.EqualT(t, "office", ToASCII("oﬃce"))   // ﬃ ligature → ffi
+		for tc := range toASCIICases() {
+			assert.EqualTf(t, tc.out, ToASCII(tc.in), "ToASCII(%q)", tc.in)
+		}
+	})
 
 	// RuneToASCII: single-rune diacritic / digit fold only.
-	assert.EqualT(t, "e", RuneToASCII('é'))
-	assert.EqualT(t, "n", RuneToASCII('ñ'))
-	assert.EqualT(t, "A", RuneToASCII('A'))
-	assert.EqualT(t, "7", RuneToASCII('٧'))  // non-ASCII decimal digit (Nd) folds to its ASCII value
-	assert.EqualT(t, "9", RuneToASCII('๙'))  // Thai
-	assert.EqualT(t, "e", RuneToASCII('ế'))  // Vietnamese e-circumflex-acute
-	assert.EqualT(t, "o", RuneToASCII('ơ'))  // horn
-	assert.EqualT(t, "oe", RuneToASCII('œ')) // OE ligature
-	assert.EqualT(t, "", RuneToASCII('π'))   // no diacritic folding -> empty (use RuneShortName)
+	t.Run("RuneToASCII", func(t *testing.T) {
+		t.Parallel()
+
+		for tc := range runeToASCIICases() {
+			assert.EqualTf(t, tc.want, RuneToASCII(tc.in), "RuneToASCII(%q)", tc.in)
+		}
+	})
 
 	// RuneShortName: phonetic word for non-foldable runes.
-	assert.EqualT(t, "pi", RuneShortName('π'))
-	assert.EqualT(t, "zhe", RuneShortName('ж'))
-	assert.EqualT(t, "lambda", RuneShortName('λ')) // wordOverrides: Unicode's "lamda" -> "lambda"
-	assert.EqualT(t, "grinning face", RuneShortName('😀'))
-	assert.EqualT(t, "A", RuneShortName('A')) // ASCII as-is
-	assert.EqualT(t, "", RuneShortName('中'))  // elided
+	t.Run("RuneShortName", func(t *testing.T) {
+		t.Parallel()
+
+		for tc := range runeShortNameCases() {
+			assert.EqualTf(t, tc.want, RuneShortName(tc.in), "RuneShortName(%q)", tc.in)
+		}
+	})
 }
+
+// =============================================
+// general purpose test harness
+// =============================================
 
 func testMangler(m mangler, mode testMode, tc manglerTestCase) func(*testing.T) {
 	return func(t *testing.T) {
@@ -367,19 +282,9 @@ type manglerTestCase struct {
 	expected func(testMode) map[testedCasing]string
 }
 
-// goIdents builds an expectation that asserts only the go-ident casings, and only in GoMangler mode.
-func goIdents(exported, unexported string) func(testMode) map[testedCasing]string {
-	return func(mode testMode) map[testedCasing]string {
-		if mode != testModeDefaultGoMangler {
-			return nil
-		}
-
-		return map[testedCasing]string{
-			testedGoExported:   exported,
-			testedGoUnexported: unexported,
-		}
-	}
-}
+// =============================================
+// recasing and identifiers
+// =============================================
 
 //nolint:maintidx // a flat table of test-case data, not algorithmic complexity
 func manglerTestCases() iter.Seq[manglerTestCase] {
@@ -682,5 +587,188 @@ func manglerTestCases() iter.Seq[manglerTestCase] {
 			input:    "́abc",
 			expected: goIdents("Abc", "abc"),
 		},
+	})
+}
+
+// goIdents builds an expectation that asserts only the go-ident casings, and only in GoMangler mode.
+func goIdents(exported, unexported string) func(testMode) map[testedCasing]string {
+	return func(mode testMode) map[testedCasing]string {
+		if mode != testModeDefaultGoMangler {
+			return nil
+		}
+
+		return map[testedCasing]string{
+			testedGoExported:   exported,
+			testedGoUnexported: unexported,
+		}
+	}
+}
+
+// =============================================
+// File
+// =============================================
+
+// inOutCase is a simple input → expected-output test case, shared by the string-in/string-out Go targets.
+type inOutCase struct{ in, out string }
+
+func goFileCases() iter.Seq[inOutCase] {
+	return slices.Values([]inOutCase{
+		{"MyModel", "my_model"},
+		{"my model", "my_model"},
+		{"test.go", "test_swagger.go"},           // reserved: test
+		{"config_linux", "config_linux_swagger"}, // reserved: GOOS
+		{"arm64.tmpl", "arm64_swagger.tmpl"},     // reserved: GOARCH, extension preserved
+		{"windows", "windows_swagger"},           // whole stem is a GOOS
+		{"handler_test", "handler_test_swagger"},
+		{"user_id", "user_id"},                            // "id" is an initialism but snake lowercases it; not a file suffix
+		{"some/dir/MyModel", "some/dir/my_model"},         // directory prefix reconducted verbatim
+		{`win\dir\MyModel.json`, `win\dir\my_model.json`}, // backslash dir + extension reconducted verbatim
+		{"IPv4Config.json", "ipv4_config.json"},           // break-crossing initialism merged
+		{"HTTPServer", "http_server"},                     // initialism lowercased in snake
+		{"café résumé", "cafe_resume"},                    // ASCII folded
+	})
+}
+
+// =============================================
+// Package
+// =============================================
+
+type goPackageCase struct {
+	in, short, pkg string
+	parts          []string
+}
+
+func goPackageCases() iter.Seq[goPackageCase] {
+	return slices.Values([]goPackageCase{
+		{"MyPackage", "package", "my-package", []string{"my", "package"}},
+		{"github.com/go-redis/redis", "redis", "github.com/go-redis/redis", []string{"redis"}},
+		{"github.com/toktok/@alpha-beta", "beta", "github.com/toktok/at-alpha-beta", []string{"at", "alpha", "beta"}},
+		{"github.com/user/GoThing/", "thing", "github.com/user/go-thing", []string{"go", "thing"}}, // trailing "/" trimmed
+		{"SomeHTTPClient", "client", "some-http-client", []string{"some", "http", "client"}},       // initialism lowercased
+		{"path/to/IPv4Utils", "utils", "path/to/ipv4-utils", []string{"ipv4", "utils"}},            // break-crossing initialism merged
+		{"café", "cafe", "cafe", []string{"cafe"}},                                                 // ASCII folded
+
+		// go-toolchain short-name repairs
+		{"main", "mainpkg", "mainpkg", []string{"mainpkg"}},                                                 // reserved package name
+		{"github.com/user/internal", "internalpkg", "github.com/user/internalpkg", []string{"internalpkg"}}, // reserved dir
+		{"pkg/vendor", "vendorpkg", "pkg/vendorpkg", []string{"vendorpkg"}},
+		{"testdata", "testdatapkg", "testdatapkg", []string{"testdatapkg"}},
+		{"xxxx/v2", "version2", "xxxx/version2", []string{"version2"}}, // major-version element
+		{"foo/V10", "version10", "foo/version10", []string{"version10"}},
+	})
+}
+
+// =============================================
+// Module
+// =============================================
+
+func goModuleCases() iter.Seq[inOutCase] {
+	return slices.Values([]inOutCase{
+		{"MyModule", "my-module"},
+		{"github.com/user/MyRepo", "github.com/user/my-repo"},        // dir kept verbatim
+		{"github.com/user/repo/v2", "github.com/user/repo/version2"}, // load-bearing version neuterized (caller re-adds /vN)
+		{"example.com/main", "example.com/mainpkg"},                  // a "main" module isn't go-gettable
+		{"example.com/internal", "example.com/internalpkg"},          // reserved dir
+		{"example.com/testdata", "example.com/testdatapkg"},          // reserved dir
+		{"example.com/con", "example.com/conpkg"},                    // Windows device name
+		{"host.tld/COM1", "host.tld/com1pkg"},                        // case-insensitive
+		{"example.com/my-con", "example.com/my-con"},                 // whole element is legal → not touched
+		{"example.com/my-v2", "example.com/my-v2"},                   // not a bare version element
+		{"café", "cafe"}, // ASCII folded
+	})
+}
+
+// =============================================
+// ConstName
+// =============================================
+
+func goConstNameCases() iter.Seq[inOutCase] {
+	return slices.Values([]inOutCase{
+		{"read only", "ReadOnly"},
+		{"1", "One"},
+		{"300", "ThreeHundred"},
+		{"0.25", "OneQuarter"},             // fraction
+		{"0.1", "OneTenth"},                // fraction
+		{"-5", "MinusFive"},                // sign
+		{"3.14", "ThreeDotOneFour"},        // non-fraction decimal
+		{"status 200", "StatusTwoHundred"}, // every number verbalized
+		// regression: numeral runes and non-ASCII digits verbalize into valid const names (FuzzGoIdent)
+		{"½ off", "OneHalfOff"}, // No numeral rune
+		{"٧", "Seven"},          // Nd non-ASCII digit (Arabic-Indic), via digit-offset
+		{"Ⅶ", "Seven"},          // Nl roman numeral
+		{"①", "One"},            // No circled digit
+		{"50%", "FiftyPercent"},
+		// regression test: an integer too large for int64 is spelled digit by digit, so the const name stays a valid
+		// (non-digit-leading) identifier rather than raw digits.
+		{"9999999999999999999", strings.Repeat("Nine", 19)},
+	})
+}
+
+func goRuneNameCases() iter.Seq[inOutCase] {
+	return slices.Values([]inOutCase{
+		{"café", "Cafe"},                       // diacritic fold
+		{"naïve", "Naive"},                     // diaeresis fold
+		{"π", "Pi"},                            // non-Latin letter -> phonetic name
+		{"σ field", "SigmaField"},              // named rune re-segments and re-cases as a word
+		{"δ plus ε", "DeltaPlusEpsilon"},       // multiple named runes
+		{"grinning 😀", "GrinningGrinningFace"}, // single-codepoint emoji named
+		{"Ω max", "OmegaMax"},                  // uppercase Greek
+		{"日本 value", "Value"},                  // CJK ideographs elided -> clean ASCII
+	})
+}
+
+// =============================================
+// ASCII utilities
+// =============================================
+
+// runeStringCase is a single-rune input → expected-output test case.
+type runeStringCase struct {
+	in   rune
+	want string
+}
+
+func toASCIICases() iter.Seq[inOutCase] {
+	return slices.Values([]inOutCase{
+		{"café", "cafe"},
+		{"naïve", "naive"},
+		{"π", "pi"},
+		{"😀", "grinning face"},
+		{"日", ""}, // CJK dropped
+		{"plain ascii", "plain ascii"},
+		// non-ASCII decimal digits (Nd) fold to their ASCII value, like the pipeline (item٧ → item7)
+		{"٧", "7"}, // Arabic-Indic
+		{"๗", "7"}, // Thai
+		{"７", "7"}, // fullwidth
+		{"item٧", "item7"},
+		{"Ⅶ", "7"}, // Nl numeral renders as a plain number
+		// diacritic fold spans every Latin block (generated asciiFold): Vietnamese, pinyin, ligatures
+		{"Tiếng Việt", "Tieng Viet"},
+		{"Nǐ hǎo", "Ni hao"}, // pinyin ǐ→i, ǎ→a
+		{"oﬃce", "office"},   // ﬃ ligature → ffi
+	})
+}
+
+func runeToASCIICases() iter.Seq[runeStringCase] {
+	return slices.Values([]runeStringCase{
+		{'é', "e"},
+		{'ñ', "n"},
+		{'A', "A"},
+		{'٧', "7"},  // non-ASCII decimal digit (Nd) folds to its ASCII value
+		{'๙', "9"},  // Thai
+		{'ế', "e"},  // Vietnamese e-circumflex-acute
+		{'ơ', "o"},  // horn
+		{'œ', "oe"}, // OE ligature
+		{'π', ""},   // no diacritic folding -> empty (use RuneShortName)
+	})
+}
+
+func runeShortNameCases() iter.Seq[runeStringCase] {
+	return slices.Values([]runeStringCase{
+		{'π', "pi"},
+		{'ж', "zhe"},
+		{'λ', "lambda"}, // wordOverrides: Unicode's "lamda" -> "lambda"
+		{'😀', "grinning face"},
+		{'A', "A"}, // ASCII as-is
+		{'中', ""},  // elided
 	})
 }

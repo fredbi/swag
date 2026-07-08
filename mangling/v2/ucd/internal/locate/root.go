@@ -6,6 +6,9 @@ import (
 	"fmt"
 	"os/exec"
 	"path/filepath"
+	"runtime"
+	"strconv"
+	"strings"
 	"time"
 	"unicode"
 )
@@ -76,6 +79,10 @@ func Resolve(ucd, rootOverride string) (dir, buildTag, suffix string, err error)
 		return "", "", "", fmt.Errorf("unknown UCD version %q (known: %v)", ucd, knownVersions())
 	}
 
+	if err := checkToolchain(v); err != nil {
+		return "", "", "", err
+	}
+
 	root := rootOverride
 	if root == "" {
 		root, err = UCDRoot()
@@ -85,6 +92,46 @@ func Resolve(ucd, rootOverride string) (dir, buildTag, suffix string, err error)
 	}
 
 	return filepath.Join(root, v.Dir), BuildConstraint(i), v.UCD, nil
+}
+
+// checkToolchain refuses to generate a dataset whose Unicode version is newer than the running Go toolchain.
+//
+// gen_runewords classifies runes with the toolchain's unicode tables (unicode.Is), so runes newly assigned in the
+// target Unicode version would otherwise be seen as unassigned and silently dropped. The guard is applied to every
+// version for a single robust rule — "regenerate version N under a Go ≥ its baseline" — even though the name-driven
+// and data-file-driven generators do not strictly need it.
+func checkToolchain(v Version) error {
+	if v.MinGo == "" {
+		return nil // baseline dataset: no lower bound
+	}
+
+	if goMinor(runtime.Version()) < goMinor(v.MinGo) {
+		return fmt.Errorf(
+			"UCD %s targets %s+, but running %s: newly assigned runes would be misclassified and dropped — rerun under %s or newer",
+			v.UCD, v.MinGo, runtime.Version(), v.MinGo,
+		)
+	}
+
+	return nil
+}
+
+// goMinor extracts the Go minor version from a "go1.NN[.P|rcN|betaN]" string ("go1.26.4" → 26, "go1.27rc1" → 27).
+func goMinor(v string) int {
+	v = strings.TrimPrefix(v, "go")
+
+	parts := strings.SplitN(v, ".", 3)
+	if len(parts) < 2 {
+		return 0
+	}
+
+	d := parts[1]
+	end := 0
+	for end < len(d) && d[end] >= '0' && d[end] <= '9' {
+		end++
+	}
+	n, _ := strconv.Atoi(d[:end])
+
+	return n
 }
 
 func knownVersions() []string {

@@ -168,7 +168,7 @@ The ident hot path is **1 alloc/op** — one pooled token slice (zero-copy rune 
 assembly buffer — and scales linearly at roughly 380 ns/token, flat from 1 to 1024 tokens. The
 number verbalizer streams into a single byte sink instead of building `[]string` + `join`:
 `NumberWords` is 0 alloc for non-numeric input and 1 for numeric; the allocation-free `AppendWords`
-variant is 0 when the caller pools the destination. See [PERFORMANCE.md](PERFORMANCE.md).
+variant is 0 when the caller pools the destination. See [performance.md](performance.md).
 
 > **Performance background**
 >

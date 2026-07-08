@@ -1,6 +1,8 @@
 package mangling
 
 import (
+	"iter"
+	"slices"
 	"testing"
 
 	"github.com/go-openapi/testify/v2/assert"
@@ -18,29 +20,16 @@ func TestNumeralAsciify(t *testing.T) {
 		t.Parallel()
 
 		g := MakeGoMangler()
-		cases := map[string]string{
-			"½":      "OneHalf",
-			"⅐":      "OneSeventh",
-			"Ⅶ":      "Seven",
-			"area ½": "AreaOneHalf",
-		}
-		for in, want := range cases {
-			assert.EqualTf(t, want, g.ConstName(in), "ConstName(%q)", in)
+		for tc := range constNameNumeralCases() {
+			assert.EqualTf(t, tc.want, g.ConstName(tc.in), "ConstName(%q)", tc.in)
 		}
 	})
 
 	t.Run("ToASCII renders a plain number (3-decimal cap)", func(t *testing.T) {
 		t.Parallel()
 
-		cases := map[string]string{
-			"½":         "0.5",
-			"⅐":         "0.143", // 1/7 capped at 3 decimals
-			"Ⅶ":         "7",
-			"²":         "2",
-			"the ½ cup": "the 0.5 cup",
-		}
-		for in, want := range cases {
-			assert.EqualTf(t, want, ToASCII(in), "ToASCII(%q)", in)
+		for tc := range toASCIINumeralCases() {
+			assert.EqualTf(t, tc.want, ToASCII(tc.in), "ToASCII(%q)", tc.in)
 		}
 	})
 
@@ -59,5 +48,27 @@ func TestNumeralAsciify(t *testing.T) {
 		assert.EqualT(t, "oneHalfCup", m.Camelize("½ cup"))
 		assert.EqualT(t, "Two", m.Pascalize("²"))
 		assert.EqualT(t, "AnotherOneHalfPlace", MakeGoMangler().IdentExported("another ½ place"))
+	})
+}
+
+// numeralAsciifyCase is an input → expected-output case for the numeral asciify treatments.
+type numeralAsciifyCase struct{ in, want string }
+
+func constNameNumeralCases() iter.Seq[numeralAsciifyCase] {
+	return slices.Values([]numeralAsciifyCase{
+		{"½", "OneHalf"},
+		{"⅐", "OneSeventh"},
+		{"Ⅶ", "Seven"},
+		{"area ½", "AreaOneHalf"},
+	})
+}
+
+func toASCIINumeralCases() iter.Seq[numeralAsciifyCase] {
+	return slices.Values([]numeralAsciifyCase{
+		{"½", "0.5"},
+		{"⅐", "0.143"}, // 1/7 capped at 3 decimals
+		{"Ⅶ", "7"},
+		{"²", "2"},
+		{"the ½ cup", "the 0.5 cup"},
 	})
 }
