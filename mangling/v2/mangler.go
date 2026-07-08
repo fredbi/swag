@@ -1,5 +1,7 @@
 package mangling
 
+import "unicode/utf8"
+
 // Mangler exposes general purpose well-known case formatters ([Mangler.Camelize], [Mangler.Snakize],
 // [Mangler.Kebabize], [Mangler.Titleize], ...) with simple recasing rules.
 //
@@ -114,22 +116,39 @@ func (m Mangler) AllCaps(str string) string {
 // table), not on the mangler.
 
 // asciifyInput runs the string-level input expansions before segmentation, so multi-word replacements re-segment and
-// re-case per word:
+// re-case per word: operator verbalization ([expandOperators], always) and rune-name asciification ([expandRuneNames],
+// when folding is enabled).
 //
-//   - operator verbalization ([expandOperators]), always — "!=" → "not equal" — since it is a symbol concern, not a
-//     folding one;
-//   - rune-name asciification ([expandRuneNames]), only when folding is enabled — non-foldable runes to their phonetic
-//     name.
+// A single byte scan decides which passes are needed, so the fast path (pure ASCII with no operator lead byte) walks
+// the input once and returns it untouched — neither pre-pass runs and neither re-scans. A glyph operator (≠, ≤, →) is
+// non-ASCII but its UTF-8 lead byte (0xE2/0xC2) is an operator lead, so it still flags hasOperator.
 //
-// Diacritics and combining marks are left for the token-level foldASCII stage.
-//
-// This is a neutral Mangler capability — shared by every preset and by GoMangler's ident pipeline.
+// Diacritics and combining marks are left for the token-level foldASCII stage; this is a neutral Mangler capability.
 func (m Mangler) asciifyInput(str string) string {
-	str = expandOperators(str)
+	var hasOperator, hasNonASCII bool
 
-	if !m.asciify {
-		return str
+	for i := 0; i < len(str); i++ {
+		c := str[i]
+		if c >= utf8.RuneSelf {
+			hasNonASCII = true
+		}
+
+		if operatorLeadByte[c] {
+			hasOperator = true
+		}
+
+		if hasOperator && hasNonASCII {
+			break
+		}
 	}
 
-	return expandRuneNames(str)
+	if hasOperator {
+		str = expandOperators(str)
+	}
+
+	if m.asciify && hasNonASCII {
+		str = expandRuneNames(str)
+	}
+
+	return str
 }

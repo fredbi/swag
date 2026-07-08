@@ -391,12 +391,16 @@ func (g GoMangler) verbalizeLeadingNumber(str string) string {
 		return str[:start] + g.n.NumberWords(string(digits)) + " " + str[end:]
 
 	default:
-		if _, ok := numbers.RuneNumber(r0); ok {
-			// A leading numeral *rune* (½, Ⅶ, ①) with folding off: verbalize it in place so the ident starts with a letter
-			// (folding on already spelled it out upstream, in expandRuneNames).
-			w := start + utf8.RuneLen(r0)
+		// Only a non-ASCII rune can be a No/Nl numeral (½, Ⅶ, ①); an ASCII-leading token skips the RuneNumber map
+		// lookup entirely — the common case for identifiers.
+		if r0 >= utf8.RuneSelf {
+			if _, ok := numbers.RuneNumber(r0); ok {
+				// A leading numeral rune with folding off: verbalize it in place so the ident starts with a letter
+				// (folding on already spelled it out upstream, in expandRuneNames).
+				w := start + utf8.RuneLen(r0)
 
-			return str[:start] + g.n.NumberWords(str[start:w]) + " " + str[w:]
+				return str[:start] + g.n.NumberWords(str[start:w]) + " " + str[w:]
+			}
 		}
 
 		return str // first token is not a number

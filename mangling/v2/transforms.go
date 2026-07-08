@@ -172,8 +172,18 @@ var operatorWords = map[string]string{
 	"→": "to", "⇒": "implies", "≈": "approximately", "≡": "equivalent", "¬": "not",
 }
 
-// operatorLeads is every rune that can start an [operatorWords] key — a cheap membership test for the fast path.
-const operatorLeads = "!<>=&|*:+-~≠≤≥→⇒≈≡¬"
+// operatorLeadByte[c] reports whether byte c can start an [operatorWords] key. Derived from the map's keys so it never
+// drifts, indexed by the full byte range (an ASCII key contributes its byte; a glyph key its UTF-8 lead byte, 0xE2 or
+// 0xC2). It lets the scan skip an ordinary character — including any non-glyph non-ASCII rune such as CJK — with a
+// single array lookup and no map lookup.
+var operatorLeadByte = func() [256]bool {
+	var t [256]bool
+	for k := range operatorWords {
+		t[k[0]] = true
+	}
+
+	return t
+}()
 
 // expandOperators replaces operator sequences with their space-padded words, ahead of segmentation, so a multi-word
 // operator re-segments and cases per word.
@@ -181,44 +191,68 @@ const operatorLeads = "!<>=&|*:+-~≠≤≥→⇒≈≡¬"
 // It is not gated on ASCII folding — verbalizing "!=" is a symbol concern, not a folding one. (A target whose symbol
 // policy is *drop* is not honored here, since drop is an assembly-time decision and this runs pre-segmentation.)
 //
-// Greedy longest-first: the two-rune key is tried before the one-rune key, so "!=" beats "!" + "=". Allocates only when
-// a substitution is actually made.
+// It works directly on the string (no []rune) and only allocates once an operator is actually substituted: an input
+// with a lead byte but no operator (e.g. "a-b") passes through untouched and allocation-free. A map lookup happens only
+// at a lead byte (or any non-ASCII byte, which might begin a glyph); ordinary characters cost a single array lookup.
 func expandOperators(str string) string {
-	if !strings.ContainsAny(str, operatorLeads) {
-		return str
-	}
-
-	runes := []rune(str)
-
 	const expansionMargin = 16
 
 	var b strings.Builder
-	b.Grow(len(str) + expansionMargin)
 
-	for i := 0; i < len(runes); {
-		if i+1 < len(runes) {
-			if w, ok := operatorWords[string(runes[i:i+2])]; ok {
+	last := 0
+	for i := 0; i < len(str); {
+		c := str[i]
+
+		if operatorLeadByte[c] {
+			if w, size := operatorAt(str, i); size > 0 {
+				if last == 0 {
+					b.Grow(len(str) + expansionMargin)
+				}
+
+				b.WriteString(str[last:i])
 				b.WriteByte(' ')
 				b.WriteString(w)
 				b.WriteByte(' ')
-				i += 2
+				i += size
+				last = i
 
 				continue
 			}
 		}
 
-		if w, ok := operatorWords[string(runes[i:i+1])]; ok {
-			b.WriteByte(' ')
-			b.WriteString(w)
-			b.WriteByte(' ')
+		// ordinary byte, or a lead byte with no operator (e.g. a lone '-'): advance one rune, ASCII inline.
+		if c < utf8.RuneSelf {
 			i++
-
-			continue
+		} else {
+			_, size := utf8.DecodeRuneInString(str[i:])
+			i += size
 		}
-
-		b.WriteRune(runes[i])
-		i++
 	}
 
+	if last == 0 {
+		return str // no operator substituted: original string, no allocation
+	}
+
+	b.WriteString(str[last:])
+
 	return b.String()
+}
+
+// operatorAt returns the operator word beginning at byte i and its byte length, greedy longest-first (two-rune key
+// before one-rune), or ("", 0) if none. Byte substrings are used as map keys, so it does not allocate.
+func operatorAt(str string, i int) (string, int) {
+	_, s1 := utf8.DecodeRuneInString(str[i:])
+
+	if i+s1 < len(str) {
+		_, s2 := utf8.DecodeRuneInString(str[i+s1:])
+		if w, ok := operatorWords[str[i:i+s1+s2]]; ok {
+			return w, s1 + s2
+		}
+	}
+
+	if w, ok := operatorWords[str[i:i+s1]]; ok {
+		return w, s1
+	}
+
+	return "", 0
 }

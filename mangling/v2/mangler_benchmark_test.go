@@ -25,6 +25,43 @@ func BenchmarkGoMangler(b *testing.B) {
 	b.Run("ConstName", benchmarkMangle(g.ConstName, constNameSamples))
 }
 
+// BenchmarkGoManglerPaths separates the engine's floor (fast path) from each slow-path trigger, so the spread — how
+// variable the engine is across input kinds — is explicit and guarded against silent creep.
+//
+// A "fast" input is pure ASCII with no operator lead byte, non-ASCII rune, or leading digit, so every string-level
+// pre-pass (expandOperators, expandRuneNames, verbalizeLeadingNumber) takes its early-return path. Each "slow/*" entry
+// deliberately trips exactly one pre-pass.
+func BenchmarkGoManglerPaths(b *testing.B) {
+	g := MakeGoMangler()
+
+	b.Run("fast", benchmarkMangle(g.IdentExported, benchmarkFastSamples))
+
+	for _, s := range benchmarkSlowSamples {
+		b.Run("slow/"+s.name, benchmarkMangle(g.IdentExported, []string{s.in}))
+	}
+}
+
+// benchmarkFastSamples are pure-ASCII inputs that trip no string-level pre-pass — the engine's floor.
+var benchmarkFastSamples = []string{
+	"sampleText",
+	"findThingById",
+	"HTTPResponseWriter",
+	"user_id",
+	"created at timestamp",
+	"list of email addresses",
+}
+
+// benchmarkSlowSamples pairs each slow-path trigger with a representative input.
+var benchmarkSlowSamples = []struct{ name, in string }{
+	{"diacritics", "café résumé"},        // token-level ASCII fold
+	{"cjk-elided", "日本語findThingById"},   // rune-name pass, elision
+	{"greek-named", "Ελληνικά value"},    // rune-name pass, romanization
+	{"numeral-rune", "½ cup portions"},   // numeral verbalization
+	{"leading-number", "200 ok results"}, // verbalizeLeadingNumber
+	{"operators", "a != b && c"},         // expandOperators
+	{"emoji", "😀 grinning face"},         // rune-name pass
+}
+
 func benchmarkMangle(fn func(string) string, samples []string) func(*testing.B) {
 	return func(b *testing.B) {
 		b.ReportAllocs()
