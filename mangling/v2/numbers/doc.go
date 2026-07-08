@@ -1,4 +1,5 @@
-//go:generate go run ../ucd/cmd/gen_numerals numbers numerals.go
+//go:generate go run ../ucd/cmd/gen_numerals numbers numerals 15.0.0
+//go:generate go run ../ucd/cmd/gen_numerals numbers numerals 17.0.0
 
 // Package numbers verbalizes the numbers found in text as English words.
 //

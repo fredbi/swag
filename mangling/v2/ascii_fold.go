@@ -1,4 +1,5 @@
-//go:generate go run ./ucd/cmd/gen_asciifold mangling asciifold_table.go
+//go:generate go run ./ucd/cmd/gen_asciifold mangling asciifold_table 15.0.0
+//go:generate go run ./ucd/cmd/gen_asciifold mangling asciifold_table 17.0.0
 
 package mangling
 

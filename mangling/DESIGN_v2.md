@@ -677,7 +677,7 @@ Reassessment pause after the alloc-reduction and rune-naming work. Groups the re
 | ~~Wire the initialism-customizing options~~ | ✅ **done (2026-07-07)** | `WithGoInitialisms(...)` appends to the list (kept in a separate `extraInitialisms` field so add-vs-replace composes cleanly around the apply-then-default ordering); `UseGoInitialisms(...)` replaces the base (no-arg = keep defaults); both feed `buildInitialismTrie`. `WithSeparators(...rune)` built as a set-membership convenience over `WithTokenSeparator` (was a `return nil` panic hazard). (`TestWithGoInitialisms`/`TestUseGoInitialisms`/`TestWithSeparators`.) |
 | ~**v1→v2 comparative benchmark**~ | perf / doc | Not just standalone benches — a v1-vs-v2 table feeds the "explicit v1 differences" doc and the migration story. We'll just mention a 30% improvement in perf ~ 1 microsec per operation|
 | ~~scalability benchmark~~ | ✅ **done (2026-07-07)** | `BenchmarkGoIdentUnexportedScaling` sweeps 1→1024 tokens, reports a `ns/token` metric. Result: **linear** — ~380 ns/token flat across the whole range (n=1 higher only from unamortized fixed per-call overhead), and **constant 1 alloc/op** regardless of token count (zero-copy pooled tokens + single output materialization). `B/op` grows linearly (~6.8 B/token = the output string). |
- | add unicode v17 files | enhancement |verify the generator for those (prepare for go1.27 support next month).|
+ | ~~add unicode v17 files~~ | ✅ done (2026-07-08) | build-guarded dual tables (`…15.0.0.go` `!go1.27` / `…17.0.0.go` `go1.27`); version registry in `locate`; green under go1.26 + go1.27rc1. See P1. |
  | v1->v2 comparitive is functional not perf | doc | user's guide about how strings are now handled vs how they used to be |
  | code layout / test layout refact | quality | code layout consolidated into topical files ✅ (2026-07-07); test-file layout + a final consolidation pass still to do |
  | final review of the API & options | quality | before landing |
@@ -843,10 +843,20 @@ constraints" holds only until we ship — after that the surface is a contract, 
 
 ### P1 — fast follow (point releases)
 
-- **Unicode v17** (lands with go1.27, ~1 month out — *after* we'd want to ship). Additive: a second generated table
-  set guarded by `//go:build go1.27`, selected v15-vs-v17 at compile time (only one links). Slightly larger tables,
-  maybe a few new summarization heuristics. Prep now, but **must not gate 1.0**. The codegen may grow a build-guard
-  emission step.
+- ~~**Unicode v17**~~ ✅ **done (2026-07-08).** Each generated table now ships in two build-guarded flavors selected at
+  compile time (only one links): `…15.0.0.go` (`//go:build !go1.27`, from `ucd/v15`) and `…17.0.0.go`
+  (`//go:build go1.27`, from `ucd/v17`) — for `runewords/tables`, `asciifold_table` and `numbers/numerals`. A version
+  registry in `ucd/internal/locate` (`Versions`, `Resolve`, `BuildConstraint`) is the single source of truth: the
+  `//go:build` tag is *derived* from adjacent `MinGo` bounds, so adding a v18 becomes one registry entry + one
+  `//go:generate` line per file (the middle version's tag auto-tightens to `go1.27 && !go1.28`). Generators take
+  `<pkg> <outbase> <version> [ucd-root]`; `locate.UCD()` → `locate.UCDRoot()` (version moved up to the callers).
+  Built & tested green under **both** go1.26 (v15 tables) and go1.27rc1 (v17 tables); generation is deterministic.
+  - **Caveat / follow-up:** only `gen_runewords` reads the *toolchain's* `unicode` tables (`classify` → `unicode.Is`),
+    so its v17 flavor must be generated under go1.27+ (else Unicode-17-new runes are misclassified as unassigned and
+    dropped). `gen_asciifold` (name-driven) and `gen_numerals` (category read from the data file) are
+    toolchain-independent. Clean fix (corrections phase): make `classify` read categories from a UCD extract
+    (DerivedGeneralCategory) instead of `unicode.Is`, making `go generate` fully toolchain-agnostic — or, cheaper, have
+    the generator refuse/warn when `runtime.Version()` is below the target version's `MinGo`.
 - **Test-quality harmonization** ("Fred's gate" — one common approach across dozens of repos): make the mangling
   tables iterator-driven like the `numbers` tests; factor test cases.
 
