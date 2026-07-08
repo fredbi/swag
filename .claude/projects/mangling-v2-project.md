@@ -94,3 +94,40 @@ v1 documented limitations to fix: all-caps explodes ("THIS_IS_ALL_CAPS" → "t_h
 heuristics (IDS/IDx/IDs), English-only hardcoded pluralization, no Unicode→ASCII transliteration, bespoke ToXXX methods
 (no composable casing×separator×word-transform), duplicated casing logic, value-type-with-pointer-index ownership.
 v1 perf bar to not regress: ~3 allocs/op for ToGoName (after PR #106).
+
+## 2026-07-08 — open follow-ups for next session (perf campaign closed)
+Micro-optimization campaign closed this session (commit 3eb06dc): lean `expandRuneNames` (index/lazy-build +
+pooled `bytes.Buffer` + runewords-first) and new public `numbers.NumberRune(r) string`. Fast/common path back to
+~528ns/1 alloc (ahead of v1); all slow paths lean except greek-class romanization.
+
+Two items to resume on (neither is a regression; both are correctness/design nits Fred spotted):
+
+1. **`numbers.NumberRune` should probably be a method, not a package func.** It currently verbalizes with *default*
+   options (`numberOptions{}`), but a `NumberMangler` may carry options (`WithNumberStripOne` / `WithNumberStripAnd`
+   / precision / specials). A package-level func can't honor them → potential discrepancy between how a numeral *rune*
+   ('½') and a numeral *string* ("1/2"-ish) verbalize under the same mangler. Prefer `(m NumberMangler) NumberRune(r)`
+   (or keep the package func as a default-option convenience and add the method). Caller is `expandRuneNames` in
+   `mangling/v2/transforms.go` — the mangler there is currently the default anyway, but wire the option-carrying path
+   for correctness. NOTE: option coverage in tests is thin — add option-varied cases when doing this.
+
+2. **Signed leading numbers are inconsistent between `IdentExported` and `ConstName`.** Spotted in live codegen
+   testing (the codegen copy). Verified table (`MakeGoMangler()`, this session):
+
+   | input | `IdentExported` | `ConstName` |
+   |-------|-----------------|-------------|
+   | `+1`  | `Plus1`         | `One`       |
+   | `-1`  | `One`           | `MinusOne`  |
+   | `1`   | `One`           | `One`       |
+   | `+2`  | `Plus2`         | `Two`       |
+   | `-5`  | `Five`          | `MinusFive` |
+
+   Findings (Fred's "both read One" was approximate — reality is two different behaviors):
+   - **`ConstName` mostly works**: it *does* differentiate the minus sign (`-1`→`MinusOne`, `-5`→`MinusFive`, correct).
+     It elides `+` (`+1`→`One`) — arguably fine (positive is the default), but confirm intended vs. bug.
+   - **`IdentExported` is the broken one**: the sign and the number run are handled by two different paths that don't
+     compose. `+` verbalizes as the symbol word "Plus" while the digit is *not* verbalized (`+1`→`Plus1`); `-` is
+     dropped as a separator while the digit *is* verbalized, losing the sign (`-1`→`One`).
+   - Suspects: `verbalizeLeadingNumber` / the leading-number path in `go_mangler.go`. It likely doesn't feed
+     `±<digits>` as one run to the number verbalizer the way `ConstName` does (via `numbers` `numberRunAt`, which
+     accepts a sign only at a word boundary). Fix probably routes a leading `±<digits>` through that same number-run
+     scan so `IdentExported("-1")` → `MinusOne` and `("+1")` → `One`/`PlusOne` consistently with `ConstName`.
