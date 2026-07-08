@@ -34,6 +34,27 @@ func TestNumberWordsNumeralRunes(t *testing.T) {
 	}
 }
 
+func TestNumberRune(t *testing.T) {
+	t.Parallel()
+
+	// NumberRune is the single-rune form of NumberWords: for a numeral rune it must produce the same words as
+	// NumberWords(string(r)), only without the string(r) allocation and the scanner.
+	m := MakeNumberMangler()
+	for tc := range numeralFloatCases() {
+		assert.EqualTf(t, m.NumberWords(string(tc.r)), NumberRune(tc.r), "NumberRune(%q)", tc.r)
+	}
+
+	// A few concrete expectations, so a regression in the shared verbalizer is caught here too.
+	assert.EqualT(t, "one half", NumberRune('½'))
+	assert.EqualT(t, "seven", NumberRune('Ⅶ'))
+	assert.EqualT(t, "two", NumberRune('②'))
+
+	// Non-numerals return "": ASCII digits (Nd), plain letters, and CJK ideographic numbers (Lo) are not No/Nl.
+	for _, r := range []rune{'5', 'A', '一'} {
+		assert.EqualTf(t, "", NumberRune(r), "NumberRune(%q) should be empty", r)
+	}
+}
+
 type numeralFloatCase struct {
 	r        rune
 	expected float64

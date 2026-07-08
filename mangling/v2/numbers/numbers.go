@@ -82,6 +82,24 @@ func RuneNumber(r rune) (float64, bool) {
 	return v, ok
 }
 
+// NumberRune verbalizes a single Unicode numeral rune as English words ('½' → "one half", 'Ⅶ' → "seven", '②' →
+// "two"), or returns "" when r is not a numeral rune (categories No and Nl; see [RuneNumber]).
+//
+// It is the single-rune form of [NumberMangler.NumberWords]: it resolves the rune's value with [RuneNumber] and
+// renders it directly, skipping the string scanner and the string(r) allocation that NumberWords(string(r)) would
+// cost — this runs per numeral rune in the asciify pass.
+//
+// Rendering uses the default options (no [WithNumberStripOne] / [WithNumberStripAnd] / special numbers), which is what
+// a numeral rune needs; NumberWords remains the entry point when options matter.
+func NumberRune(r rune) string {
+	v, ok := RuneNumber(r)
+	if !ok {
+		return ""
+	}
+
+	return numberWords(v, numberOptions{})
+}
+
 // AppendWords appends the english-words form of in (numbers verbalized, surrounding text verbatim) to dst and returns
 // the extended slice.
 //

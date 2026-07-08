@@ -6,12 +6,8 @@ import (
 
 	"github.com/go-openapi/swag/mangling/v2/numbers"
 	"github.com/go-openapi/swag/mangling/v2/runewords"
+	"github.com/go-openapi/swag/pools/shared"
 )
-
-// numeralVerbalizer spells a numeral rune to words in the asciify pass (½ → "one half").
-//
-// A default, immutable NumberMangler is enough — the rune-aware scanner turns string(r) into its value's words.
-var numeralVerbalizer = numbers.MakeNumberMangler()
 
 // TargetTransform is a compiled, immutable recipe describing how to render a segmented token stream: casing ×
 // separator × affix × stages × repair.
@@ -102,49 +98,56 @@ func TargetAllCaps() TargetTransform {
 // Runes the table elides (CJK ideographs, decorative symbols) are dropped.
 // Foldable diacritics and combining marks pass through untouched for the token-level fold stage.
 // Allocates only when a substitution or drop is actually needed.
+//
+// The scratch buffer comes from a pool so its (heavy) working allocation is amortized across calls — unlike a
+// strings.Builder, whose buffer is discarded each call; only the final materialized string allocates per call.
+//
+// Branch order is chosen for the hot case: [runewords.Word] is tried first for a non-ASCII rune, so a named rune
+// (Greek, Cyrillic, emoji, symbol — the common non-ASCII input) resolves in one table lookup, skipping the
+// combining-mark / diacritic / numeral probes that a non-Latin letter would otherwise all miss.
 func expandRuneNames(str string) string {
-	need := false
-	for _, r := range str {
-		if r >= utf8.RuneSelf && !isCombiningMark(r) {
-			if _, ok := asciiFold[r]; !ok {
-				need = true
+	// Find the first rune this pass must act on: non-ASCII and not foldable (a diacritic/combining mark passes through
+	// for the fold stage). Everything before it — ASCII and foldable runes — is unchanged, so it is bulk-copied rather
+	// than re-scanned; if there is no such rune, the input is returned untouched, with no buffer and no copy.
+	start := -1
+	for i, r := range str {
+		if r >= utf8.RuneSelf && !foldable(r) {
+			start = i
 
-				break
-			}
+			break
 		}
 	}
-	if !need {
-		return str // pure ASCII, or only diacritics/combining marks the fold stage handles
+	if start < 0 {
+		return str
 	}
 
-	// runes that expand to a word or number make the result longer than the input; a small margin avoids the first
-	// reallocation for the common case of a few substitutions.
-	const expansionMargin = 16
+	b, redeem := shared.BorrowBufferWithRedeem()
+	defer redeem()
+	b.Grow(2 * len(str))       // rough; the pooled buffer's capacity is recycled, so any regrow amortizes across calls
+	b.WriteString(str[:start]) // the unchanged prefix, in one copy
 
-	var b strings.Builder
-	b.Grow(len(str) + expansionMargin)
-	for _, r := range str {
+	for _, r := range str[start:] {
 		switch {
-		case r < utf8.RuneSelf, isCombiningMark(r):
-			b.WriteRune(r) // ASCII, or a combining mark left for the fold stage to strip
+		case r < utf8.RuneSelf:
+			b.WriteRune(r) // ASCII passes through (one byte)
 		default:
-			if _, ok := asciiFold[r]; ok {
-				b.WriteRune(r) // foldable diacritic: left for the fold stage
-			} else if d, ok := asciiDigit(r); ok {
-				b.WriteByte(d) // non-ASCII decimal digit (Nd) → its ASCII digit ('٧' → '7'), then handled as a digit
-			} else if _, ok := numbers.RuneNumber(r); ok {
-				b.WriteByte(' ')
-				b.WriteString(numeralVerbalizer.NumberWords(string(r))) // numeral rune → words ("½" → "one half");
-				b.WriteByte(' ')                                        // a name reads better spelled out (ToASCII keeps the plain number)
-			} else if w, ok := runewords.Word(r); ok {
+			if w, ok := runewords.Word(r); ok { // the common non-ASCII case: name the rune (Greek, Cyrillic, emoji, symbol)
 				b.WriteByte(' ')
 				b.WriteString(w)
 				b.WriteByte(' ')
-			} // else: an elided rune (CJK, decorative) — dropped
+			} else if foldable(r) {
+				b.WriteRune(r) // foldable diacritic or combining mark: passed through for the token-level fold stage
+			} else if d, ok := asciiDigit(r); ok {
+				b.WriteByte(d) // non-ASCII decimal digit (Nd) → its ASCII digit ('٧' → '7')
+			} else if words := numbers.NumberRune(r); words != "" { // numeral rune → words ("½" → "one half")
+				b.WriteByte(' ')
+				b.WriteString(words)
+				b.WriteByte(' ')
+			} // else: an elided rune (CJK ideograph, decorative symbol) — dropped
 		}
 	}
 
-	return b.String()
+	return b.String() // the one per-call allocation (a copy); the pooled buffer's capacity is recycled on redeem
 }
 
 // operatorWords verbalizes an operator sequence as a multi-word phrase, expanded before segmentation (like
