@@ -15,7 +15,8 @@ func TestGoIdentFallback(t *testing.T) {
 	t.Parallel()
 
 	// each of these reduces to nothing after segmentation / ASCII folding
-	emptyish := []string{"", "___", "---", "   ", "日本" /* CJK, folded away */, "_", "."}
+	// (note: "---" is no longer here — "--" now verbalizes as "decrement")
+	emptyish := []string{"", "___", "   ", "日本" /* CJK, folded away */, "_", "."}
 
 	t.Run("default fallback, cased per target", func(t *testing.T) {
 		t.Parallel()

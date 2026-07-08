@@ -208,23 +208,22 @@ func isAllCombiningMarks(runes []rune) bool {
 	return true
 }
 
-// defaultSymbolWords maps a symbol rune to the word it verbalizes to (e.g. "@" => "at", "!" => "bang").
+// defaultSymbolWords maps a single symbol rune to the word it verbalizes to (e.g. "@" => "at", "!" => "bang").
 //
-// This is the default data for the symbol verbalization policy: when a target chooses to *verbalize* a symbol rather
-// than drop it, this table supplies the word.
-// It is deliberately narrow — only symbols that read meaningfully as a word.
+// This is the default data for the symbol verbalization policy: when a target verbalizes a symbol rather than dropping
+// it, this table supplies the word. It is deliberately narrow — only symbols that read meaningfully as a word.
 //
-// Explicitly NOT included (handled elsewhere, not by verbalization):
+// The tokenizer treats a rune in this map as a symbol token (not a separator), and the assembler renders it with its
+// word under the verbalize policy.
+//
+// Multi-rune operators (!=, <=, ->, …) and the comparison glyphs (<, >, ≠, ≤, ≥, …) are NOT here: they verbalize as
+// multi-word phrases, which must be expanded before segmentation (see [operatorWords] / [expandOperators]) so they
+// re-segment and case per word.
+//
+// Also explicitly NOT included (handled elsewhere):
 //   - separators and whitespace (space, and — depending on config — '-' '_' '.'): consumed by segmentation;
 //   - structural/grouping punctuation (brackets, braces, parens, quotes): default policy drops them;
 //   - letters with diacritics: folded to ASCII via [asciiFold].
-//
-// The current [defaultTokenSeparator] treats all [unicode.IsPunct] as a separator, which is too wide — it would elide
-// the very symbols listed here before they could be verbalized.
-//
-// Reconciling that (separator set vs symbol-word set) is a wiring concern, deferred.
-//
-// NOTE: prepared as data only; not yet wired into the pipeline.
 var defaultSymbolWords = map[rune]string{
 	// operators & markers (ASCII)
 	'@':  "at",
@@ -241,8 +240,6 @@ var defaultSymbolWords = map[rune]string{
 	'^':  "caret",
 	'!':  "bang",
 	'?':  "question",
-	'<':  "less",
-	'>':  "greater",
 	'$':  "dollar",
 	'.':  "dot", // e.g. spelled decimals: "one dot two" (verbalize vs. elide is the target's symbol policy)
 

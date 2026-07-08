@@ -113,13 +113,20 @@ func (m Mangler) AllCaps(str string) string {
 // — it inflects a single word — so it belongs in a standalone helper (English rules plus an irregular/uncountable
 // table), not on the mangler.
 
-// asciifyInput is the string-level half of ASCII-fication, applied before segmentation when folding is enabled: it
-// expands non-foldable runes to their phonetic name so multi-word names re-segment.
+// asciifyInput runs the string-level input expansions before segmentation, so multi-word replacements re-segment and
+// re-case per word:
+//
+//   - operator verbalization ([expandOperators]), always — "!=" → "not equal" — since it is a symbol concern, not a
+//     folding one;
+//   - rune-name asciification ([expandRuneNames]), only when folding is enabled — non-foldable runes to their phonetic
+//     name.
 //
 // Diacritics and combining marks are left for the token-level foldASCII stage.
 //
 // This is a neutral Mangler capability — shared by every preset and by GoMangler's ident pipeline.
 func (m Mangler) asciifyInput(str string) string {
+	str = expandOperators(str)
+
 	if !m.asciify {
 		return str
 	}

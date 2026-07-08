@@ -146,3 +146,79 @@ func expandRuneNames(str string) string {
 
 	return b.String()
 }
+
+// operatorWords verbalizes an operator sequence as a multi-word phrase, expanded before segmentation (like
+// [expandRuneNames]) so the phrase re-segments and cases per word: "!=" → " not equal " → [not, equal] → "NotEqual".
+//
+// A single cased symbol word cannot do this: the assembler cases a symbol replacement as one word, so "not equal"
+// would come out "Not equal". The Unicode glyphs mirror their ASCII twins (≠ = !=); pinning them here also fixes the
+// generic rune-name collapse, which drops the load-bearing word (≠'s name "NOT EQUAL TO" reduces to "equal").
+//
+// Keys are at most two runes.
+var operatorWords = map[string]string{
+	// ASCII digraphs
+	"!=": "not equal", "==": "equal",
+	"<=": "less or equal", ">=": "greater or equal",
+	"&&": "and", "||": "or",
+	"<<": "shift left", ">>": "shift right",
+	"**": "power", "::": "scope",
+	"->": "to", "=>": "implies",
+	"++": "increment", "--": "decrement",
+	"=~": "matches",
+	// single-char comparisons (multi-word, so owned here rather than the per-rune symbol table)
+	"<": "less than", ">": "greater than",
+	// Unicode operator glyphs, pinned to their ASCII twins
+	"≠": "not equal", "≤": "less or equal", "≥": "greater or equal",
+	"→": "to", "⇒": "implies", "≈": "approximately", "≡": "equivalent", "¬": "not",
+}
+
+// operatorLeads is every rune that can start an [operatorWords] key — a cheap membership test for the fast path.
+const operatorLeads = "!<>=&|*:+-~≠≤≥→⇒≈≡¬"
+
+// expandOperators replaces operator sequences with their space-padded words, ahead of segmentation, so a multi-word
+// operator re-segments and cases per word.
+//
+// It is not gated on ASCII folding — verbalizing "!=" is a symbol concern, not a folding one. (A target whose symbol
+// policy is *drop* is not honored here, since drop is an assembly-time decision and this runs pre-segmentation.)
+//
+// Greedy longest-first: the two-rune key is tried before the one-rune key, so "!=" beats "!" + "=". Allocates only when
+// a substitution is actually made.
+func expandOperators(str string) string {
+	if !strings.ContainsAny(str, operatorLeads) {
+		return str
+	}
+
+	runes := []rune(str)
+
+	const expansionMargin = 16
+
+	var b strings.Builder
+	b.Grow(len(str) + expansionMargin)
+
+	for i := 0; i < len(runes); {
+		if i+1 < len(runes) {
+			if w, ok := operatorWords[string(runes[i:i+2])]; ok {
+				b.WriteByte(' ')
+				b.WriteString(w)
+				b.WriteByte(' ')
+				i += 2
+
+				continue
+			}
+		}
+
+		if w, ok := operatorWords[string(runes[i:i+1])]; ok {
+			b.WriteByte(' ')
+			b.WriteString(w)
+			b.WriteByte(' ')
+			i++
+
+			continue
+		}
+
+		b.WriteRune(runes[i])
+		i++
+	}
+
+	return b.String()
+}

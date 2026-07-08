@@ -27,7 +27,9 @@
 // # Symbol verbalization
 //
 // Common symbols such as "?", "@", "#" are verbalized and replaced by a short word (e.g. "question", "at",
-// "hash").
+// "hash"). Multi-rune operators verbalize as a phrase — "!=" → "not equal" → NotEqual, "<=" → LessOrEqual,
+// "->" → To — as do their Unicode glyph twins (≠, ≤, →). Operator verbalization runs regardless of ASCII folding;
+// it is not honored by a target whose symbol policy drops symbols.
 //
 // # ASCII folding
 //
