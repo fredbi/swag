@@ -38,6 +38,10 @@ func TestNumberWords(t *testing.T) {
 	assert.EqualT(t, "zero", numberWords(0, numberOptions{}))
 }
 
+// =============================================
+// Fractions
+// =============================================
+
 type fractionCase struct {
 	x    float64
 	o    numberOptions
