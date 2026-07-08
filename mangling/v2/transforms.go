@@ -154,7 +154,9 @@ func expandRuneNames(str string) string {
 // would come out "Not equal". The Unicode glyphs mirror their ASCII twins (≠ = !=); pinning them here also fixes the
 // generic rune-name collapse, which drops the load-bearing word (≠'s name "NOT EQUAL TO" reduces to "equal").
 //
-// Keys are at most two runes.
+// Keys are at most two runes. Values are uninflected base forms — "equal"/"match"/"imply", not the 3rd-person
+// "equals"/"matches"/"implies" — so they read as neutral labels and stay consistent with the per-rune symbol table
+// (both "=" and "==" verbalize to "equal").
 var operatorWords = map[string]string{
 	// ASCII digraphs
 	"!=": "not equal", "==": "equal",
@@ -162,14 +164,14 @@ var operatorWords = map[string]string{
 	"&&": "and", "||": "or",
 	"<<": "shift left", ">>": "shift right",
 	"**": "power", "::": "scope",
-	"->": "to", "=>": "implies",
+	"->": "to", "=>": "imply",
 	"++": "increment", "--": "decrement",
-	"=~": "matches",
+	"=~": "match", "!~": "not match",
 	// single-char comparisons (multi-word, so owned here rather than the per-rune symbol table)
 	"<": "less than", ">": "greater than",
 	// Unicode operator glyphs, pinned to their ASCII twins
 	"≠": "not equal", "≤": "less or equal", "≥": "greater or equal",
-	"→": "to", "⇒": "implies", "≈": "approximately", "≡": "equivalent", "¬": "not",
+	"→": "to", "⇒": "imply", "≈": "approximately", "≡": "equivalent", "¬": "not",
 }
 
 // operatorLeadByte[c] reports whether byte c can start an [operatorWords] key — the first byte of each key (an ASCII

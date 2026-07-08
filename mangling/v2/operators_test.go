@@ -41,7 +41,7 @@ func TestOperatorVerbalization(t *testing.T) {
 		t.Parallel()
 
 		g := MakeGoMangler()
-		assert.EqualT(t, "AEqualsB", g.ConstName("a = b"))            // single '=' stays "equals" (defaultSymbolWords)
+		assert.EqualT(t, "AEqualB", g.ConstName("a = b"))             // single '=' → "equal", consistent with "=="
 		assert.EqualT(t, "FiftyPercent", g.ConstName("50%"))          // '%' unaffected
 		assert.EqualT(t, "MyName", g.ConstName("my-name"))            // lone '-' is a separator
 		assert.EqualT(t, "plain text", expandOperators("plain text")) // fast path: no operator lead char
@@ -63,11 +63,12 @@ func operatorCases() iter.Seq[inOutCase] {
 		{"p || q", "POrQ"},
 		{"i++", "IIncrement"},
 		{"i--", "IDecrement"},
-		{"a =~ b", "AMatchesB"},
+		{"a =~ b", "AMatchB"},
+		{"a !~ b", "ANotMatchB"},
 		{"a -> b", "AToB"},
 		{"a → b", "AToB"},
-		{"a => b", "AImpliesB"},
-		{"a ⇒ b", "AImpliesB"},
+		{"a => b", "AImplyB"},
+		{"a ⇒ b", "AImplyB"},
 		{"x ** y", "XPowerY"},
 		{"a :: b", "AScopeB"},
 		{"a << b", "AShiftLeftB"},

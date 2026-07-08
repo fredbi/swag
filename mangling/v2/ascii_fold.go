@@ -242,7 +242,7 @@ var defaultSymbolWords = map[rune]string{
 	'#':  "hash",
 	'%':  "percent",
 	'+':  "plus",
-	'=':  "equals",
+	'=':  "equal", // uninflected, consistent with "==" (operatorWords); the symbol words are labels, not conjugated verbs
 	'*':  "star",
 	'/':  "slash",
 	'\\': "backslash",
