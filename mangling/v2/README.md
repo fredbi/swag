@@ -43,6 +43,7 @@ Manglers are immutable values, configured with functional options at constructio
 
 ## Documentation
 
+- [Design](docs/design.md) — the pipeline, the token model, and the roadmap.
 - [Go identifiers](docs/go-identifiers.md) — the "always a valid Go identifier" guarantee,
   `Ident*` / `ConstName` / `File` / `Package` / `Module`, and the repairs.
 - [ASCII-fication](docs/asciification.md) — folding and romanization: `café → Cafe`,
