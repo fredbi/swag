@@ -3,7 +3,7 @@ package mangling
 import "github.com/go-openapi/swag/mangling/v2/numbers"
 
 type (
-	// TokenOption customizes the behavior of the [tokenizer].
+	// TokenOption customizes the behavior of the tokenizer (see the internal tokens package).
 	TokenOption func(tokenOptions) tokenOptions
 
 	// Option customizes the behavior of the [Mangler].
@@ -57,6 +57,12 @@ func buildOptions(o options, opts []Option) options {
 		o = apply(o)
 	}
 
+	// The default separator is root policy (it protects the verbalized symbols); inject it so the tokenizer never has to
+	// fall back to its own minimal rule.
+	if o.separator == nil {
+		o.separator = defaultTokenSeparator
+	}
+
 	return o
 }
 
@@ -95,6 +101,9 @@ func buildGoOptions(o goOptions, opts []GoOption) goOptions {
 	}
 	if o.identFallback == "" {
 		o.identFallback = defaultIdentFallback // "___" -> "Empty" / "empty" (cased per target)
+	}
+	if o.separator == nil {
+		o.separator = defaultTokenSeparator // same default as the base Mangler (see buildOptions)
 	}
 
 	return o

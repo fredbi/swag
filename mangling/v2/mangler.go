@@ -1,6 +1,10 @@
 package mangling
 
-import "unicode/utf8"
+import (
+	"unicode/utf8"
+
+	"github.com/go-openapi/swag/mangling/v2/internal/tokens"
+)
 
 // Mangler exposes general purpose well-known case formatters ([Mangler.Camelize], [Mangler.Snakize],
 // [Mangler.Kebabize], [Mangler.Titleize], ...) with simple recasing rules.
@@ -12,7 +16,7 @@ import "unicode/utf8"
 // documented in the package overview — see the "Case handling", "Symbol verbalization", "ASCII folding" and
 // "Numerals" sections there.
 type Mangler struct {
-	tokenizer
+	tokens.Tokenizer
 	options // options for plurals (possibly - future - language)
 }
 
@@ -20,7 +24,7 @@ type Mangler struct {
 func MakeMangler(opts ...Option) Mangler {
 	var m Mangler
 	m.options = buildOptions(m.options, opts)
-	m.tokenizer.tokenOptions = m.options.tokenOptions
+	m.Separator = m.separator // Tokenizer.Separator (public) <- the resolved option (private, defaulted in buildOptions)
 
 	return m
 }
@@ -38,10 +42,10 @@ func NewMangler(opts ...Option) *Mangler {
 func (m Mangler) Transform(target TargetTransform, str string) string {
 	str = m.asciifyInput(str)
 
-	t := borrowTokens(str)
-	defer t.redeem()
+	t := tokens.Borrow(str)
+	defer t.Redeem()
 
-	m.segment(&t)
+	m.Segment(&t)
 
 	if m.asciify {
 		m.foldASCII(&t)

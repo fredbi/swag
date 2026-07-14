@@ -8,6 +8,7 @@ import (
 	"unicode"
 	"unicode/utf8"
 
+	"github.com/go-openapi/swag/mangling/v2/internal/tokens"
 	"github.com/go-openapi/swag/mangling/v2/numbers"
 	"github.com/go-openapi/swag/mangling/v2/runewords"
 )
@@ -35,7 +36,7 @@ func ToASCII[T ~string | ~[]byte](s T) string {
 		switch {
 		case r < utf8.RuneSelf:
 			b.WriteRune(r)
-		case isCombiningMark(r):
+		case tokens.IsCombiningMark(r):
 			// strip
 		default:
 			if f, ok := asciiFold[r]; ok {
@@ -105,9 +106,9 @@ func RuneShortName[T ~rune | ~byte](r T) string {
 //
 // Pure-ASCII tokens, and tokens whose non-ASCII runes are non-foldable (e.g. CJK — a future rune-name concern), are
 // left untouched, so nothing allocates for them.
-func (m Mangler) foldASCII(t *tokens) {
+func (m Mangler) foldASCII(t *tokens.Tokens) {
 	for i := range t.Len() {
-		runes, override := t.span(i)
+		runes, override := t.Span(i)
 		if override != "" {
 			continue // already rewritten by an earlier stage
 		}
@@ -142,7 +143,7 @@ func foldToASCII(runes []rune) (string, bool) {
 		switch {
 		case r < utf8.RuneSelf:
 			_, _ = b.WriteRune(r)
-		case isCombiningMark(r):
+		case tokens.IsCombiningMark(r):
 			// strip
 		default:
 			if s, ok := asciiFold[r]; ok {
@@ -161,17 +162,7 @@ func foldable(r rune) bool {
 		return true
 	}
 
-	return isCombiningMark(r)
-}
-
-func isCombiningMark(r rune) bool {
-	// No combining mark (Mn/Mc/Me) exists below U+0300, so ASCII and Latin-1 skip the three range-table binary
-	// searches — this runs per rune in writeCased/foldToASCII on the hot path.
-	if r < 0x0300 {
-		return false
-	}
-
-	return unicode.In(r, unicode.Mn, unicode.Mc, unicode.Me)
+	return tokens.IsCombiningMark(r)
 }
 
 // asciiDigit maps a decimal-digit rune (category Nd, any script: ASCII, Arabic-Indic ٧, Devanagari ०, Thai ๗,
@@ -211,7 +202,7 @@ func asciiDigit(r rune) (byte, bool) {
 // An empty slice counts as all-marks (also renders to nothing).
 func isAllCombiningMarks(runes []rune) bool {
 	for _, r := range runes {
-		if !isCombiningMark(r) {
+		if !tokens.IsCombiningMark(r) {
 			return false
 		}
 	}

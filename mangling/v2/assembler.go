@@ -4,6 +4,8 @@ import (
 	"fmt"
 	"strings"
 	"unicode"
+
+	"github.com/go-openapi/swag/mangling/v2/internal/tokens"
 )
 
 // wordCasing is how a word token is cased at assembly.
@@ -34,9 +36,9 @@ const (
 // symbol or a leading number doesn't consume it.
 //
 // Initialism casing, when present, is preserved from the token rather than re-cased.
-func (m Mangler) assemble(t *tokens, target TargetTransform) string {
+func (m Mangler) assemble(t *tokens.Tokens, target TargetTransform) string {
 	var b strings.Builder
-	b.Grow(t.runeLen()) // one buffer alloc; ~exact for ASCII output
+	b.Grow(t.RuneLen()) // one buffer alloc; ~exact for ASCII output
 
 	firstWord := true
 	wrote := false
@@ -63,16 +65,16 @@ func (m Mangler) assemble(t *tokens, target TargetTransform) string {
 	}
 
 	for i := range t.Len() {
-		runes, override := t.span(i)
+		runes, override := t.Span(i)
 
-		switch t.kindOf(i) {
-		case kindWord:
+		switch t.Kind(i) {
+		case tokens.KindWord:
 			if override == "" && isAllCombiningMarks(runes) {
 				continue // renders to nothing (marks are stripped) — don't emit a separator or consume the first-word slot
 			}
 			writeSep(false)
 			writeCased(&b, runes, override, nextCasing())
-		case kindInitialism:
+		case tokens.KindInitialism:
 			writeSep(false)
 			// An initialism follows the target's casing *intent*, except title-casing preserves its canonical form: lower →
 			// lowercase (snake, and leading in unexported → "httpGet"), upper → uppercase, title/as-is → canonical
@@ -86,10 +88,10 @@ func (m Mangler) assemble(t *tokens, target TargetTransform) string {
 				c = casingAsIs
 			}
 			writeCased(&b, runes, override, c)
-		case kindNumber:
+		case tokens.KindNumber:
 			writeSep(true) // glue to the preceding token
 			writeCased(&b, runes, override, casingAsIs)
-		case kindSymbol:
+		case tokens.KindSymbol:
 			switch target.symbolPolicy {
 			case symbolDrop:
 				// elide
@@ -103,7 +105,7 @@ func (m Mangler) assemble(t *tokens, target TargetTransform) string {
 				}
 			}
 		default:
-			panic(fmt.Errorf("internal error: invalid tokenKind: %v", t.kindOf(i)))
+			panic(fmt.Errorf("internal error: invalid tokenKind: %v", t.Kind(i)))
 		}
 	}
 
@@ -124,7 +126,7 @@ func writeCased(b *strings.Builder, runes []rune, override string, c wordCasing)
 	// `first` tracks the first *surviving* rune so title-casing lands on it after any leading mark is dropped.
 	first := true
 	for _, r := range runes {
-		if isCombiningMark(r) {
+		if tokens.IsCombiningMark(r) {
 			continue
 		}
 

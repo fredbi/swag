@@ -6,6 +6,7 @@ import (
 	"strings"
 	"unicode/utf8"
 
+	"github.com/go-openapi/swag/mangling/v2/internal/tokens"
 	"github.com/go-openapi/swag/mangling/v2/numbers"
 )
 
@@ -38,7 +39,7 @@ func MakeGoMangler(opts ...GoOption) GoMangler {
 	var g GoMangler
 	g.goOptions = buildGoOptions(g.goOptions, opts)
 	g.Mangler.options = g.goOptions.options
-	g.tokenizer.tokenOptions = g.goOptions.tokenOptions
+	g.Separator = g.goOptions.separator
 	g.n = numbers.MakeNumberMangler(g.numberOpts...)
 	g.trie = buildInitialismTrie(g.initialisms)
 
@@ -206,10 +207,10 @@ func (g GoMangler) orFallback(id string, target TargetTransform) string {
 func (g GoMangler) identifier(str string, target TargetTransform) string {
 	str = g.asciifyInput(str)
 
-	t := borrowTokens(str)
-	defer t.redeem()
+	t := tokens.Borrow(str)
+	defer t.Redeem()
 
-	g.segment(&t)
+	g.Segment(&t)
 	if g.Mangler.asciify {
 		g.foldASCII(&t)
 	}

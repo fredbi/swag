@@ -3,6 +3,8 @@ package mangling
 import (
 	"strings"
 	"unicode"
+
+	"github.com/go-openapi/swag/mangling/v2/internal/tokens"
 )
 
 // DefaultInitialisms returns the built-in set of initialisms recognized when Go initialisms are enabled.
@@ -125,36 +127,37 @@ func isPluralizable(ini string, set map[string]struct{}) bool {
 // match walks the trie over the contiguous rune span starting at token r, returning the canonical form and token span
 // of the longest initialism whose terminal lands on a **token boundary** (span 0 if none).
 //
+// It reads token bounds and runes through the [tokens.Tokens] index API (no access to the private token struct).
 // Terminals that fall mid-token are ignored (no sub-token prefix matching).
 // A pluralized terminal is accepted only when its suffix reads lowercase in the input (so "IDs" pluralizes but "IDS"
 // does not).
-func (t *initialismTrie) match(toks []token, runes []rune, r, n int) (string, int) {
+func (t *initialismTrie) match(tk *tokens.Tokens, runes []rune, r, n int) (string, int) {
 	node := &t.root
 	bestCanonical := ""
 	bestSpan := 0
 
-	pos := toks[r].start
+	pos, _ := tk.Bounds(r)
 	for tokIdx := r; tokIdx < n; tokIdx++ {
-		tk := toks[tokIdx]
-		if tk.start != pos {
+		start, end := tk.Bounds(tokIdx)
+		if start != pos {
 			break // not contiguous (an elided separator sits between): initialisms don't cross separators
 		}
 
-		for i := tk.start; i < tk.end; i++ {
+		for i := start; i < end; i++ {
 			child := node.children[unicode.ToLower(runes[i])]
 			if child == nil {
 				return bestCanonical, bestSpan
 			}
 			node = child
 
-			if i == tk.end-1 && node.canonical != "" && (!node.plural || unicode.IsLower(runes[i])) {
+			if i == end-1 && node.canonical != "" && (!node.plural || unicode.IsLower(runes[i])) {
 				// terminal aligned with a token boundary (and, if plural, a lowercase suffix)
 				bestCanonical = node.canonical
 				bestSpan = tokIdx - r + 1
 			}
 		}
 
-		pos = tk.end
+		pos = end
 	}
 
 	return bestCanonical, bestSpan
@@ -166,33 +169,22 @@ func (t *initialismTrie) match(toks []token, runes []rune, r, n int) (string, in
 //
 // Merges shrink the slice in place; assembly then renders the canonical form (with the leading-unexported lowercasing
 // rule).
-func (g GoMangler) applyInitialisms(t *tokens) {
+func (g GoMangler) applyInitialisms(t *tokens.Tokens) {
 	if g.trie == nil {
 		return
 	}
 
-	toks := t.toks.Slice()
-	runes := t.runes.Slice()
+	runes := t.Runes()
 	n := t.Len()
 
-	w := 0
-	for r := 0; r < n; {
-		if canonical, span := g.trie.match(toks, runes, r, n); span > 0 {
-			merged := toks[r]
-			merged.end = toks[r+span-1].end
-			merged.kind = kindInitialism
-			merged.override = canonical
-			toks[w] = merged
-			w++
-			r += span
-
-			continue
+	// The overlay owns the in-place forward compaction; this callback supplies only the matching *policy*: at each
+	// position, the longest initialism run (if any) and the canonical casing to emit for it.
+	t.Overlay(func(from int) (int, tokens.Kind, string) {
+		canonical, span := g.trie.match(t, runes, from, n)
+		if span == 0 {
+			return 0, 0, ""
 		}
 
-		toks[w] = toks[r]
-		w++
-		r++
-	}
-
-	t.count = w
+		return span, tokens.KindInitialism, canonical
+	})
 }

@@ -4,6 +4,7 @@ import (
 	"slices"
 	"testing"
 
+	"github.com/go-openapi/swag/mangling/v2/internal/tokens"
 	"github.com/go-openapi/testify/v2/assert"
 )
 
@@ -108,11 +109,39 @@ func TestModuleNonVersionSuffix(t *testing.T) {
 	assert.EqualT(t, "foo/version2", g.Module("foo/v2")) // real version → rewritten
 }
 
+// TestDefaultSeparatorInjected guards the invariant that a constructed mangler always carries the full default
+// separator predicate.
+//
+// The tokenizer's own nil-Separator fallback is a minimal whitespace/non-graphic rule; if a constructor forgot to
+// inject the default, segmentation would silently switch to that weaker (and slower) rule for punctuation. This pins
+// the injection for both the base Mangler and the GoMangler, checking a rune the default splits on (a comma, category
+// Po) that the minimal fallback would not.
+func TestDefaultSeparatorInjected(t *testing.T) {
+	t.Parallel()
+
+	for name, sep := range map[string]func(rune) bool{
+		"Mangler":   MakeMangler().Separator,
+		"GoMangler": MakeGoMangler().Separator,
+	} {
+		t.Run(name, func(t *testing.T) {
+			t.Parallel()
+
+			if sep == nil {
+				t.Fatal("constructed mangler has a nil Separator (default not injected)")
+			}
+			assert.Truef(t, sep(','), "%s: default separator must split on ',' (Po)", name)     // the full rule; basicSeparator would miss it
+			assert.Truef(t, sep('-'), "%s: default separator must split on '-' (Pd)", name)     // dashes
+			assert.Falsef(t, sep('@'), "%s: '@' verbalizes as a symbol, not a separator", name) // guarded by defaultSymbolWords
+			assert.Falsef(t, sep('a'), "%s: letters are never separators", name)
+		})
+	}
+}
+
 // TestTokenizeEarlyBreak covers the yield-returns-false path (consumer stops iterating early).
 func TestTokenizeEarlyBreak(t *testing.T) {
 	t.Parallel()
 
-	tk := tokenizer{tokenOptions: buildTokenOptions(tokenOptions{}, nil)}
+	tk := tokens.Tokenizer{Separator: defaultTokenSeparator}
 	n := 0
 	for range tk.Tokenize("a b c") {
 		n++
@@ -127,7 +156,7 @@ func TestTokenizeEarlyBreak(t *testing.T) {
 func TestTokenizeOrphanLeadingMark(t *testing.T) {
 	t.Parallel()
 
-	tk := tokenizer{tokenOptions: buildTokenOptions(tokenOptions{}, nil)}
+	tk := tokens.Tokenizer{Separator: defaultTokenSeparator}
 	got := slices.Collect(tk.Tokenize("́abc")) // leading combining acute
 	assert.Truef(t, slices.Equal([]string{"́abc"}, got), "got %v", got)
 }
