@@ -4,6 +4,7 @@
 package mangling
 
 import (
+	"maps"
 	"strings"
 	"unicode"
 	"unicode/utf8"
@@ -208,6 +209,14 @@ func isAllCombiningMarks(runes []rune) bool {
 	}
 
 	return true
+}
+
+// DefaultSymbolWords returns a copy of the built-in symbol-verbalization set (rune → word, e.g. '@' → "at").
+//
+// Use it as a starting point to build a custom set for [WithSymbolWords] when you want wholesale control rather than a
+// small overlay. The returned map is a fresh copy — mutating it does not affect the mangler.
+func DefaultSymbolWords() map[rune]string {
+	return maps.Clone(defaultSymbolWords)
 }
 
 // defaultSymbolWords maps a single symbol rune to the word it verbalizes to (e.g. "@" => "at", "!" => "bang").

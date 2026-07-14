@@ -31,6 +31,10 @@
 // "->" → To — as do their Unicode glyph twins (≠, ≤, →). Operator verbalization runs regardless of ASCII folding;
 // it is not honored by a target whose symbol policy drops symbols.
 //
+// The single-rune set is customizable with [WithSymbolWords] (start from [DefaultSymbolWords]). It is dual-purpose:
+// its keys decide which runes are symbol tokens rather than separators, and its values are the emitted words — so
+// adding "," makes it a verbalizable token while removing "@" turns it into a separator.
+//
 // # ASCII folding
 //
 // By default, letters and digits are left unchanged. With ASCII folding enabled (off in [Mangler], on in

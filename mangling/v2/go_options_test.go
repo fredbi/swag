@@ -88,6 +88,51 @@ func TestWithTokenSeparatorPredicate(t *testing.T) {
 	assert.EqualT(t, "aB", m.Camelize("a.b"))
 }
 
+// TestWithSymbolWords covers the customizable symbol set: overriding a word, adding a symbol (which changes
+// segmentation — the rune becomes a token instead of a separator), and removing one (which makes it a separator). It
+// also checks the built-in default set is never mutated.
+func TestWithSymbolWords(t *testing.T) {
+	t.Parallel()
+
+	t.Run("override a word", func(t *testing.T) {
+		t.Parallel()
+		g := MakeGoMangler(WithManglerOptions(WithSymbolWords(map[rune]string{'@': "arobase"})))
+		assert.EqualT(t, "AArobaseB", g.ConstName("a@b"))          // custom word
+		assert.EqualT(t, "AAtB", MakeGoMangler().ConstName("a@b")) // default unchanged
+	})
+
+	t.Run("add a symbol changes segmentation", func(t *testing.T) {
+		t.Parallel()
+		// ',' is a separator by default ("a,b" -> "AB"); adding it to the set makes it a verbalizable symbol token.
+		g := MakeGoMangler(WithManglerOptions(WithSymbolWords(map[rune]string{',': "comma"})))
+		assert.EqualT(t, "ACommaB", g.ConstName("a,b"))
+		assert.EqualT(t, "AB", MakeGoMangler().ConstName("a,b")) // default: ',' is a separator
+	})
+
+	t.Run("remove a symbol makes it a separator", func(t *testing.T) {
+		t.Parallel()
+		// An empty word removes '@' from the set, so it segments as a separator (dropped) instead of verbalizing.
+		g := MakeGoMangler(WithManglerOptions(WithSymbolWords(map[rune]string{'@': ""})))
+		assert.EqualT(t, "AB", g.ConstName("a@b"))
+	})
+
+	t.Run("base Mangler honors it too", func(t *testing.T) {
+		t.Parallel()
+		m := MakeMangler(WithSymbolWords(map[rune]string{'@': "arobase"}))
+		assert.EqualT(t, "A arobase b", m.Humanize("a@b")) // Humanize titleizes the first word
+	})
+
+	t.Run("DefaultSymbolWords returns an independent copy", func(t *testing.T) {
+		t.Parallel()
+		d := DefaultSymbolWords()
+		d['@'] = "MUTATED"
+		delete(d, '&')
+		// mutating the copy must not leak into a freshly built mangler
+		assert.EqualT(t, "AAtB", MakeGoMangler().ConstName("a@b"))
+		assert.EqualT(t, "AAndB", MakeGoMangler().ConstName("a&b"))
+	})
+}
+
 // TestBaseManglerNamesNumeralRune exercises expandRuneNames' numeral branch on the base Mangler path.
 //
 // A numeral rune is spelled out as words (unlike literal ASCII digits, which Camelize leaves alone).

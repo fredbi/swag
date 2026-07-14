@@ -341,7 +341,7 @@ func (g GoMangler) verbalizeLeadingNumber(str string) string {
 	start := -1
 	var r0 rune
 	for i, r := range str {
-		if defaultTokenSeparator(r) {
+		if g.Separator(r) {
 			// A leading sign is a separator by category, but when it directly precedes a decimal digit it is the number's
 			// sign, so keep it: "-1" must verbalize to "minus one", not a stripped "one".
 			if r == '-' || r == '+' {

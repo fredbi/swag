@@ -1,6 +1,10 @@
 package mangling
 
-import "github.com/go-openapi/swag/mangling/v2/numbers"
+import (
+	"maps"
+
+	"github.com/go-openapi/swag/mangling/v2/numbers"
+)
 
 type (
 	// TokenOption customizes the behavior of the tokenizer (see the internal tokens package).
@@ -22,6 +26,11 @@ type (
 		tokenOptions
 
 		asciify bool // fold Latin diacritics to ASCII (off in base Mangler, on in GoMangler)
+
+		// symbolWords maps a symbol rune to the word it verbalizes to; nil means the built-in defaultSymbolWords. It is
+		// dual-purpose: its keys drive segmentation (a rune in the set is a symbol token, not a separator) and its values
+		// drive verbalization (the word the assembler emits). Customized via WithSymbolWords.
+		symbolWords map[rune]string
 	}
 
 	goOptions struct {
@@ -44,9 +53,29 @@ func buildTokenOptions(o tokenOptions, opts []TokenOption) tokenOptions {
 		o = apply(o)
 	}
 
-	// defaults
+	// The separator default is not resolved here: it depends on the symbol set (see resolveSymbolSeparator), which lives
+	// on options and is only final once all options are applied. A nil separator is filled in by buildOptions /
+	// buildGoOptions.
+	return o
+}
+
+// resolveSymbolSeparator finalizes the symbol set and the separator predicate, once every option has been applied.
+//
+// The separator depends on the symbol set (the set's keys decide which runes are symbol tokens vs. separators), so it
+// can only be built here. The uncustomized case reuses the shared, allocation-free defaultTokenSeparator; a customized
+// set builds a per-mangler predicate (see separatorRule). A separator supplied wholesale via WithTokenSeparator wins
+// and is left untouched.
+func resolveSymbolSeparator(o options) options {
+	custom := o.symbolWords != nil
+	if !custom {
+		o.symbolWords = defaultSymbolWords // shared, read-only: the assembler only reads it
+	}
 	if o.separator == nil {
-		o.separator = defaultTokenSeparator
+		if custom {
+			o.separator = newSeparatorRule(o.symbolWords).sep
+		} else {
+			o.separator = defaultTokenSeparator
+		}
 	}
 
 	return o
@@ -57,13 +86,7 @@ func buildOptions(o options, opts []Option) options {
 		o = apply(o)
 	}
 
-	// The default separator is root policy (it protects the verbalized symbols); inject it so the tokenizer never has to
-	// fall back to its own minimal rule.
-	if o.separator == nil {
-		o.separator = defaultTokenSeparator
-	}
-
-	return o
+	return resolveSymbolSeparator(o)
 }
 
 func buildGoOptions(o goOptions, opts []GoOption) goOptions {
@@ -102,9 +125,7 @@ func buildGoOptions(o goOptions, opts []GoOption) goOptions {
 	if o.identFallback == "" {
 		o.identFallback = defaultIdentFallback // "___" -> "Empty" / "empty" (cased per target)
 	}
-	if o.separator == nil {
-		o.separator = defaultTokenSeparator // same default as the base Mangler (see buildOptions)
-	}
+	o.options = resolveSymbolSeparator(o.options) // symbol set + separator, same as the base Mangler
 
 	return o
 }
@@ -137,6 +158,37 @@ func WithTokenSeparator(separator func(rune) bool) TokenOption {
 func WithTokenOptions(opts ...TokenOption) Option {
 	return func(o options) options {
 		o.tokenOptions = buildTokenOptions(o.tokenOptions, opts)
+
+		return o
+	}
+}
+
+// WithSymbolWords customizes the symbol-verbalization set on top of the built-in defaults ([DefaultSymbolWords]).
+//
+// Each entry overlays the defaults: a new key adds a symbol, an existing key overrides its word, and an **empty word
+// removes** the symbol from the set. The rest of the defaults are kept — call [DefaultSymbolWords] and build a fresh
+// map if you need wholesale control.
+//
+// The set is dual-purpose, so an edit affects two stages:
+//   - segmentation: a rune in the set is a single-rune *symbol token*; a rune not in the set falls to the category
+//     rules and is typically a separator. So adding ',' makes "a,b" tokenize as [a , b] (→ verbalizable), while removing
+//     '@' makes "a@b" tokenize as [a b] (the '@' becomes a separator, dropped).
+//   - verbalization: under a target's verbalize policy, the word is what the assembler emits ("@" → "at").
+//
+// Repeated calls accumulate. Applies to the base [Mangler] and, via [WithManglerOptions], to the [GoMangler].
+func WithSymbolWords(words map[rune]string) Option {
+	return func(o options) options {
+		if o.symbolWords == nil {
+			o.symbolWords = maps.Clone(defaultSymbolWords) // copy-on-write: never mutate the shared default
+		}
+		for r, w := range words {
+			if w == "" {
+				delete(o.symbolWords, r) // empty word removes the symbol from the set
+
+				continue
+			}
+			o.symbolWords[r] = w
+		}
 
 		return o
 	}

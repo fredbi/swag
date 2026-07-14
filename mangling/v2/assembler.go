@@ -99,7 +99,7 @@ func (m Mangler) assemble(t *tokens.Tokens, target TargetTransform) string {
 				writeSep(false)
 				writeCased(&b, runes, override, casingAsIs)
 			default: // symbolVerbalize (the zero-value default)
-				if w, ok := defaultSymbolWords[runes[0]]; ok {
+				if w, ok := m.symbolWords[runes[0]]; ok {
 					writeSep(false)
 					writeStringCased(&b, w, nextCasing())
 				}

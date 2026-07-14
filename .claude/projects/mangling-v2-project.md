@@ -150,3 +150,31 @@ Both fixed together (commit pending).
    Guarded by `TestVerbalizeLeadingSign` / `TestLeadingSignNotBound`. **Perf unchanged** (the sign check sits inside the
    separator branch and never fires when the leading rune is already a digit): fast ~522ns/1 alloc, leading-number
    ~920ns, numeral-rune ~1170ns. Fuzz `FuzzGoIdent` clean (670k execs).
+
+## 2026-07-08 — customizable symbol-verbalization set (`WithSymbolWords`)
+The single-rune symbol map is now per-mangler and customizable. New public API: `WithSymbolWords(map[rune]string)`
+(overlays the defaults — new key adds, existing key overrides, **empty word removes**) and `DefaultSymbolWords()`
+(copy of the built-ins). Applies to the base `Mangler` and, via `WithManglerOptions`, to `GoMangler`.
+
+Design notes (the non-obvious parts):
+- **Dual-purpose map**: keys drive *segmentation* (a rune in the set is a symbol token, not a separator), values drive
+  *verbalization*. So `WithSymbolWords({',':"comma"})` makes `a,b`→`ACommaB` (comma was a separator); `{'@':""}`
+  makes `a@b`→`AB` (`@` becomes a separator). Documented on the option + in `doc.go`.
+- **No `[128]bool` in the struct.** `Mangler` has value receivers, so an inline table would bloat every method-call
+  copy by 128 bytes. Instead: the ASCII table lives behind a pointer in a tiny `separatorRule{ascii *[128]bool; words
+  map}` (separator.go); its `sep` method value is bound into `tokens.Tokenizer.Separator` at construction, capturing
+  16 bytes, not the mangler. The map itself is an 8-byte field on `options` (needed by the assembler independently).
+- **Default path stays allocation-free.** `resolveSymbolSeparator` (options.go) runs once after all options are applied
+  (the separator depends on the final symbol set): uncustomized → shared `defaultTokenSeparator` + init-built table (0
+  extra allocs); customized → one-time clone + `[128]bool` + closure (~+6 allocs at construction only).
+- Rerouted the two separator consumers: `tokens.Tokenizer.Separator` (already injected) and `verbalizeLeadingNumber`
+  (now `g.Separator`, which also makes leading-number detection respect a custom `WithTokenSeparator` — a latent nit).
+- Assembler reads `m.symbolWords` (was the package global).
+
+Runtime hot paths byte-identical (fast ~548ns/1 alloc, leading-number ~1045ns, operators ~810ns). `go test -race` +
+lint clean; `FuzzGoIdent` clean (653k execs). Guarded by `TestWithSymbolWords` (override / add-changes-segmentation /
+remove / base-Mangler / default-copy-independence).
+
+NOTE (open, not done): `operatorWords`/`operatorLeadByte` (multi-rune operators, transforms.go) is the analogous global
+and is still fixed. Left as-is for now; same treatment possible if operator customization is ever wanted (watch the
+deliberate `'='`↔`"=="` "equal" consistency).
