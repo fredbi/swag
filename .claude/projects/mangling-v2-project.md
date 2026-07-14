@@ -100,7 +100,8 @@ Micro-optimization campaign closed this session (commit 3eb06dc): lean `expandRu
 pooled `bytes.Buffer` + runewords-first) and new public `numbers.NumberRune(r) string`. Fast/common path back to
 ~528ns/1 alloc (ahead of v1); all slow paths lean except greek-class romanization.
 
-Two items to resume on (neither is a regression; both are correctness/design nits Fred spotted):
+Two items to resume on (neither is a regression; both are correctness/design nits Fred spotted).
+**Both RESOLVED 2026-07-08** — see the "resolved" note at the end of this section.
 
 1. **`numbers.NumberRune` should probably be a method, not a package func.** It currently verbalizes with *default*
    options (`numberOptions{}`), but a `NumberMangler` may carry options (`WithNumberStripOne` / `WithNumberStripAnd`
@@ -131,3 +132,21 @@ Two items to resume on (neither is a regression; both are correctness/design nit
      `±<digits>` as one run to the number verbalizer the way `ConstName` does (via `numbers` `numberRunAt`, which
      accepts a sign only at a word boundary). Fix probably routes a leading `±<digits>` through that same number-run
      scan so `IdentExported("-1")` → `MinusOne` and `("+1")` → `One`/`PlusOne` consistently with `ConstName`.
+
+### Resolved 2026-07-08
+Both fixed together (commit pending).
+
+1. **Option-aware numeral verbalization.** Added `(m NumberMangler) NumberRune(r)` (honors the mangler's options) and
+   kept the package-level `NumberRune(r)` as a default-options convenience delegating to it. Gave `Mangler` a
+   `num numbers.NumberMangler` field; `expandRuneNames` now verbalizes numeral runes through it, and `GoMangler.n` was
+   consolidated into the promoted `Mangler.num`. Result: under `WithGoNumberOptions(WithNumberStripOne(true))`,
+   `IdentExported("½cup")` == `HalfCup` matches `ConstName("½")` == `Half` (was `OneHalfCup` vs `Half`). Guarded by
+   `numbers.TestNumberRuneOptions` + a consistency subtest in `TestNumeralAsciify`.
+
+2. **Leading sign.** `verbalizeLeadingNumber` now treats a leading `-`/`+` that *directly* precedes a decimal digit as
+   the number's sign (fed into the run, so `NumberWords` sees `"-1"`). Final table (`MakeGoMangler()`), Ident now agrees
+   with Const: `-1`→`MinusOne`, `-5`→`MinusFive`, `-3.14`→`MinusThreeDotOneFour`, `+1`→`One`, `+2`→`Two`. The sign binds
+   only at the very front before a digit — `my-name`→`MyName` (interior), `-abc`→`Abc`, `- 1`→`One` (detached) unchanged.
+   Guarded by `TestVerbalizeLeadingSign` / `TestLeadingSignNotBound`. **Perf unchanged** (the sign check sits inside the
+   separator branch and never fires when the leading rune is already a digit): fast ~522ns/1 alloc, leading-number
+   ~920ns, numeral-rune ~1170ns. Fuzz `FuzzGoIdent` clean (670k execs).

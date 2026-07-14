@@ -29,7 +29,6 @@ type GoMangler struct {
 	Mangler
 	goOptions
 
-	n        numbers.NumberMangler
 	trie     *initialismTrie     // precomputed initialism index (shared, read-only)
 	reserved map[string]struct{} // keywords ∪ builtins, for unexported-ident repair
 }
@@ -40,7 +39,7 @@ func MakeGoMangler(opts ...GoOption) GoMangler {
 	g.goOptions = buildGoOptions(g.goOptions, opts)
 	g.Mangler.options = g.goOptions.options
 	g.Separator = g.goOptions.separator
-	g.n = numbers.MakeNumberMangler(g.numberOpts...)
+	g.num = numbers.MakeNumberMangler(g.numberOpts...) // shared by ConstName, leading-number and numeral-rune verbalization
 	g.trie = buildInitialismTrie(g.initialisms)
 
 	g.reserved = make(map[string]struct{}, len(g.keywords)+len(g.builtins))
@@ -170,7 +169,7 @@ func (g GoMangler) File(input string) string {
 func (g GoMangler) ConstName(value string) string {
 	// Value-policy options (symbol / keep-digits / rune-name) are deferred; a variadic can be added back later without
 	// breaking callers.
-	return g.IdentExported(g.n.NumberWords(value))
+	return g.IdentExported(g.num.NumberWords(value))
 }
 
 // repairReserved appends the reserved-word suffix (default "Var") when id collides with a Go keyword or builtin.
@@ -332,6 +331,10 @@ func (g GoMangler) goIdent(str string, target TargetTransform) string {
 // Devanagari, …), and No/Nl numeral runes (½, Ⅶ).
 // Non-ASCII digits are converted to ASCII before verbalizing.
 //
+// A leading sign directly in front of a digit is part of the number ("-1" -> "minus one", "+2" -> "two"), even though
+// '-'/'+' are separators elsewhere ("my-name" splits on '-'). The sign only binds at the very front, right before a
+// digit; interior signs stay separators.
+//
 // Used by the Ident* methods (ConstName verbalizes every number).
 func (g GoMangler) verbalizeLeadingNumber(str string) string {
 	// The first non-separator rune decides whether the first token is a number.
@@ -339,6 +342,16 @@ func (g GoMangler) verbalizeLeadingNumber(str string) string {
 	var r0 rune
 	for i, r := range str {
 		if defaultTokenSeparator(r) {
+			// A leading sign is a separator by category, but when it directly precedes a decimal digit it is the number's
+			// sign, so keep it: "-1" must verbalize to "minus one", not a stripped "one".
+			if r == '-' || r == '+' {
+				if nr, _ := utf8.DecodeRuneInString(str[i+1:]); isASCIIDigit(nr) || isNonASCIIDigit(nr) {
+					start, r0 = i, r
+
+					break
+				}
+			}
+
 			continue
 		}
 		start, r0 = i, r
@@ -349,10 +362,19 @@ func (g GoMangler) verbalizeLeadingNumber(str string) string {
 		return str // no content — fast path, nothing allocated
 	}
 
+	// Consume a leading sign with the digit run behind it; the rune after the sign classifies the run. str[start:] keeps
+	// the sign, so NumberWords sees "-1"/"+2" and renders (or drops) it.
+	signed := r0 == '-' || r0 == '+'
+	numStart := start
+	if signed {
+		numStart = start + 1 // '-'/'+' is one ASCII byte
+		r0, _ = utf8.DecodeRuneInString(str[numStart:])
+	}
+
 	switch {
 	case isASCIIDigit(r0):
 		// Leading ASCII digit run with one interior decimal point — byte scan, no allocation.
-		end, seenDot := start, false
+		end, seenDot := numStart, false
 	loop:
 		for end < len(str) {
 			switch c := str[end]; {
@@ -365,12 +387,16 @@ func (g GoMangler) verbalizeLeadingNumber(str string) string {
 			}
 		}
 
-		return str[:start] + g.n.NumberWords(str[start:end]) + " " + str[end:]
+		return str[:start] + g.num.NumberWords(str[start:end]) + " " + str[end:]
 
 	case isNonASCIIDigit(r0):
-		// Leading non-ASCII decimal digits (folding off): convert the run to ASCII, then verbalize.
+		// Leading non-ASCII decimal digits (folding off): convert the run to ASCII, then verbalize. The sign (ASCII) is
+		// carried in front so NumberWords sees it.
 		var digits []byte
-		end, seenDot := start, false
+		if signed {
+			digits = append(digits, str[start])
+		}
+		end, seenDot := numStart, false
 		for end < len(str) {
 			r, size := utf8.DecodeRuneInString(str[end:])
 			if d, ok := asciiDigit(r); ok {
@@ -389,7 +415,7 @@ func (g GoMangler) verbalizeLeadingNumber(str string) string {
 			break
 		}
 
-		return str[:start] + g.n.NumberWords(string(digits)) + " " + str[end:]
+		return str[:start] + g.num.NumberWords(string(digits)) + " " + str[end:]
 
 	default:
 		// Only a non-ASCII rune can be a No/Nl numeral (½, Ⅶ, ①); an ASCII-leading token skips the RuneNumber map
@@ -400,7 +426,7 @@ func (g GoMangler) verbalizeLeadingNumber(str string) string {
 				// (folding on already spelled it out upstream, in expandRuneNames).
 				w := start + utf8.RuneLen(r0)
 
-				return str[:start] + g.n.NumberWords(str[start:w]) + " " + str[w:]
+				return str[:start] + g.num.NumberWords(str[start:w]) + " " + str[w:]
 			}
 		}
 

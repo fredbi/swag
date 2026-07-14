@@ -55,6 +55,19 @@ func TestNumberRune(t *testing.T) {
 	}
 }
 
+// TestNumberRuneOptions verifies the method form honors the mangler's options (so a numeral rune verbalizes the same
+// way as the equivalent digit input under one mangler), while the package-level function stays default-options.
+func TestNumberRuneOptions(t *testing.T) {
+	t.Parallel()
+
+	strip := MakeNumberMangler(WithNumberStripOne(true))
+	assert.EqualT(t, "half", strip.NumberRune('½'))                   // "one half" with the "one" stripped
+	assert.EqualT(t, strip.NumberWords("0.5"), strip.NumberRune('½')) // agrees with the value verbalized as digits
+
+	// The package-level function ignores any options (default rendering).
+	assert.EqualT(t, "one half", NumberRune('½'))
+}
+
 type numeralFloatCase struct {
 	r        rune
 	expected float64

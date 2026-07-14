@@ -4,6 +4,7 @@ import (
 	"unicode/utf8"
 
 	"github.com/go-openapi/swag/mangling/v2/internal/tokens"
+	"github.com/go-openapi/swag/mangling/v2/numbers"
 )
 
 // Mangler exposes general purpose well-known case formatters ([Mangler.Camelize], [Mangler.Snakize],
@@ -18,6 +19,11 @@ import (
 type Mangler struct {
 	tokens.Tokenizer
 	options // options for plurals (possibly - future - language)
+
+	// num verbalizes numeral runes in the asciify pass (½ → "one half"). The base Mangler carries a default
+	// NumberMangler; the GoMangler overrides it with its configured one so a numeral rune and the same value written as
+	// digits verbalize consistently.
+	num numbers.NumberMangler
 }
 
 // MakeMangler builds a [Mangler] value with optional settings.
@@ -25,6 +31,7 @@ func MakeMangler(opts ...Option) Mangler {
 	var m Mangler
 	m.options = buildOptions(m.options, opts)
 	m.Separator = m.separator // Tokenizer.Separator (public) <- the resolved option (private, defaulted in buildOptions)
+	m.num = numbers.MakeNumberMangler()
 
 	return m
 }
@@ -151,7 +158,7 @@ func (m Mangler) asciifyInput(str string) string {
 	}
 
 	if m.asciify && hasNonASCII {
-		str = expandRuneNames(str)
+		str = expandRuneNames(str, m.num)
 	}
 
 	return str

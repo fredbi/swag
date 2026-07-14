@@ -105,7 +105,10 @@ func TargetAllCaps() TargetTransform {
 // Branch order is chosen for the hot case: [runewords.Word] is tried first for a non-ASCII rune, so a named rune
 // (Greek, Cyrillic, emoji, symbol — the common non-ASCII input) resolves in one table lookup, skipping the
 // combining-mark / diacritic / numeral probes that a non-Latin letter would otherwise all miss.
-func expandRuneNames(str string) string {
+//
+// Numeral runes are verbalized through num (the mangler's configured [numbers.NumberMangler]) so their wording honors
+// the same number options as the rest of the pipeline.
+func expandRuneNames(str string, num numbers.NumberMangler) string {
 	// Find the first rune this pass must act on: non-ASCII and not foldable (a diacritic/combining mark passes through
 	// for the fold stage). Everything before it — ASCII and foldable runes — is unchanged, so it is bulk-copied rather
 	// than re-scanned; if there is no such rune, the input is returned untouched, with no buffer and no copy.
@@ -139,7 +142,7 @@ func expandRuneNames(str string) string {
 				b.WriteRune(r) // foldable diacritic or combining mark: passed through for the token-level fold stage
 			} else if d, ok := asciiDigit(r); ok {
 				b.WriteByte(d) // non-ASCII decimal digit (Nd) → its ASCII digit ('٧' → '7')
-			} else if words := numbers.NumberRune(r); words != "" { // numeral rune → words ("½" → "one half")
+			} else if words := num.NumberRune(r); words != "" { // numeral rune → words ("½" → "one half")
 				b.WriteByte(' ')
 				b.WriteString(words)
 				b.WriteByte(' ')

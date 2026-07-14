@@ -89,15 +89,24 @@ func RuneNumber(r rune) (float64, bool) {
 // renders it directly, skipping the string scanner and the string(r) allocation that NumberWords(string(r)) would
 // cost — this runs per numeral rune in the asciify pass.
 //
-// Rendering uses the default options (no [WithNumberStripOne] / [WithNumberStripAnd] / special numbers), which is what
-// a numeral rune needs; NumberWords remains the entry point when options matter.
-func NumberRune(r rune) string {
+// Rendering honors the mangler's options ([WithNumberStripOne] etc.), so a numeral rune verbalizes consistently with
+// the same value written as digits ('½' and "1/2"-style input agree under one mangler). Use the package-level
+// [NumberRune] for a quick default-options rendering without a mangler.
+func (m NumberMangler) NumberRune(r rune) string {
 	v, ok := RuneNumber(r)
 	if !ok {
 		return ""
 	}
 
-	return numberWords(v, numberOptions{})
+	return numberWords(v, m.numberOptions)
+}
+
+// NumberRune is the default-options form of [NumberMangler.NumberRune]: it verbalizes a single Unicode numeral rune
+// with no options applied. Build a [NumberMangler] and call its method when options matter.
+func NumberRune(r rune) string {
+	var m NumberMangler // zero value: default options
+
+	return m.NumberRune(r)
 }
 
 // AppendWords appends the english-words form of in (numbers verbalized, surrounding text verbatim) to dst and returns
