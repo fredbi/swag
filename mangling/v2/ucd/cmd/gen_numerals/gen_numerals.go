@@ -1,3 +1,6 @@
+// SPDX-FileCopyrightText: Copyright 2015-2025 go-swagger maintainers
+// SPDX-License-Identifier: Apache-2.0
+
 // Command gen_numerals builds the rune -> numeric value table (default numerals.go) from the UCD
 // DerivedNumericValues.txt extract.
 //
@@ -156,6 +159,7 @@ func codeRange(s string) (lo, hi rune, err error) {
 
 func emit(source, packageName, outFile, buildTag string, nums []numeral) error {
 	var b bytes.Buffer
+	fmt.Fprint(&b, "// SPDX-FileCopyrightText: Copyright 2015-2025 go-swagger maintainers\n// SPDX-License-Identifier: Apache-2.0\n\n")
 	if buildTag != "" {
 		fmt.Fprintf(&b, "//go:build %s\n\n", buildTag)
 	}

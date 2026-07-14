@@ -1,3 +1,6 @@
+// SPDX-FileCopyrightText: Copyright 2015-2025 go-swagger maintainers
+// SPDX-License-Identifier: Apache-2.0
+
 // Package ucd hosts the Unicode Character Database (UCD) source extracts and the code generators that turn them into
 // the static lookup tables the mangling packages rely on.
 //

@@ -1,3 +1,6 @@
+// SPDX-FileCopyrightText: Copyright 2015-2025 go-swagger maintainers
+// SPDX-License-Identifier: Apache-2.0
+
 // Command gen_runewords builds the compact rune -> word table (default tables.go) from the UCD DerivedName.txt and
 // emoji-data.txt extracts.
 //
@@ -463,6 +466,7 @@ func emit(source, packageName, outFile, buildTag string, entries []kept, idOf ma
 	}
 
 	var b bytes.Buffer
+	fmt.Fprint(&b, "// SPDX-FileCopyrightText: Copyright 2015-2025 go-swagger maintainers\n// SPDX-License-Identifier: Apache-2.0\n\n")
 	if buildTag != "" {
 		fmt.Fprintf(&b, "//go:build %s\n\n", buildTag)
 	}
