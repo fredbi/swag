@@ -46,9 +46,11 @@ func NewMangler(opts ...Option) *Mangler {
 	return &m
 }
 
-// Transform renders str through the target recipe: segment → assemble (casing × separator × symbol policy).
+// Transform renders str through the target recipe: asciify the input (operator verbalization always, rune-name
+// verbalization when folding is on) → segment → ASCII-fold the tokens when folding is on → assemble (casing ×
+// separator × symbol policy).
 //
-// Stages (verbalization, folding, initialisms) will run between the two.
+// The [GoMangler] inserts an initialism overlay before assembly; the base [Mangler] has no initialism stage.
 func (m Mangler) Transform(target TargetTransform, str string) string {
 	str = m.asciifyInput(str)
 

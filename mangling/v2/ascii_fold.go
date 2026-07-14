@@ -108,8 +108,9 @@ func RuneShortName[T ~rune | ~byte](r T) string {
 //
 // It runs between segmentation and assembly when folding is enabled (off in the base [Mangler], on in the [GoMangler]).
 //
-// Pure-ASCII tokens, and tokens whose non-ASCII runes are non-foldable (e.g. CJK — a future rune-name concern), are
-// left untouched, so nothing allocates for them.
+// Pure-ASCII tokens are left untouched, so nothing allocates for them. Non-Latin runes are already romanized or elided
+// by the rune-name pass ([expandRuneNames]), which runs pre-segmentation; a non-foldable non-ASCII rune reaching this
+// stage is passed through unchanged.
 func (m Mangler) foldASCII(t *tokens.Tokens) {
 	for i := range t.Len() {
 		runes, override := t.Span(i)
@@ -153,7 +154,7 @@ func foldToASCII(runes []rune) (string, bool) {
 			if s, ok := asciiFold[r]; ok {
 				_, _ = b.WriteString(s)
 			} else {
-				_, _ = b.WriteRune(r) // non-foldable (e.g. CJK): left for the future rune-name stage
+				_, _ = b.WriteRune(r) // non-foldable non-ASCII: passed through (rune-naming already ran pre-segmentation)
 			}
 		}
 	}

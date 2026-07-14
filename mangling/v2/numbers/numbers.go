@@ -136,6 +136,8 @@ func (m NumberMangler) AppendWords(dst []byte, in string) []byte {
 }
 
 // The engine is reached through NumberMangler (which verbalizes numbers found in text), RuneNumber (which resolves a
-// numeral rune to its value), and Roman (which renders an integer as a roman numeral).
+// numeral rune to its value), NumberRune (which verbalizes a single numeral rune — as a package function with default
+// options, or as a NumberMangler method that honors the mangler's options), and Roman (which renders an integer as a
+// roman numeral).
 // The internal numberWords helper verbalizes a single cardinal value; a typed public cardinal helper can be added later
 // if a consumer needs one, without breaking callers.

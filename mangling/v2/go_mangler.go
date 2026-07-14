@@ -165,7 +165,10 @@ func (g GoMangler) File(input string) string {
 // ConstName produces a valid exported Go identifier from an arbitrary value (e.g. an enum member).
 //
 // Every number in the value is verbalized ("0.25" -> "one quarter", "300" -> "three hundred") and the result is turned
-// into an exported identifier.
+// into an exported identifier. This is what distinguishes it from [GoMangler.IdentExported], which verbalizes only a
+// *leading* number (for identifier validity) and keeps interior digits: "status 200" -> "StatusTwoHundred" here, but
+// "Status200" through IdentExported. Reach for IdentExported when embedded digits should stay digits (status codes,
+// versions, "oauth2").
 // Type-name prefixing of enum members (Color + Red -> ColorRed) is the code generator's job.
 //
 //	ConstName("0.25") == "OneQuarter"   ConstName("300") == "ThreeHundred"   ConstName("read only") == "ReadOnly"
