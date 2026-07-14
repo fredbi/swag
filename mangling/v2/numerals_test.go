@@ -102,6 +102,40 @@ func TestLeadingSignNotBound(t *testing.T) {
 	assert.EqualT(t, "One", g.IdentExported("- 1"))        // sign detached from the digit → not bound
 }
 
+// TestArabicNumberSeparators covers non-Latin numeric separators in the asciify pass.
+//
+// Arabic-Indic (and Persian) digits are stored in logical order, most-significant first — same as ASCII — so no
+// reordering is needed for RTL numbers; the digit run folds straight through. Only the Arabic decimal separator
+// (U+066B ٫) needs mapping to '.', so a fractional value survives ("١٢٫٥" -> 12.5, not 125). The Arabic thousands
+// separator (U+066C ٬) is elided like any grouping separator, concatenating the groups to the right value.
+func TestArabicNumberSeparators(t *testing.T) {
+	t.Parallel()
+
+	g := MakeGoMangler()
+
+	t.Run("decimal separator maps to a dot", func(t *testing.T) {
+		t.Parallel()
+		assert.EqualT(t, "TwelveDotFive", g.ConstName("١٢٫٥"))     // was OneHundredAndTwentyFive (125) before the fix
+		assert.EqualT(t, "TwelveDotFive", g.IdentExported("١٢٫٥")) // Ident agrees
+		assert.EqualT(t, "TwelveDotFive", g.ConstName("۱۲٫۵"))     // Persian digits, Arabic decimal separator
+		assert.EqualT(t, "12.5", ToASCII("١٢٫٥"))                  // standalone folder too
+	})
+
+	t.Run("thousands separator is dropped (groups concatenate)", func(t *testing.T) {
+		t.Parallel()
+		assert.EqualT(t, "OneThousandTwoHundredAndThirtyFour", g.ConstName("١٬٢٣٤"))
+		assert.EqualT(t, "OneThousandTwoHundredAndThirtyFourDotFive", g.ConstName("١٬٢٣٤٫٥"))
+		assert.EqualT(t, "1234", ToASCII("١٬٢٣٤"))
+	})
+
+	t.Run("Arabic-Indic number folds identically to its ASCII form", func(t *testing.T) {
+		t.Parallel()
+		// digits are logical-order MSB-first, so no reversal — the Arabic form and the ASCII form agree.
+		assert.EqualT(t, g.ConstName("1984"), g.ConstName("١٩٨٤"))
+		assert.EqualT(t, g.ConstName("12.5"), g.ConstName("١٢٫٥"))
+	})
+}
+
 // numeralAsciifyCase is an input → expected-output case for the numeral asciify treatments.
 type numeralAsciifyCase struct{ in, want string }
 

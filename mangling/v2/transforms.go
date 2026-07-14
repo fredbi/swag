@@ -145,6 +145,8 @@ func expandRuneNames(str string, num numbers.NumberMangler) string {
 				b.WriteRune(r) // foldable diacritic or combining mark: passed through for the token-level fold stage
 			} else if d, ok := asciiDigit(r); ok {
 				b.WriteByte(d) // non-ASCII decimal digit (Nd) → its ASCII digit ('٧' → '7')
+			} else if sep, ok := asciiNumberSeparator(r); ok {
+				b.WriteByte(sep) // non-ASCII numeric separator → ASCII ('٫' → '.'), so the decimal point survives
 			} else if words := num.NumberRune(r); words != "" { // numeral rune → words ("½" → "one half")
 				b.WriteByte(' ')
 				b.WriteString(words)

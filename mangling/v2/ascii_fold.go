@@ -47,6 +47,8 @@ func ToASCII[T ~string | ~[]byte](s T) string {
 				b.WriteString(f)
 			} else if d, ok := asciiDigit(r); ok {
 				b.WriteByte(d) // non-ASCII decimal digit (Nd) → its ASCII value ("٧" → "7"), like the pipeline
+			} else if sep, ok := asciiNumberSeparator(r); ok {
+				b.WriteByte(sep) // non-ASCII numeric separator → ASCII ('٫' → '.')
 			} else if v, ok := numbers.RuneNumber(r); ok {
 				b.WriteByte(' ')
 				b.WriteString(formatNumeral(v)) // numeral rune → plain number ("½" → "0.5"), not wording
@@ -168,6 +170,23 @@ func foldable(r rune) bool {
 	}
 
 	return tokens.IsCombiningMark(r)
+}
+
+// asciiNumberSeparator maps a non-ASCII numeric separator to its ASCII equivalent so a number written in a non-Latin
+// script folds to a form the number logic recognizes.
+//
+// Only the Arabic decimal separator (U+066B ٫) is mapped — to '.', so "١٢٫٥" folds to "12.5" and its decimal point is
+// kept. The Arabic *thousands* separator (U+066C ٬) is deliberately NOT mapped: like every grouping separator it is
+// elided, which concatenates the digit groups to the correct value ("١٬٢٣٤" → "1234"); mapping it to ',' would instead
+// break the leading-number scan.
+//
+// Hebrew and most other scripts use ASCII digits and a plain '.', so they need no entry here.
+func asciiNumberSeparator(r rune) (byte, bool) {
+	if r == '٫' { // ARABIC DECIMAL SEPARATOR
+		return '.', true
+	}
+
+	return 0, false
 }
 
 // asciiDigit maps a decimal-digit rune (category Nd, any script: ASCII, Arabic-Indic ٧, Devanagari ०, Thai ๗,
